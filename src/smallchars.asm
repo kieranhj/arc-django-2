@@ -1,0 +1,515 @@
+; Small font 8x5 pixels.
+; 84 glyphs total 420 bytes.
+; NOT in ASCII order:
+; [a-z][0-9]!: -<>
+; (BOLD) [A-Z][0-9]!: -<>
+;
+;       [0 - 25][26-35][36][37][38][39][40][41]
+; ASCII [97-122][48-57][33][58][32][45][60][62]
+; ASCII [65-90]
+
+; a
+	.byte 0b01111100
+	.byte 0b10000010
+	.byte 0b11111110
+	.byte 0b10000010
+	.byte 0b10000010
+; b
+	.byte 0b11111100
+	.byte 0b10000010
+	.byte 0b11111100
+	.byte 0b10000010
+	.byte 0b11111110
+; c
+	.byte 0b11111110
+	.byte 0b10000000
+	.byte 0b10000000
+	.byte 0b10000000
+	.byte 0b11111110
+; d
+	.byte 0b11111100
+	.byte 0b10000010
+	.byte 0b10000010
+	.byte 0b10000010
+	.byte 0b11111100
+; e
+	.byte 0b11111110
+	.byte 0b10000000
+	.byte 0b11111100
+	.byte 0b10000000
+	.byte 0b11111110
+; f
+	.byte 0b11111110
+	.byte 0b10000000
+	.byte 0b11111000
+	.byte 0b10000000
+	.byte 0b10000000
+; g
+	.byte 0b11111110
+	.byte 0b10000000
+	.byte 0b10011100
+	.byte 0b10000010
+	.byte 0b11111110
+; h
+	.byte 0b10000010
+	.byte 0b10000010
+	.byte 0b11111110
+	.byte 0b10000010
+	.byte 0b10000010
+; i
+	.byte 0b01111100
+	.byte 0b00010000
+	.byte 0b00010000
+	.byte 0b00010000
+	.byte 0b01111100
+; j
+	.byte 0b01111100
+	.byte 0b00000010
+	.byte 0b00000010
+	.byte 0b01000010
+	.byte 0b00111100
+; k
+	.byte 0b10000100
+	.byte 0b10001000
+	.byte 0b11111000
+	.byte 0b10001000
+	.byte 0b10000100
+; l
+	.byte 0b10000000
+	.byte 0b10000000
+	.byte 0b10000000
+	.byte 0b10000000
+	.byte 0b11111100
+; m
+	.byte 0b10000010
+	.byte 0b11000110
+	.byte 0b11111110
+	.byte 0b10010010
+	.byte 0b10000010
+; n
+	.byte 0b10000100
+	.byte 0b11000100
+	.byte 0b10100100
+	.byte 0b10010100
+	.byte 0b10001100
+; o
+	.byte 0b01111100
+	.byte 0b10000010
+	.byte 0b10000010
+	.byte 0b10000010
+	.byte 0b01111100
+; p
+	.byte 0b11111100
+	.byte 0b10000010
+	.byte 0b11111100
+	.byte 0b10000000
+	.byte 0b10000000
+; q
+	.byte 0b01111100
+	.byte 0b10000010
+	.byte 0b10001010
+	.byte 0b10000110
+	.byte 0b01111110
+; r
+	.byte 0b11111100
+	.byte 0b10000010
+	.byte 0b11111100
+	.byte 0b10000100
+	.byte 0b10000010
+; s
+	.byte 0b01111110
+	.byte 0b10000000
+	.byte 0b11111100
+	.byte 0b00000010
+	.byte 0b11111100
+; t
+	.byte 0b11111110
+	.byte 0b00010000
+	.byte 0b00010000
+	.byte 0b00010000
+	.byte 0b00010000
+; u
+	.byte 0b10000010
+	.byte 0b10000010
+	.byte 0b10000010
+	.byte 0b10000010
+	.byte 0b01111100
+; v
+	.byte 0b10000010
+	.byte 0b10000010
+	.byte 0b01000100
+	.byte 0b00101000
+	.byte 0b00010000
+; w
+	.byte 0b10000010
+	.byte 0b10010010
+	.byte 0b10010010
+	.byte 0b10101010
+	.byte 0b01101100
+; x
+	.byte 0b01000100
+	.byte 0b00101000
+	.byte 0b00010000
+	.byte 0b00101000
+	.byte 0b01000100
+; y
+	.byte 0b10000010
+	.byte 0b01000100
+	.byte 0b00101000
+	.byte 0b00010000
+	.byte 0b00010000
+; z
+	.byte 0b01111100
+	.byte 0b00001000
+	.byte 0b00010000
+	.byte 0b00100000
+	.byte 0b01111110
+; 0
+	.byte 0b00111100
+	.byte 0b01000110
+	.byte 0b01001010
+	.byte 0b01010010
+	.byte 0b00111100
+; 1
+	.byte 0b00011000
+	.byte 0b00101000
+	.byte 0b01001000
+	.byte 0b00001000
+	.byte 0b00001000
+; 2
+	.byte 0b01111110
+	.byte 0b00000010
+	.byte 0b01111110
+	.byte 0b01000000
+	.byte 0b01111110
+; 3
+	.byte 0b01111110
+	.byte 0b00000010
+	.byte 0b00011110
+	.byte 0b00000010
+	.byte 0b01111110
+; 4
+	.byte 0b00011100
+	.byte 0b00010100
+	.byte 0b00100100
+	.byte 0b01111110
+	.byte 0b00000100
+; 5
+	.byte 0b01111110
+	.byte 0b01000000
+	.byte 0b01111110
+	.byte 0b00000010
+	.byte 0b01111110
+; 6
+	.byte 0b01111110
+	.byte 0b01000000
+	.byte 0b01111100
+	.byte 0b01000010
+	.byte 0b01111110
+; 7
+	.byte 0b01111100
+	.byte 0b00001000
+	.byte 0b00010000
+	.byte 0b00100000
+	.byte 0b01000000
+; 8
+	.byte 0b01111110
+	.byte 0b01000010
+	.byte 0b01111110
+	.byte 0b01000010
+	.byte 0b01111110
+; 9
+	.byte 0b01111110
+	.byte 0b01000010
+	.byte 0b01111110
+	.byte 0b00000010
+	.byte 0b01111110
+; !
+	.byte 0b00001000
+	.byte 0b00001000
+	.byte 0b00001000
+	.byte 0b00000000
+	.byte 0b00001000
+; :
+	.byte 0b00000000
+	.byte 0b00001000
+	.byte 0b00000000
+	.byte 0b00001000
+	.byte 0b00000000
+; space
+	.byte 0b00000000
+	.byte 0b00000000
+	.byte 0b00000000
+	.byte 0b00000000
+	.byte 0b00000000
+; -
+	.byte 0b00000000
+	.byte 0b00000000
+	.byte 0b01111110
+	.byte 0b00000000
+	.byte 0b00000000
+; <
+   	.byte 0b00110000
+	.byte 0b01110000
+	.byte 0b11111111
+	.byte 0b01110000
+	.byte 0b00110000
+; >
+   	.byte 0b00001100
+	.byte 0b00001110
+	.byte 0b11111111
+	.byte 0b00001110
+	.byte 0b00001100
+;-------------------
+; A
+	.byte 0b01111100
+	.byte 0b11000110
+	.byte 0b11111110
+	.byte 0b11000110
+	.byte 0b11000110
+; B
+	.byte 0b11111100
+	.byte 0b11000110
+	.byte 0b11111100
+	.byte 0b11000110
+	.byte 0b11111110
+; C
+	.byte 0b11111110
+	.byte 0b11000000
+	.byte 0b11000000
+	.byte 0b11000000
+	.byte 0b11111110
+; D
+	.byte 0b11111100
+	.byte 0b11000110
+	.byte 0b11000110
+	.byte 0b11000110
+	.byte 0b11111100
+; E
+	.byte 0b11111110
+	.byte 0b11000000
+	.byte 0b11111100
+	.byte 0b11000000
+	.byte 0b11111110
+; F
+	.byte 0b11111110
+	.byte 0b11000000
+	.byte 0b11111000
+	.byte 0b11000000
+	.byte 0b11000000
+; G
+	.byte 0b11111110
+	.byte 0b11000000
+	.byte 0b11011110
+	.byte 0b11000010
+	.byte 0b11111110
+; H
+	.byte 0b11000110
+	.byte 0b11000110
+	.byte 0b11111110
+	.byte 0b11000110
+	.byte 0b11000110
+; I
+	.byte 0b11111110
+	.byte 0b00111000
+	.byte 0b00111000
+	.byte 0b00111000
+	.byte 0b11111110
+; J
+	.byte 0b01111100
+	.byte 0b00000110
+	.byte 0b00000110
+	.byte 0b01100110
+	.byte 0b00111100
+; K
+	.byte 0b11000110
+	.byte 0b11001100
+	.byte 0b11111000
+	.byte 0b11001100
+	.byte 0b11000110
+; L
+	.byte 0b11000000
+	.byte 0b11000000
+	.byte 0b11000000
+	.byte 0b11000000
+	.byte 0b11111110
+; M
+	.byte 0b11000110
+	.byte 0b11000110
+	.byte 0b11111110
+	.byte 0b11010110
+	.byte 0b11000110
+; N
+	.byte 0b11000110
+	.byte 0b11000110
+	.byte 0b11100110
+	.byte 0b11010110
+	.byte 0b11001110
+; O
+	.byte 0b01111100
+	.byte 0b11000110
+	.byte 0b11000110
+	.byte 0b11000110
+	.byte 0b01111100
+; P
+	.byte 0b11111100
+	.byte 0b11000110
+	.byte 0b11111100
+	.byte 0b11000000
+	.byte 0b11000000
+; Q
+	.byte 0b01111100
+	.byte 0b11000010
+	.byte 0b11001010
+	.byte 0b11000110
+	.byte 0b01111110
+; R
+	.byte 0b11111100
+	.byte 0b11000110
+	.byte 0b11111100
+	.byte 0b11001100
+	.byte 0b11000110
+; S
+	.byte 0b01111110
+	.byte 0b11100000
+	.byte 0b11111100
+	.byte 0b00001110
+	.byte 0b11111100
+; T
+	.byte 0b11111110
+	.byte 0b00111000
+	.byte 0b00111000
+	.byte 0b00111000
+	.byte 0b00111000
+; U
+	.byte 0b11000110
+	.byte 0b11000110
+	.byte 0b11000110
+	.byte 0b11000110
+	.byte 0b01111100
+; V
+	.byte 0b11000110
+	.byte 0b11000110
+	.byte 0b01101100
+	.byte 0b00111000
+	.byte 0b00010000
+; W
+	.byte 0b11000110
+	.byte 0b11010110
+	.byte 0b11010110
+	.byte 0b11101110
+	.byte 0b01101100
+; X
+	.byte 0b11000110
+	.byte 0b01101100
+	.byte 0b00111000
+	.byte 0b00111100
+	.byte 0b01100110
+; Y
+	.byte 0b11000011
+	.byte 0b01100110
+	.byte 0b00111100
+	.byte 0b00011000
+	.byte 0b00011000
+;Z
+	.byte 0b11111110
+	.byte 0b00001100
+	.byte 0b00011000
+	.byte 0b00110000
+	.byte 0b11111110
+; 0
+	.byte 0b00111100
+	.byte 0b01000110
+	.byte 0b01001010
+	.byte 0b01010010
+	.byte 0b00111100
+; 1  bold
+	.byte 0b00011100
+	.byte 0b00101100
+	.byte 0b01001100
+	.byte 0b00001100
+	.byte 0b00001100
+; 2 bold
+	.byte 0b01111110
+	.byte 0b00000110
+	.byte 0b01111110
+	.byte 0b01100000
+	.byte 0b01111110
+; 3
+	.byte 0b01111110
+	.byte 0b00000110
+	.byte 0b00011110
+	.byte 0b00000110
+	.byte 0b01111110
+; 4
+	.byte 0b00011100
+	.byte 0b00010100
+	.byte 0b00100100
+	.byte 0b01111110
+	.byte 0b00000100
+; 5
+	.byte 0b01111110
+	.byte 0b01000000
+	.byte 0b01111110
+	.byte 0b00000110
+	.byte 0b01111110
+; 6
+	.byte 0b01111110
+	.byte 0b01100000
+	.byte 0b01111100
+	.byte 0b01100110
+	.byte 0b01111110
+; 7
+	.byte 0b01111110
+	.byte 0b00001100
+	.byte 0b00011000
+	.byte 0b00110000
+	.byte 0b01100000
+; 8
+	.byte 0b11111110
+	.byte 0b11000110
+	.byte 0b11111110
+	.byte 0b11000110
+	.byte 0b11111110
+; 9
+	.byte 0b01111110
+	.byte 0b01000110
+	.byte 0b01111110
+	.byte 0b00000110
+	.byte 0b01111110
+; !
+	.byte 0b00001000
+	.byte 0b00001000
+	.byte 0b00001000
+	.byte 0b00000000
+	.byte 0b00001000
+; :
+	.byte 0b00000000
+	.byte 0b00001000
+	.byte 0b00000000
+	.byte 0b00001000
+	.byte 0b00000000
+; space
+	.byte 0b00000000
+	.byte 0b00000000
+	.byte 0b00000000
+	.byte 0b00000000
+	.byte 0b00000000
+; -
+	.byte 0b00000000
+	.byte 0b00000000
+	.byte 0b01111110
+	.byte 0b00000000
+	.byte 0b00000000
+; <2
+   	.byte 0b00110000
+	.byte 0b01110000
+	.byte 0b11111111
+	.byte 0b01110000
+	.byte 0b00110000
+; > bold
+   	.byte 0b00001100
+	.byte 0b00001110
+	.byte 0b11111111
+	.byte 0b00001110
+	.byte 0b00001100

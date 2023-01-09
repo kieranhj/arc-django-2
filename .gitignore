@@ -1,0 +1,6 @@
+compile.txt
+loader.txt
+build/
+\!Django01/
+\!Django02/
+*.pyc

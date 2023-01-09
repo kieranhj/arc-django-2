@@ -1,0 +1,10 @@
+Chipo Django 2
+~~~
+A chiptune musicdisk disc with Rabenauge.
+
+TODO
+~~~
+- Make new repo.
+- Strip out code & assets that are not required.
+- Add 3D rendering code for cube.
+- Move layout to be roughly that of Bodo's WIP.
