@@ -12,14 +12,17 @@
 .equ OS_Mouse, 0x1c
 .equ OS_ChangeDynamicArea, 0x2a
 .equ OS_GenerateError, 0x2b
+.equ OS_ReadEscapeState, 0x2c
 .equ OS_ReadVduVariables, 0x31
 .equ OS_ReadMonotonicTime, 0x42
+.equ OS_Plot, 0x45
 .equ OS_ReadDynamicArea, 0x5c
 .equ OS_ConvertHex2, 0xd1
 .equ OS_ConvertHex4, 0xd2
 .equ OS_ConvertHex8, 0xd4
 .equ OS_ConvertCardinal1, 0xd5	
 .equ OS_ConvertCardinal4, 0xd8
+.equ OS_WriteI, 0x100
 
 .equ OSByte_EventEnable, 14
 .equ OSByte_EventDisable, 13
@@ -34,6 +37,11 @@
 .equ IKey_LeftClick, 0xf6
 .equ IKey_RightClick, 0xf4
 .equ IKey_Space, 0x9d
+.equ IKey_Return, 0xB6
+.equ IKey_Escape, 0x8f
+.equ IKey_S, 0xae
+.equ IKey_D, 0xcd
+.equ IKey_R, 0xcc
 .equ IKey_Escape, 0x8f
 .equ IKey_ArrowUp, 198
 .equ IKey_ArrowDown, 214
@@ -93,7 +101,7 @@
 .equ RasterMan_Configure, 0x47e8c
 
 .equ VIDC_Col0, 0x00000000
-.equ VIDC_Col1, 0x04000000
+.equ VIDC_Col1, 0x04000000              ; index << 26
 .equ VIDC_Col2, 0x08000000
 .equ VIDC_Col3, 0x0c000000
 .equ VIDC_Col4, 0x10000000
@@ -109,3 +117,16 @@
 .equ VIDC_Col14, 0x38000000
 .equ VIDC_Col15, 0x3c000000
 .equ VIDC_Border, 0x40000000
+
+.equ VIDC_Write, 0x03400000
+.equ VIDC_HBorderStart, 0x88000000      ; (M-1)/2 pixels << 14 [odd]
+.equ VIDC_HDisplayStart, 0x8C000000     ; (M-7)/2 MODE 9 pixels << 14 [x7]
+.equ VIDC_HDisplayEnd, 0x90000000       ; (M-7)/2 MODE 9 pixels << 14 [x7]
+.equ VIDC_HBorderEnd, 0x94000000        ; (M-1)/2 pixels << 14 [odd]
+.equ VIDC_VBorderStart, 0xA8000000      ; N-1 rasters << 14
+.equ VIDC_VDisplayStart, 0xAC000000     ; N-1 rasters << 14
+.equ VIDC_VDisplayEnd, 0xB0000000       ; N-1 rasters << 14
+.equ VIDC_VBorderEnd, 0xB4000000        ; N-1 rasters << 14
+
+.equ MODE9_HCentrePixels, 291
+.equ MODE9_VCentreRasters, 166

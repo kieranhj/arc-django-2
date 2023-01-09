@@ -224,6 +224,6 @@ small_font_map_ascii_to_glyph:
     suble r1, r0, #ASCII_a - SmallFont_a
     mov pc, lr
 
-.align 4
+.p2align 2
 small_font_data:
 .include "src/smallchars.asm"

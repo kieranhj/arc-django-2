@@ -36,7 +36,9 @@ update_menu:
 	ldr r3, selection_number
 	cmp r3, #0
 	beq .2
+	.if _DJANGO==1
 	bl plot_menu_item
+	.endif
 	sub r3, r3, #1
 	str r3, selection_number
 	
@@ -49,7 +51,9 @@ update_menu:
 	ldr r3, selection_number
 	cmp r3, #MAX_SONGS
 	bge .3
+	.if _DJANGO==1
 	bl plot_menu_item
+	.endif
 	add r3, r3, #1
 	str r3, selection_number
 
@@ -95,7 +99,9 @@ update_menu:
 	str r0, autoplay_flag
 
 	mov r3, #MAX_SONGS
+	.if _DJANGO==1
 	bl plot_menu_item
+	.endif
 	b .5
 
 	.9:
@@ -105,7 +111,9 @@ update_menu:
 
 	; Play song in R0.
 	bl play_song
+	.if _DJANGO==1
 	bl plot_menu_item
+	.endif
 
 .5:
 
@@ -130,7 +138,9 @@ update_menu:
 	ldr r3, selection_number
 	cmp r2, r3
 	beq .6
+	.if _DJANGO==1
 	bl plot_menu_item
+	.endif
 
     ; Absolute Y.
 	mov r0, #1023
@@ -143,13 +153,21 @@ update_menu:
 .endif
 
 .6:
+	.if _DJANGO==1
+	bl plot_menu_selection
+	.endif
+	
+	ldr pc, [sp], #4
+
+plot_menu_selection:
+	str lr, [sp, #-4]!
+
 	; Update selected item.
-    ldr r0, vsync_count
-    ands r0, r0, #1
-    bne .8
+    ldr r1, vsync_count
+    and r1, r1, #1
 
 	ldr r0, selection_colour
-	add r0, r0, #1
+	add r0, r0, r1
 	cmp r0, #15
 	movgt r0, #0
 	str r0, selection_colour
@@ -239,7 +257,7 @@ plot_menu_item_ex:
     str r0, small_font_bold_flag
 	ldr pc, [sp], #4
 
-.align 4
+.p2align 2
 menu_table:
 	.long menu_01_string - menu_table
 	.long menu_02_string - menu_table
@@ -254,52 +272,52 @@ menu_table:
 	.long menu_11_string - menu_table
 	.long menu_12_string - menu_table
 
-.align 4
+.p2align 2
 menu_01_string:
 	.byte 31, MENU_SONG_XPOS, MENU_TOP_YPOS, "SWITCHIN LANES", 31, MENU_ARTIST_XPOS, MENU_TOP_YPOS, "BY JUICE", 0
 
-.align 4
+.p2align 2
 menu_02_string:
 	.byte 31, MENU_SONG_XPOS, MENU_TOP_YPOS+1*MENU_ROW_HEIGHT, "BRATGRUMBEERE", 31, MENU_ARTIST_XPOS, MENU_TOP_YPOS+1*MENU_ROW_HEIGHT, "BY VIRGILL", 0
 
-.align 4
+.p2align 2
 menu_03_string:
 	.byte 31, MENU_SONG_XPOS, MENU_TOP_YPOS+2*MENU_ROW_HEIGHT, "RED DROPS", 31, MENU_ARTIST_XPOS, MENU_TOP_YPOS+2*MENU_ROW_HEIGHT, "BY OKEANOS", 0
 
-.align 4
+.p2align 2
 menu_04_string:
 	.byte 31, MENU_SONG_XPOS, MENU_TOP_YPOS+3*MENU_ROW_HEIGHT, "AMIGA FUNERAL", 31, MENU_ARTIST_XPOS, MENU_TOP_YPOS+3*MENU_ROW_HEIGHT, "BY VIRGILL", 0
 
-.align 4
+.p2align 2
 menu_05_string:
 	.byte 31, MENU_SONG_XPOS, MENU_TOP_YPOS+4*MENU_ROW_HEIGHT, "A VIRAG ELSZARADT", 31, MENU_ARTIST_XPOS, MENU_TOP_YPOS+4*MENU_ROW_HEIGHT, "BY DALEZY", 0
 
-.align 4
+.p2align 2
 menu_06_string:
 	.byte 31, MENU_SONG_XPOS, MENU_TOP_YPOS+5*MENU_ROW_HEIGHT, "PAWS AND CLAWS", 31, MENU_ARTIST_XPOS, MENU_TOP_YPOS+5*MENU_ROW_HEIGHT, "BY SLASH", 0
 
-.align 4
+.p2align 2
 menu_07_string:
 	.byte 31, MENU_SONG_XPOS, MENU_TOP_YPOS+6*MENU_ROW_HEIGHT, "RESURGENCE", 31, MENU_ARTIST_XPOS, MENU_TOP_YPOS+6*MENU_ROW_HEIGHT, "BY VEDDER", 0
 
-.align 4
+.p2align 2
 menu_08_string:
 	.byte 31, MENU_SONG_XPOS, MENU_TOP_YPOS+7*MENU_ROW_HEIGHT, "QUICKSHOT DRAMAKING", 31, MENU_ARTIST_XPOS, MENU_TOP_YPOS+7*MENU_ROW_HEIGHT, "BY CURT COOL", 0
 
-.align 4
+.p2align 2
 menu_09_string:
 	.byte 31, MENU_SONG_XPOS, MENU_TOP_YPOS+8*MENU_ROW_HEIGHT, "SYNCOPATED GROOVE", 31, MENU_ARTIST_XPOS, MENU_TOP_YPOS+8*MENU_ROW_HEIGHT, "BY OKEANOS", 0
 
-.align 4
+.p2align 2
 menu_10_string:
 	.byte 31, MENU_SONG_XPOS, MENU_TOP_YPOS+9*MENU_ROW_HEIGHT, "PAULA AT THE DISCO", 31, MENU_ARTIST_XPOS, MENU_TOP_YPOS+9*MENU_ROW_HEIGHT, "BY TRIACE", 0
 
-.align 4
+.p2align 2
 menu_11_string:
 	.byte 31, MENU_SONG_XPOS, MENU_TOP_YPOS+10*MENU_ROW_HEIGHT, "CONCORDIA", 31, MENU_ARTIST_XPOS, MENU_TOP_YPOS+10*MENU_ROW_HEIGHT, "BY MA2E", 0
 
-.align 4
+.p2align 2
 menu_12_string:
 	.byte 31, 32, MENU_TOP_YPOS+11*MENU_ROW_HEIGHT, "AUTOPLAY", 0
 
-.align 4
+.p2align 2

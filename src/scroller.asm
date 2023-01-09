@@ -128,11 +128,7 @@ scroller_scroll_row:
 	str lr, [sp, #-4]!
 
 	; set border colour!
-	.if _DEBUG_RASTERS
-	adr r0, vdu_set_border_red
-	mov r1, #6
-	swi OS_WriteN
-	.endif
+	SET_BORDER 0x0000ff
 
 	ldr r12, screen_addr
 	mov r0, #Scroller_Y_Pos
@@ -154,11 +150,7 @@ scroller_scroll_row:
 	blt .1
 
 	; set border colour!
-	.if _DEBUG_RASTERS
-	adr r0, vdu_set_border_black
-	mov r1, #6
-	swi OS_WriteN
-	.endif
+	SET_BORDER 0x000000
 	ldr pc, [sp], #4
 
 .macro scroller_shift_left_by_pixels

@@ -4,7 +4,35 @@ A chiptune musicdisk disc with Rabenauge.
 
 TODO
 ~~~
-- Make new repo.
-- Strip out code & assets that are not required.
+- Make new repo. - DONE
+- Strip out code & assets that are not required. - STARTED
+- Sort out BSS segment.
+- Optimise menu plotting and font plotting code.
+  - Convert smallfont to MODE 9 at runtime?
+  - Also store in ASCII order for simplicity?
 - Add 3D rendering code for cube.
-- Move layout to be roughly that of Bodo's WIP.
+- Move screen layout to be roughly that of Bodo's WIP.
+- Add 'toothed' columns.
+
+
+WIP Features
+~~~
+- Overscan screen?
+  - Not currently - 320x256
+- Menu at top.
+  - Similar to before.
+  - Looks like the same font.
+- Spinning cube centre LHS of screen.
+  - Faces shades of blue.
+  - Rendered on top of everything.
+- Scrolltext at bottom, 16x16 or 20x20 maybe?
+  - Single colour font?
+  - Masked on top of background
+  - Single pixel scroll?
+- Vertically scrolling toothed columns (what to call these?)
+  - Five columns
+  - 'Teeth' are 16x16
+  - Columns are 3x 'teeth' wide
+  - Columns overlap by 1x 'teeth' width
+  - Columns scroll upwards are different speeds
+  - Shades of grey-blue from dark (centre) to light (rhs screen)

@@ -30,9 +30,9 @@ main:
 
 .include "../lib/lz4-decode.asm"
 
-.align 4
+.p2align 2
 code_source:
 .incbin "../build/arc-django.lz4"
 
-.align 4
+.p2align 2
 code_main:

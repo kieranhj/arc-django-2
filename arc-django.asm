@@ -3,11 +3,12 @@
 ; ============================================================================
 
 .equ _DEBUG, 1
-.equ _DEBUG_RASTERS, (_DEBUG && 0)		; I don't think this works with RasterMan?
+.equ _DEBUG_RASTERS, (_DEBUG && _RASTERMAN==0 && 1)		; I don't think this works with RasterMan?
 
-.equ _DJANGO, 2
+.equ _DJANGO, 1
+.equ _RASTERMAN, 1
 
-.equ Screen_Banks, 1
+.equ Screen_Banks, _DJANGO
 .equ Screen_Mode, 9
 .equ Screen_Width, 320
 .equ Screen_Height, 256
@@ -29,6 +30,13 @@
     ADC    \bit, \bit, \bit                         ; carry into lsb of R1
     EOR    \temp, \temp, \seed, LSL #12             ; (involved!)
     EOR    \seed, \temp, \temp, LSR #20             ; (similarly involved!)
+.endm
+
+.macro SET_BORDER rgb
+	.if _DEBUG_RASTERS
+	mov r4, #\rgb
+	bl palette_set_border
+	.endif
 .endm
 
 ; ============================================================================
@@ -83,6 +91,7 @@ Start:
 ; Stack
 ; ============================================================================
 
+; TODO: Move stack to BSS.
 .skip 1024
 stack_base:
 
@@ -91,10 +100,10 @@ stack_base:
 ; ============================================================================
 
 main:
-	MOV r0,#22	;Set MODE
-	SWI OS_WriteC
-	MOV r0,#Screen_Mode
-	SWI OS_WriteC
+	; Set screen MODE & disable cursor
+	adr r0, vdu_screen_disable_cursor
+	mov r1, #12
+	swi OS_WriteN
 
 	; Set screen size for number of buffers
 	MOV r0, #DynArea_Screen
@@ -109,11 +118,6 @@ main:
 	ADRCC r0, error_noscreenmem
 	SWICC OS_GenerateError
 
-	; Disable cursor
-	adr r0, vdu_disable_cursor
-	mov r1, #10
-	swi OS_WriteN
-
 	; Grab mouse.
 	.if Mouse_Enable
 	swi OS_Mouse
@@ -127,7 +131,9 @@ main:
 	; EARLY INIT / LOAD STUFF HERE!
 
 	; RasterMan Init.
+	.if _RASTERMAN
 	bl rasters_init
+	.endif
 
 	; QTM Init.
 	; Required to make QTM play nicely with RasterMan.
@@ -191,7 +197,6 @@ main:
 	; Pause.
 	mov r4, #Menu_Beat_Frames
 	bl wait_frames
-	.endif
 
 	; Menu Screen.
 	mov r0, #12				; cls
@@ -201,10 +206,15 @@ main:
 	ldr r12, screen_addr
 	adrl r9, logo_data
 	bl plot_logo
+	.endif
 
 	; Draw menu to screen.
+	ldr r12, screen_addr
 	bl plot_menu
+
+	.if _DJANGO==1
 	bl scroller_init
+	.endif
 
 	; Set palette (shows screen).
 	adrl r2, logo_pal_block
@@ -221,12 +231,19 @@ main:
 	bl play_song
 
 	; Fire up the RasterMan!
+	.if _RASTERMAN
 	swi RasterMan_Install
+	.endif
 
 main_loop:
 
 	; Block if we've not even had a vsync since last time - we're >50Hz!
+	.if _RASTERMAN
 	swi RasterMan_Wait
+	.else
+	mov r0, #19
+	swi OS_Byte
+	.endif
 
 	mov r0, #1
 	ldr r2, vsync_count
@@ -240,7 +257,9 @@ main_loop:
 	.endif
 
 	; DO STUFF HERE!
+	bl get_next_screen_for_writing
 
+	.if _DJANGO==1
 	; scroll the bottom.
 	bl scroller_update
 
@@ -261,45 +280,55 @@ main_loop:
 	blne plot_logo_glitched
 	.8:
 
-	.if _DEBUG_RASTERS
-	adr r0, vdu_set_border_green
-	mov r1, #6
-	swi OS_WriteN
-	.endif
+	SET_BORDER 0x00ff00
 	bl update_sprites
-	.if _DEBUG_RASTERS
-	adr r0, vdu_set_border_black
-	mov r1, #6
-	swi OS_WriteN
+	SET_BORDER 0x000000
 	.endif
 
 	; exit if Escape is pressed
+	.if _RASTERMAN
 	swi RasterMan_ScanKeyboard
 	mov r1, #0xc0c0
 	cmp r0, r1
 	beq exit
+	.else
+	swi OS_ReadEscapeState
+	bcs exit
+	.endif
 
 	; do menu.
 	bl keyboard_scan_debounced
 	bl update_menu
 
+	SET_BORDER 0xff0000
+	bl plot_menu
+	bl plot_menu_selection
+	SET_BORDER 0x000000
+
 	; autoplay!
 	bl check_autoplay
+
+	; Swap screens!
+	bl show_screen_at_vsync
 
 	; repeat!
 	b main_loop
 
 exit:
 	; wait for vsync (any pending buffers)
+	.if _RASTERMAN
 	swi RasterMan_Wait
+	.endif
+
 	bl release_music_interrupt
 
+	.if _RASTERMAN
 	swi RasterMan_Release
 	swi RasterMan_Wait
+	.endif
 
 	; Fade out.
-	; TODO: Fade volume down?
-	.if _DJANGO==1
+	.if _DJANGO==1 && _DEBUG==0
 	adrl r2, logo_pal_block
 	bl palette_init_fade_to_black
 	bl fade_out_with_volume
@@ -319,7 +348,7 @@ exit:
 	mov r2, #0
 	swi OS_Release
 
-	.if _DJANGO==1
+	.if _DJANGO==1 && _DEBUG==0
 	; Pause.
 	mov r4, #Menu_Beat_Frames
 	bl wait_frames
@@ -338,6 +367,15 @@ exit:
 	mov r4, #Menu_Beat_Frames*2
 	bl wait_frames
 	.endif
+
+	; Display whichever bank we've just written to
+	mov r0, #OSByte_WriteDisplayBank
+	ldr r1, scr_bank
+	swi OS_Byte
+	; and write to it
+	mov r0, #OSByte_WriteVDUBank
+	ldr r1, scr_bank
+	swi OS_Byte
 
 	; Flush keyboard buffer.
 	mov r0, #15
@@ -484,7 +522,7 @@ debug_string:
 error_noscreenmem:
 	.long 0
 	.byte "Cannot allocate screen memory!"
-	.align 4
+	.p2align 2
 	.long 0
 
 get_screen_addr:
@@ -579,12 +617,34 @@ event_handler:
 	LDMIA sp!, {r2-r12}
 	LDMIA sp!, {r0-r1, pc}
 
-buffer_pending:
-	.long 0				; screen bank number to display at vsync.
-
 palette_pending:
 	.long 0				; (optional) ptr to a block of palette data to set at vsync.
 .endif
+
+buffer_pending:
+	.long 0				; screen bank number to display at vsync.
+
+show_screen_at_vsync:
+	; Show current bank at next vsync
+	ldr r1, scr_bank
+	MOV r0, #OSByte_WriteDisplayBank
+	swi OS_Byte
+	mov pc, lr
+
+get_next_screen_for_writing:
+	; Increment to next bank for writing
+	ldr r1, scr_bank
+	add r1, r1, #1
+	cmp r1, #Screen_Banks
+	movgt r1, #1
+	str r1, scr_bank
+
+	; Now set the screen bank to write to
+	mov r0, #OSByte_WriteVDUBank
+	swi OS_Byte
+
+	; Back buffer address for writing bank stored at screen_addr
+	b get_screen_addr
 
 error_handler:
 	STMDB sp!, {r0-r2, lr}
@@ -740,36 +800,26 @@ screen_addr:
 	.long 0					; ptr to the current VIDC screen bank being written to.
 
 .include "lib/mode9-palette.asm"
-.include "src/logo.asm"
 .include "src/menu.asm"
+.include "src/small-font.asm"
+.if _DJANGO==1
+.include "src/logo.asm"
 .include "src/vubars.asm"
 .include "src/scroller.asm"
-.include "src/small-font.asm"
 .include "src/sprites.asm"
+.endif
+.if _RASTERMAN
 .include "src/rasters.asm"
+.endif
 .include "lib/lz4-decode.asm"
 
 ; ============================================================================
 ; Data Segment
 ; ============================================================================
 
-vdu_disable_cursor:
-.byte 23,1,0,0,0,0,0,0,0,0
-.align 4
-
-.if _DEBUG
-vdu_set_border_red:
-.byte 19,0,24,255,0,0
-.align 4
-
-vdu_set_border_green:
-.byte 19,0,24,0,255,0
-.align 4
-
-vdu_set_border_black:
-.byte 19,0,24,0,0,0
-.align 4
-.endif
+vdu_screen_disable_cursor:
+.byte 22, Screen_Mode, 23,1,0,0,0,0,0,0,0,0
+.p2align 2
 
 music_table:
 	.long music_01_mod - music_table
@@ -784,88 +834,90 @@ music_table:
 	.long music_10_mod - music_table
 	.long music_11_mod - music_table
 
-.align 4
+.p2align 2
 logo_pal_block:
 .incbin "build/logo.bin.pal"
 
-.align 4
+.if _DJANGO==1
+.p2align 2
 logo_data:
 .incbin "build/logo.bin"
 
-.align 4
+.p2align 2
 rabenauge_pal_block:
 .incbin "build/rabenauge.bin.pal"
 
-.align 4
+.p2align 2
 rabenauge_splash:
 .incbin "build/rabenauge.lz4"
 
-.align 4
+.p2align 2
 bitshifters_pal_block:
 .incbin "build/bitshifters.bin.pal"
 
-.align 4
+.p2align 2
 bitshifters_splash:
 .incbin "build/bitshifters.lz4"
 
-.align 4
-scroller_text_string:
-.include "src/scrolltxt-final.asm"
-scroller_text_string_end:
-
-.align 4
-scroller_font_data:
-.incbin "build/scroller_font.bin"
-
-.align 4
+.p2align 2
 note_sprite_data:
 .incbin "build/note1.bin"
 .incbin "build/note2.bin"
 .incbin "build/note3.bin"
 .incbin "build/note4.bin"
 .incbin "build/note5.bin"
+.endif
 
-.align 4
+.p2align 2
+scroller_text_string:
+.include "src/scrolltxt-final.asm"
+scroller_text_string_end:
+
+.p2align 2
+scroller_font_data:
+.incbin "build/scroller_font.bin"
+
+.p2align 2
 music_01_mod:
 .incbin "build/music_01.bin"
 
-.align 4
+.p2align 2
 music_02_mod:
 .incbin "build/music_02.bin"
 
-.align 4
+.p2align 2
 music_03_mod:
 .incbin "build/music_03.bin"
 
-.align 4
+.p2align 2
 music_04_mod:
 .incbin "build/music_04.bin"
 
-.align 4
+.p2align 2
 music_05_mod:
 .incbin "build/music_05.bin"
 
-.align 4
+.p2align 2
 music_06_mod:
 .incbin "build/music_06.bin"
 
-.align 4
+.p2align 2
 music_07_mod:
 .incbin "build/music_07.bin"
 
-.align 4
+.p2align 2
 music_08_mod:
 .incbin "build/music_08.bin"
 
-.align 4
+.p2align 2
 music_09_mod:
 .incbin "build/music_09.bin"
 
-.align 4
+.p2align 2
 music_10_mod:
 .incbin "build/music_10.bin"
 
-.align 4
+.p2align 2
 music_11_mod:
 .incbin "build/music_11.bin"
 
@@ -875,7 +927,7 @@ music_11_mod:
 
 ; TODO: Figure out how to actually specify BSS!!
 
-.align 4
+.p2align 2
 vidc_table_1:
 	.skip 256*4*4
 

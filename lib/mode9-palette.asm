@@ -32,6 +32,25 @@ palette_set_block:
     blt .1
 	ldr pc, [sp], #4			; rts
 
+.if _DEBUG
+; R4 = colour as 0x00BBGGRR
+; Uses R0,R1 
+palette_set_border:
+    adrl r1, palette_osword_block
+    mov r0, #24
+    strb r0, [r1, #0]       ; logical colour
+    strb r0, [r1, #1]       ; mode
+    and r0, r4, #0xff
+    strb r0, [r1, #2]       ; red
+    mov r0, r4, lsr #8
+    strb r0, [r1, #3]       ; green
+    mov r0, r4, lsr #16
+    strb r0, [r1, #4]       ; blue
+    mov r0, #12
+    swi OS_Word
+    mov pc,lr
+.endif
+
 ; R0 = [0-16] interpolation
 ; R2 = palette block ptr
 palette_make_fade_to_black:
@@ -167,7 +186,7 @@ solid_white:
 palette_interp_block:
     .skip 64
 
-.align 4
+.p2align 2
 palette_osword_block:
     .skip 8
     ; logical colour
