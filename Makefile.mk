@@ -3,6 +3,7 @@ RM_RF:=-cmd /c rd /s /q
 MKDIR_P:=-cmd /c mkdir
 COPY:=copy
 VASM?=bin\vasmarm_std_win32.exe
+VLINK?=bin\vlink.exe
 LZ4?=bin\lz4.exe
 PYTHON2?=C:\Dev\Python27\python.exe
 PYTHON3?=python.exe
@@ -12,6 +13,7 @@ RM_RF:=rm -Rf
 MKDIR_P:=mkdir -p
 COPY:=cp
 VASM?=vasmarm_std
+VLINK?=vlink
 LZ4?=lz4
 PYTHON3?=python
 DOS2UNIX?=dos2unix
@@ -48,8 +50,11 @@ folder: build loader music text
 loader: build ./build/arc-django.lz4
 	$(VASM) -L build/loader.txt -m250 -Fbin -opt-adr -o build\loader.bin src/loader.asm
 
-./build/arc-django.bin: build arc-django.asm assets music
-	$(VASM) -L build/compile.txt -m250 -Fbin -opt-adr -o build\arc-django.bin arc-django.asm
+./build/arc-django.bin: ./build/arc-django.o link_script.txt
+	$(VLINK) -T link_script.txt -b rawbin1 -o $@ build/arc-django.o -Mbuild/linker.txt
+
+./build/arc-django.o: build arc-django.asm assets music
+	$(VASM) -L build/compile.txt -m250 -Fvobj -opt-adr -o build/arc-django.o arc-django.asm
 
 .PHONY:assets
 assets: build ./build/logo.lz4 ./build/logo.bin.pal ./build/scroller_font.bin \

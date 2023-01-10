@@ -2,6 +2,19 @@
 ; Rasters via RasterMan.
 ; ============================================================================
 
+.equ VU_Bars_Y_Pos, 216
+.equ VU_Bars_Height, 3
+.equ VU_Bars_Gap, 4
+.equ VU_Bars_Effect, 2	; 'effect'
+.equ VU_Bars_Gravity, 2	; lines per vsync
+
+.equ Horizontal_Divider_1, 100
+.equ Horizontal_Divider_2, 202
+.equ Horizontal_Divider_3, 233
+.equ MenuArea_Top, Horizontal_Divider_1+2
+.equ MenuArea_Height, Horizontal_Divider_2-Horizontal_Divider_1-3
+.equ Stave_Top, VU_Bars_Y_Pos - VU_Bars_Gap
+
 rasters_init:
     ; Configure RasterMan for future compatibility.
     mov r0, #4
@@ -14,10 +27,6 @@ rasters_init:
 	; Init tables.
 	adr r5, raster_tables
 	ldmia r5, {r0-r3}
-	add r0, r0, r5			; vidc table 1
-	add r1, r1, r5			; vidc table 2
-	add r2, r2, r5			; vidc table 3
-	add r3, r3, r5			; memc table
 	stmfd sp!, {r0-r3}
 
 	mov r4, #0
@@ -99,7 +108,7 @@ raster_list:
     .long 0xffffffff
 
 raster_tables:
-	.long vidc_table_1 - raster_tables
-	.long vidc_table_2 - raster_tables
-	.long vidc_table_3 - raster_tables
-	.long memc_table   - raster_tables
+	.long vidc_table_1
+	.long vidc_table_2
+	.long vidc_table_3
+	.long memc_table

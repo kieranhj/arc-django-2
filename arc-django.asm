@@ -3,9 +3,9 @@
 ; ============================================================================
 
 .equ _DEBUG, 1
-.equ _DEBUG_RASTERS, (_DEBUG && _RASTERMAN==0 && 1)		; I don't think this works with RasterMan?
+.equ _DEBUG_RASTERS, (_DEBUG && _RASTERMAN==0 && 1)
 
-.equ _DJANGO, 1
+.equ _DJANGO, 2
 .equ _RASTERMAN, 1
 
 .equ Screen_Banks, _DJANGO
@@ -54,21 +54,6 @@
 .endif
 .equ Menu_Beat_Frames, 25				; 0.5 seconds.
 
-.equ Scroller_Y_Pos, 237
-
-.equ VU_Bars_Y_Pos, 216
-.equ VU_Bars_Height, 3
-.equ VU_Bars_Gap, 4
-.equ VU_Bars_Effect, 2	; 'effect'
-.equ VU_Bars_Gravity, 2	; lines per vsync
-
-.equ Horizontal_Divider_1, 100
-.equ Horizontal_Divider_2, 202
-.equ Horizontal_Divider_3, 233
-.equ MenuArea_Top, Horizontal_Divider_1+2
-.equ MenuArea_Height, Horizontal_Divider_2-Horizontal_Divider_1-3
-.equ Stave_Top, VU_Bars_Y_Pos - VU_Bars_Gap
-
 .equ Glitch_Time, 12
 
 .equ Mouse_Enable, 1
@@ -84,16 +69,11 @@
 .org 0x8000
 
 Start:
-    adrl sp, stack_base
+    ldr sp, stack_p
 	B main
 
-; ============================================================================
-; Stack
-; ============================================================================
-
-; TODO: Move stack to BSS.
-.skip 1024
-stack_base:
+stack_p:
+	.long stack_base
 
 ; ============================================================================
 ; Main
@@ -925,18 +905,4 @@ music_11_mod:
 ; BSS Segment
 ; ============================================================================
 
-; TODO: Figure out how to actually specify BSS!!
-
-.p2align 2
-vidc_table_1:
-	.skip 256*4*4
-
-; TODO: Can we get rid of these?
-vidc_table_2:
-	.skip 256*4*4
-
-vidc_table_3:
-	.skip 256*8*4
-
-memc_table:
-	.skip 256*2*4
+.include "src/bss.asm"

@@ -2,6 +2,8 @@
 ; Scroller
 ; ============================================================================
 
+.equ Scroller_Y_Pos, 237
+
 .equ Scroller_Glyph_Width, 16
 .equ Scroller_Glyph_Height, 16
 

@@ -6,7 +6,7 @@ TODO
 ~~~
 - Make new repo. - DONE
 - Strip out code & assets that are not required. - STARTED
-- Sort out BSS segment.
+- Sort out BSS segment. - DONE
 - Optimise menu plotting and font plotting code.
   - Convert smallfont to MODE 9 at runtime?
   - Also store in ASCII order for simplicity?
