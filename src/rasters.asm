@@ -5,8 +5,6 @@
 .equ VU_Bars_Y_Pos, 216
 .equ VU_Bars_Height, 3
 .equ VU_Bars_Gap, 4
-.equ VU_Bars_Effect, 2	; 'effect'
-.equ VU_Bars_Gravity, 2	; lines per vsync
 
 .equ Horizontal_Divider_1, 100
 .equ Horizontal_Divider_2, 202

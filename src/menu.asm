@@ -2,9 +2,9 @@
 ; Menu stuff.
 ; ============================================================================
 
-.equ MENU_SONG_XPOS, 3
-.equ MENU_ARTIST_XPOS, 23
-.equ MENU_TOP_YPOS, 114
+.equ MENU_SONG_XPOS, 0
+.equ MENU_ARTIST_XPOS, 22
+.equ MENU_TOP_YPOS, 12
 .equ MENU_ROW_HEIGHT, 7
 .equ MENU_COLOUR, 15
 
@@ -318,6 +318,6 @@ menu_11_string:
 
 .p2align 2
 menu_12_string:
-	.byte 31, 32, MENU_TOP_YPOS+11*MENU_ROW_HEIGHT, "AUTOPLAY", 0
+	.byte 31, 1, MENU_TOP_YPOS+11*MENU_ROW_HEIGHT, "AUTOPLAY", 0
 
 .p2align 2

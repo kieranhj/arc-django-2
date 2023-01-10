@@ -6,7 +6,7 @@
 .equ _DEBUG_RASTERS, (_DEBUG && _RASTERMAN==0 && 1)
 
 .equ _DJANGO, 2
-.equ _RASTERMAN, 1
+.equ _RASTERMAN, 0
 
 .equ Screen_Banks, _DJANGO
 .equ Screen_Mode, 9
@@ -55,6 +55,9 @@
 .equ Menu_Beat_Frames, 25				; 0.5 seconds.
 
 .equ Glitch_Time, 12
+
+.equ VU_Bars_Effect, 2	; 'effect'
+.equ VU_Bars_Gravity, 2	; lines per vsync
 
 .equ Mouse_Enable, 1
 .equ Mouse_Sensitivity, 10
@@ -217,6 +220,21 @@ main:
 
 main_loop:
 
+	; ========================================================================
+	; TICK
+	; ========================================================================
+
+	; do menu.
+	bl keyboard_scan_debounced
+	bl update_menu
+
+	; autoplay!
+	bl check_autoplay
+
+	; ========================================================================
+	; VSYNC
+	; ========================================================================
+
 	; Block if we've not even had a vsync since last time - we're >50Hz!
 	.if _RASTERMAN
 	swi RasterMan_Wait
@@ -231,13 +249,26 @@ main_loop:
 	str r2, vsync_count
 	; R0 = vsync delta since last frame.
 
-	; show debug
-	.if _DEBUG
-	bl debug_write_vsync_count
-	.endif
+	; ========================================================================
+	; DRAW
+	; ========================================================================
 
-	; DO STUFF HERE!
 	bl get_next_screen_for_writing
+
+	SET_BORDER 0x00ff00
+	ldr r12, screen_addr
+    bl clear_left_screen
+
+	ldr r12, screen_addr
+	bl plot_columns
+	
+	bl update_columns
+	SET_BORDER 0x000000
+
+	SET_BORDER 0xff0000
+	bl plot_menu
+	bl plot_menu_selection
+	SET_BORDER 0x000000
 
 	.if _DJANGO==1
 	; scroll the bottom.
@@ -265,6 +296,14 @@ main_loop:
 	SET_BORDER 0x000000
 	.endif
 
+	; show debug
+	.if _DEBUG
+	bl debug_write_vsync_count
+	.endif
+
+	; Swap screens!
+	bl show_screen_at_vsync
+
 	; exit if Escape is pressed
 	.if _RASTERMAN
 	swi RasterMan_ScanKeyboard
@@ -275,21 +314,6 @@ main_loop:
 	swi OS_ReadEscapeState
 	bcs exit
 	.endif
-
-	; do menu.
-	bl keyboard_scan_debounced
-	bl update_menu
-
-	SET_BORDER 0xff0000
-	bl plot_menu
-	bl plot_menu_selection
-	SET_BORDER 0x000000
-
-	; autoplay!
-	bl check_autoplay
-
-	; Swap screens!
-	bl show_screen_at_vsync
 
 	; repeat!
 	b main_loop
@@ -782,6 +806,7 @@ screen_addr:
 .include "lib/mode9-palette.asm"
 .include "src/menu.asm"
 .include "src/small-font.asm"
+.include "src/columns.asm"
 .if _DJANGO==1
 .include "src/logo.asm"
 .include "src/vubars.asm"
