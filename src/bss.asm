@@ -14,22 +14,26 @@ stack_base:
 
 ; ============================================================================
 
-vidc_table_1:
+vidc_table_1_no_adr:
 	.skip 256*4*4
 
 ; TODO: Can we get rid of these?
-vidc_table_2:
+vidc_table_2_no_adr:
 	.skip 256*4*4
 
-vidc_table_3:
+vidc_table_3_no_adr:
 	.skip 256*8*4
 
-memc_table:
+memc_table_no_adr:
 	.skip 256*2*4
 
 ; ============================================================================
 
-mode9_font_data:
+mode9_font_data_no_adr:
 	.skip Mode9Font_MaxGlyphs * Mode9Font_Height * 4
+
+; ============================================================================
+
+.include "lib/lib_bss.asm"
 
 ; ============================================================================

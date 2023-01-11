@@ -20,6 +20,7 @@
 .equ Mode_Bytes, Screen_Stride*Mode_Height
 
 .include "lib/swis.h.asm"
+.include "lib/config.h.asm"
 
 ; ============================================================================
 ; Macros.
@@ -116,6 +117,8 @@ main:
 	.if _USE_MODE9_FONT
 	bl mode9_font_init
 	.endif
+
+	bl maths_init
 
 	; RasterMan Init.
 	.if _RASTERMAN
@@ -712,7 +715,6 @@ play_song:
 	str r0, song_number
 	adr r2, music_table
 	ldr r1, [r2, r0, lsl #2]	; r0 * 4
-	add r1, r1, r2				; MOD data address
 	mov r0, #0					; load from address
 	swi QTM_Load
 
@@ -821,6 +823,8 @@ screen_addr:
 .include "src/rasters.asm"
 .endif
 .include "lib/lz4-decode.asm"
+.include "lib/maths.asm"
+.include "src/3d-scene.asm"
 
 ; ============================================================================
 ; Data Segment
@@ -831,104 +835,27 @@ vdu_screen_disable_cursor:
 .p2align 2
 
 music_table:
-	.long music_01_mod - music_table
-	.long music_02_mod - music_table
-	.long music_03_mod - music_table
-	.long music_04_mod - music_table
-	.long music_05_mod - music_table
-	.long music_06_mod - music_table
-	.long music_07_mod - music_table
-	.long music_08_mod - music_table
-	.long music_09_mod - music_table
-	.long music_10_mod - music_table
-	.long music_11_mod - music_table
+	.long music_01_mod_no_adr
+	.long music_02_mod_no_adr
+	.long music_03_mod_no_adr
+	.long music_04_mod_no_adr
+	.long music_05_mod_no_adr
+	.long music_06_mod_no_adr
+	.long music_07_mod_no_adr
+	.long music_08_mod_no_adr
+	.long music_09_mod_no_adr
+	.long music_10_mod_no_adr
+	.long music_11_mod_no_adr
 
 .p2align 2
 logo_pal_block:
 .incbin "build/logo.bin.pal"
 
-.if _DJANGO==1
-.p2align 2
-logo_data:
-.incbin "build/logo.bin"
+; ============================================================================
+; DATA Segment
+; ============================================================================
 
-.p2align 2
-rabenauge_pal_block:
-.incbin "build/rabenauge.bin.pal"
-
-.p2align 2
-rabenauge_splash:
-.incbin "build/rabenauge.lz4"
-
-.p2align 2
-bitshifters_pal_block:
-.incbin "build/bitshifters.bin.pal"
-
-.p2align 2
-bitshifters_splash:
-.incbin "build/bitshifters.lz4"
-
-.p2align 2
-note_sprite_data:
-.incbin "build/note1.bin"
-.incbin "build/note2.bin"
-.incbin "build/note3.bin"
-.incbin "build/note4.bin"
-.incbin "build/note5.bin"
-.endif
-
-.p2align 2
-scroller_text_string:
-.include "src/scrolltxt-final.asm"
-scroller_text_string_end:
-
-.p2align 2
-scroller_font_data:
-.incbin "build/scroller_font.bin"
-
-.p2align 2
-music_01_mod:
-.incbin "build/music_01.bin"
-
-.p2align 2
-music_02_mod:
-.incbin "build/music_02.bin"
-
-.p2align 2
-music_03_mod:
-.incbin "build/music_03.bin"
-
-.p2align 2
-music_04_mod:
-.incbin "build/music_04.bin"
-
-.p2align 2
-music_05_mod:
-.incbin "build/music_05.bin"
-
-.p2align 2
-music_06_mod:
-.incbin "build/music_06.bin"
-
-.p2align 2
-music_07_mod:
-.incbin "build/music_07.bin"
-
-.p2align 2
-music_08_mod:
-.incbin "build/music_08.bin"
-
-.p2align 2
-music_09_mod:
-.incbin "build/music_09.bin"
-
-.p2align 2
-music_10_mod:
-.incbin "build/music_10.bin"
-
-.p2align 2
-music_11_mod:
-.incbin "build/music_11.bin"
+.include "src/data.asm"
 
 ; ============================================================================
 ; BSS Segment

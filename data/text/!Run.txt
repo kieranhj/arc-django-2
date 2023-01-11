@@ -19,7 +19,7 @@ RMKILL MemAlloc
 RMLOAD <Demo$Dir>.QTM146c_24 { > null: }
 RMLOAD <Demo$Dir>.RasterM29 { > null: }
 |
-wimpslot -min 586K
+wimpslot -min 900K
 <Demo$Dir>.!RunImage
 |
 RMKILL RasterMan

@@ -106,7 +106,7 @@ raster_list:
     .long 0xffffffff
 
 raster_tables:
-	.long vidc_table_1
-	.long vidc_table_2
-	.long vidc_table_3
-	.long memc_table
+	.long vidc_table_1_no_adr
+	.long vidc_table_2_no_adr
+	.long vidc_table_3_no_adr
+	.long memc_table_no_adr

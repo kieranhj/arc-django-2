@@ -374,7 +374,7 @@ small_font_map:
 .p2align 2
 
 mode9_font_data_p:
-    .long mode9_font_data
+    .long mode9_font_data_no_adr
 .endif
 
 small_font_data:
