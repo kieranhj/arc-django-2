@@ -119,6 +119,7 @@ main:
 	.endif
 
 	bl maths_init
+	bl init_3d_scene
 
 	; RasterMan Init.
 	.if _RASTERMAN
@@ -238,6 +239,10 @@ main_loop:
 	; autoplay!
 	bl check_autoplay
 
+	; tick modules
+	bl update_columns
+	bl update_3d_scene
+
 	; ========================================================================
 	; VSYNC
 	; ========================================================================
@@ -268,13 +273,15 @@ main_loop:
 
 	ldr r12, screen_addr
 	bl plot_columns
-	
-	bl update_columns
 	SET_BORDER 0x000000
 
 	SET_BORDER 0xff0000
 	bl plot_menu
 	bl plot_menu_selection
+	SET_BORDER 0x000000
+
+	SET_BORDER 0x0000ff
+	bl draw_3d_scene
 	SET_BORDER 0x000000
 
 	.if _DJANGO==1
@@ -673,7 +680,9 @@ error_handler:
 
 	; Do these help?
 	swi QTM_Stop
+	.if _RASTERMAN
 	swi RasterMan_Release
+	.endif
 
 	LDMIA sp!, {r0-r2, lr}
 	MOVS pc, lr

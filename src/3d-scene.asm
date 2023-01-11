@@ -15,7 +15,7 @@
 ; in order to map the viewport onto the entire screen.
 
 .equ VIEWPORT_SCALE,    (Screen_Width /2) * PRECISION_MULTIPLIER
-.equ VIEWPORT_CENTRE_X, (Screen_Width /2) * PRECISION_MULTIPLIER
+.equ VIEWPORT_CENTRE_X, (100) * PRECISION_MULTIPLIER
 .equ VIEWPORT_CENTRE_Y, (Screen_Height/2) * PRECISION_MULTIPLIER
 
 ; ============================================================================
@@ -174,19 +174,19 @@ update_3d_scene:
     bne .2
 
     ; Update any scene vars, camera, object position etc. (Rocket?)
-    mov r1, #0                      ; ROTATION_X
+    mov r1, #MATHS_CONST_HALF    ; ROTATION_X
     ldr r0, object_rot+0
     add r0, r0, r1
     bic r0, r0, #0xff000000         ; brads
     str r0, object_rot+0
 
-    mov r1, #MATHS_CONST_QUARTER    ; ROTATION_Y
+    mov r1, #MATHS_CONST_HALF    ; ROTATION_Y
     ldr r0, object_rot+4
     add r0, r0, r1
     bic r0, r0, #0xff000000         ; brads
     str r0, object_rot+4
 
-    mov r1, #MATHS_CONST_QUARTER    ; ROTATION_Z
+    mov r1, #MATHS_CONST_HALF    ; ROTATION_Z
     ldr r0, object_rot+8
     add r0, r0, r1
     bic r0, r0, #0xff000000         ; brads
@@ -462,14 +462,14 @@ object_num_verts:
     .long 8
 
 object_verts:
-    VECTOR3 -32.0,  32.0, -32.0
-    VECTOR3  32.0,  32.0, -32.0
-    VECTOR3  32.0, -32.0, -32.0
-    VECTOR3 -32.0, -32.0, -32.0
-    VECTOR3 -32.0,  32.0,  32.0
-    VECTOR3  32.0,  32.0,  32.0
-    VECTOR3  32.0, -32.0,  32.0
-    VECTOR3 -32.0, -32.0,  32.0
+    VECTOR3 -16.0,  16.0, -16.0
+    VECTOR3  16.0,  16.0, -16.0
+    VECTOR3  16.0, -16.0, -16.0
+    VECTOR3 -16.0, -16.0, -16.0
+    VECTOR3 -16.0,  16.0,  16.0
+    VECTOR3  16.0,  16.0,  16.0
+    VECTOR3  16.0, -16.0,  16.0
+    VECTOR3 -16.0, -16.0,  16.0
 
 .if LERP_3D_SCENE
 cube_verts:     ; CUBE

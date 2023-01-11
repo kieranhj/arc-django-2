@@ -287,8 +287,7 @@ polygon_clip_right_side:
 polygon_plot_quad:
     str lr, [sp, #-4]!
     str r4, polygon_colour
-
-    str r12, [sp], #4   ; stash screen addr for now.
+    str r12, polygon_screen_addr    ; stash screen addr for now.
 
     ; Convert polygon indices to an edge list.
     adr r12, polygon_edge_list      ; ptr to edge_list [xs, m, ys, ye]
@@ -315,7 +314,7 @@ polygon_plot_quad:
     orr r9, r9, r9, lsl #16
 
     ; Plot the span buffer to the screen.
-    ldr r11, [sp], #4       ; pop screen addr
+    ldr r11, polygon_screen_addr    ; pop screen addr
     bl polygon_plot_spans
 
     ldr pc, [sp], #4
@@ -328,6 +327,8 @@ polyerror: ;The error block
 .long 0
 .endif
 
+polygon_screen_addr:
+    .long 0
 
 ; Blat the spans from the table to the screen.
 ; Params:
