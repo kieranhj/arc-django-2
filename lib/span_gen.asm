@@ -4,7 +4,7 @@
 ; Kindly provided by Progen (Sarah Walker).
 ; ============================================================================
 
-.equ MAXSPAN, Screen_Width
+.equ MAXSPAN, Screen_Width		; TODO: Can probably reduce this for this demo.
 .equ _SPAN_GEN_MULTI_WORD, 0	; TODO: multiword plotting for regular polys.
 
 gen_code_pointers_p:
@@ -283,15 +283,13 @@ gen_end_code_end:
 ;	B return_from_span_plot
 ;	.long return_from_span_plot
 
-gen_code_pointers_p2:
-	.long gen_code_pointers_p
 gen_code_start_p:
-	.long gen_code_start_p
+	.long gen_code_start_no_adr
 
 gen_code:
 	STR lr, [sp, #-4]!
 
-	LDR r11, gen_code_pointers_p2
+	LDR r11, gen_code_pointers_p
 	LDR r12, gen_code_start_p
         MOV r0, #0 ;first pixel offset - 0-7
 	MOV r1, #1 ;length - 1-320

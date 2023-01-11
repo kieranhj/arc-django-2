@@ -7,13 +7,16 @@ TODO
 - Make new repo. - DONE
 - Strip out code & assets that are not required. - STARTED
 - Sort out BSS segment. - DONE
+  - And DATA segment. - DONE
+  - Need an RODATA segment?
 - Add 'toothed' columns. - DONE
 - Optimise menu plotting and font plotting code. - DONE
   - Convert smallfont to MODE 9 at runtime? - DONE
   - Also store in ASCII order for simplicity? - DONE
   => TODO: Bold is a bit bodged, ripple hack/effect missing.
 - Add scrolltext.
-- Add 3D rendering code for cube.
+- Add 3D rendering code for cube. - DONE
+- Add 3D cube!
 - Move screen layout to be roughly that of Bodo's WIP.
 
 
