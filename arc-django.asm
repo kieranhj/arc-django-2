@@ -7,6 +7,7 @@
 
 .equ _DJANGO, 2
 .equ _RASTERMAN, 0
+.equ _USE_MODE9_FONT, 1	; convert font to MODE 9 at runtime.
 
 .equ Screen_Banks, _DJANGO
 .equ Screen_Mode, 9
@@ -112,6 +113,9 @@ main:
 	str r0, rnd_seed
 
 	; EARLY INIT / LOAD STUFF HERE!
+	.if _USE_MODE9_FONT
+	bl mode9_font_init
+	.endif
 
 	; RasterMan Init.
 	.if _RASTERMAN

@@ -8,9 +8,11 @@ TODO
 - Strip out code & assets that are not required. - STARTED
 - Sort out BSS segment. - DONE
 - Add 'toothed' columns. - DONE
-- Optimise menu plotting and font plotting code.
-  - Convert smallfont to MODE 9 at runtime?
-  - Also store in ASCII order for simplicity?
+- Optimise menu plotting and font plotting code. - DONE
+  - Convert smallfont to MODE 9 at runtime? - DONE
+  - Also store in ASCII order for simplicity? - DONE
+  => TODO: Bold is a bit bodged, ripple hack/effect missing.
+- Add scrolltext.
 - Add 3D rendering code for cube.
 - Move screen layout to be roughly that of Bodo's WIP.
 

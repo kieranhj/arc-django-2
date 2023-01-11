@@ -1,5 +1,7 @@
+; ============================================================================
 ; Plot small font in MODE 9.
 ; Small font 8x5 pixels 1bpp.
+; ============================================================================
 
 .equ SmallFont_Height, 5
 .equ ASCII_a, 97
@@ -29,6 +31,9 @@
 .equ SmallFont_LessThan, 40
 .equ SmallFont_MoreThan, 41
 .equ SmallFont_BoldBase, 42 ; add this to make glyphs bold.
+
+.equ Mode9Font_Height, SmallFont_Height
+.equ Mode9Font_MaxGlyphs, ASCII_z-ASCII_Space
 
 small_font_bold_flag:
     .long 0
@@ -93,9 +98,14 @@ small_font_plot_string:
     b .1
 
     .3:
+    .if _USE_MODE9_FONT
+    bl mode9_font_plot_glyph
+    .else
     bl small_font_plot_glyph
+    .endif
     b .1
 
+.if _USE_MODE9_FONT==0
 ; R11=screen addr to plot at (updated).
 ; R10=colour data.
 ; R0=ASCII.
@@ -223,7 +233,149 @@ small_font_map_ascii_to_glyph:
     cmp r0, #ASCII_z
     suble r1, r0, #ASCII_a - SmallFont_a
     mov pc, lr
+.else
 
+; R11=screen addr to plot at (updated).
+; R10=colour data.
+; R0=ASCII.
+; Need to preserve R6.
+mode9_font_plot_glyph:
+    ldr r1, small_font_bold_flag
+    cmp r1, #0
+    bne .2
+
+    ; TODO: Remove bold hack etc.
+    cmp r0, #ASCII_A
+    blt .2
+    cmp r0, #ASCII_Z
+    bgt .2
+
+    ; We know this is an uppercase letter but not bold.
+    orr r0, r0, #32             ; force lower case.
+
+.2:
+    sub r0, r0, #ASCII_Space
+    ldr r9, mode9_font_data_p
+    add r9, r9, r0, lsl #4      ; + ascii * 16
+    add r9, r9, r0, lsl #2      ; + ascii * 4 = ascii * 20
+
+    mov r8, r11
+    mov r7, #SmallFont_Height
+.1:
+    ldr r3, [r9], #4                ; glyph word
+    ldr r4, [r8]                    ; screen word
+
+    bic r4, r4, r3                  ; clear glyph bits from bg word.
+    and r3, r3, r10                 ; mask in colour / data
+    orr r4, r3, r4
+    str r4, [r8], #Screen_Stride    ; next line.
+
+    ; TODO: Any ripple hack/effect depending on design.
+
+    subs r7, r7, #1
+    bne .1
+
+    add r11, r11, #4                ; next glyph pos.
+    mov pc, lr
+
+; R0=ASCII
+; R1=small font glyph #
+mode9_font_make_glyph:
+    .if SmallFont_Height==5
+    adr r9, small_font_data
+    add r9, r9, r1, lsl #2      ; + glyph * 4
+    add r9, r9, r1              ; + glyph = glyph * 5
+
+    sub r0, r0, #ASCII_Space    ; ' '
+
+    ldr r8, mode9_font_data_p
+    add r8, r8, r0, lsl #4      ; + ascii * 16
+    add r8, r8, r0, lsl #2      ; + ascii * 4 = ascii * 20
+
+    add r0, r0, #ASCII_Space    ; ' '
+    .else
+    .error Code assumes SmallFont_Height == 5!
+    .endif
+
+; FALL THROUGH!
+
+; R9=ptr to glyph data.
+; R8=ptr to mode 9 data.
+; Trashes r7, r2, r3
+small_font_glyph_to_mode9:
+    mov r7, #SmallFont_Height
+.1:
+    ldrb r2, [r9], #1           ; r2 = glyph byte
+    mov r3, #0
+
+    ; convert glyph byte to 4bpp
+    ; %abcdefgh
+    tst r2, #0b00000001
+    orrne r3, r3, #0xf0000000
+    tst r2, #0b00000010
+    orrne r3, r3, #0x0f000000
+    tst r2, #0b00000100
+    orrne r3, r3, #0x00f00000
+    tst r2, #0b00001000
+    orrne r3, r3, #0x000f0000
+    tst r2, #0b00010000
+    orrne r3, r3, #0x0000f000
+    tst r2, #0b00100000
+    orrne r3, r3, #0x00000f00
+    tst r2, #0b01000000
+    orrne r3, r3, #0x000000f0
+    tst r2, #0b10000000
+    orrne r3, r3, #0x0000000f
+
+    str r3, [r8], #4
+    subs r7, r7, #1
+    bne .1
+    mov pc, lr
+
+; Convert small font data to MODE 9.
+mode9_font_init:
+    str lr, [sp, #-4]!
+
+    adr r4, small_font_map
+.1:
+    ldrb r0, [r4], #1
+    ldrb r1, [r4], #1
+    ldrb r5, [r4], #1
+    
+    cmp r5, #0xff
+    beq .3
+
+.2:
+    ; R0=ascii
+    ; R1=small font glyph #
+    bl mode9_font_make_glyph
+    subs r5, r5, #1
+    beq .1
+
+    add r0, r0, #1
+    add r1, r1, #1
+    b .2
+
+.3:
+    ldr pc, [sp], #4
+
+small_font_map:
+    .byte ASCII_Space, SmallFont_Space, 1
+    .byte ASCII_ExclamationMark, SmallFont_ExclamationMark, 1
+    .byte ASCII_Minus, SmallFont_Minus, 1
+    .byte ASCII_Colon, SmallFont_Colon, 1
+    .byte ASCII_LessThan, SmallFont_LessThan, 1
+    .byte ASCII_MoreThan, SmallFont_MoreThan, 1
+
+    .byte ASCII_0, SmallFont_0, 10
+    .byte ASCII_A, SmallFont_BoldBase + SmallFont_a, 26
+    .byte ASCII_a, SmallFont_a, 26
+    .byte -1, -1, -1
 .p2align 2
+
+mode9_font_data_p:
+    .long mode9_font_data
+.endif
+
 small_font_data:
 .include "src/smallchars.asm"
