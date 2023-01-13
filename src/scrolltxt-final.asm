@@ -3,8 +3,8 @@
                 ;    12345678901234567890!2345678901234567890
 ; scrolltxt
 
-	.byte	2,4,"                            CHIP O       ",1,8
-	.byte   2,8,"                       DJANGO ONE     ",1,8	
+	.byte	2,4,"                     ",1,8,"       CHIP O       "
+	.byte   2,8,"                  ",1,8,"     DJANGO ONE     "
 
 	.byte	2,4,"                ",2,2,"  FINAL VERSION FROM RABENAUGE"
 	.byte    " AND THE GREAT COMPOSERS OF THE AMIGA SCENE.       DONE FOR THE DEADLINE PARTY 2021.         "
@@ -16,7 +16,7 @@
 	.byte    "HEAVY TECHNICAL SUPPORT: BIFAT & OKEANOS      GFX: TITUS & BODO     "
 	.byte    "MUSIC ORGANIZER: VIRGILL                        AND THE MUSIC FROM THE COMPOSERS: CURT COOL,DALEZY,JUICE,MA2E,OKEANOS,SLASH,TRIACE,VIRGILL     "
 	.byte    "                WE HOPE YOU LIKE THIS PACK!     COLLECT THEM ALL!! :)               "
-	.byte	" GREETINGS:     ",1,8,2,8
+	.byte	1,8,2,8,"     GREETINGS:     "
         .byte	"ABYSS    "
         .byte	"ABYSS CONNECTION    "
         .byte	"ALTAIR    "

@@ -203,10 +203,6 @@ main:
 	ldr r12, screen_addr
 	bl plot_menu
 
-	.if _DJANGO==1
-	bl scroller_init
-	.endif
-
 	; Set palette (shows screen).
 	adrl r2, logo_pal_block
 	bl palette_set_block
@@ -241,6 +237,7 @@ main_loop:
 
 	; tick modules
 	bl update_columns
+	bl scroller_update
 	bl update_3d_scene
 
 	; ========================================================================
@@ -275,19 +272,22 @@ main_loop:
 	bl plot_columns
 	SET_BORDER 0x000000
 
+	SET_BORDER 0xffff00
+	ldr r12, screen_addr
+	bl scroller_draw
+	SET_BORDER 0x000000
+
 	SET_BORDER 0xff0000
 	bl plot_menu
 	bl plot_menu_selection
 	SET_BORDER 0x000000
 
 	SET_BORDER 0x0000ff
+	ldr r12, screen_addr
 	bl draw_3d_scene
 	SET_BORDER 0x000000
 
 	.if _DJANGO==1
-	; scroll the bottom.
-	bl scroller_update
-
 	; do VU bars.
 	bl update_vu_bars
 
@@ -822,10 +822,10 @@ screen_addr:
 .include "src/menu.asm"
 .include "src/small-font.asm"
 .include "src/columns.asm"
+.include "src/scroller.asm"
 .if _DJANGO==1
 .include "src/logo.asm"
 .include "src/vubars.asm"
-.include "src/scroller.asm"
 .include "src/sprites.asm"
 .endif
 .if _RASTERMAN

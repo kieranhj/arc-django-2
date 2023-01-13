@@ -14,10 +14,12 @@ TODO
   - Convert smallfont to MODE 9 at runtime? - DONE
   - Also store in ASCII order for simplicity? - DONE
   => TODO: Bold is a bit bodged, ripple hack/effect missing.
-- Add scrolltext.
+- Add scrolltext. - DONE
+  => Control codes are triggered on LHS now not RHS.
 - Add 3D rendering code for cube. - DONE
-- Add 3D cube!
+- Add 3D cube! - DONE
 - Move screen layout to be roughly that of Bodo's WIP.
+- Optimise for 8MHz machines.
 
 
 WIP Features

@@ -43,11 +43,6 @@ note_sprite_data_no_adr:
 .endif
 
 .p2align 2
-scroller_text_string_no_adr:
-.include "src/scrolltxt-final.asm"
-scroller_text_string_end_no_adr:
-
-.p2align 2
 scroller_font_data_no_adr:
 .incbin "build/scroller_font.bin"
 
@@ -94,5 +89,12 @@ music_10_mod_no_adr:
 .p2align 2
 music_11_mod_no_adr:
 .incbin "build/music_11.bin"
+
+; ============================================================================
+
+.p2align 2
+scroller_text_string_no_adr:
+.include "src/scrolltxt-final.asm"
+scroller_text_string_end_no_adr:
 
 ; ============================================================================

@@ -18,40 +18,44 @@ scroller_delay:
     .long 0
 
 scroller_text_ptr:
-	.long 0
+	.long scroller_text_string_end_no_adr - 2
 
-scroller_cur_column:
-	.long 15
+scroller_text_start_p:
+	.long scroller_text_string_no_adr
+
+scroller_column:
+	.long Scroller_Glyph_Width
 
 scroller_glyph_data_ptr:
 	.long 0
 
-scroller_init:
-	adr r0, scroller_text_string_end
-	sub r0, r0, #1
-	str r0, scroller_text_ptr
-	mov pc, lr
+scroller_font_data_p:
+	.long scroller_font_data_no_adr
 
 scroller_update:
+	str lr, [sp, #-4]!
+
     ldr r0, scroller_delay
     cmp r0, #0
     beq .1
     subs r0, r0, #1
     str r0, scroller_delay
-    mov pc, lr
-
+	ldrne pc, [sp], #4
+	; jump to next char.
+	mov r0, #Scroller_Glyph_Width
+	str r0, scroller_column
     .1:
-	str lr, [sp, #-4]!
 
 	; next column index
-	ldr r0, scroller_cur_column
+	ldr r0, scroller_column
     ldr r1, scroller_speed
 	add r0, r0, r1
 	cmp r0, #Scroller_Glyph_Width
 	; next string char?
 	blge get_next_char
-	str r0, scroller_cur_column
+	str r0, scroller_column
 
+	.if _DJANGO==1
 	; hit a delay so no scroll.
 	ldr r2, scroller_delay
 	cmp r2, #0
@@ -65,21 +69,23 @@ scroller_update:
 
 	; scroll the row
 	bl scroller_scroll_row
+	.endif
+
 	ldr pc, [sp], #4
 
 get_next_char:
 	ldr r10, scroller_text_ptr
     
     .1:
-	ldrb r0, [r10], #1
+	ldrb r0, [r10, #1]!
     cmp r0, #Scroller_Code_Wait
     bne .2
 
     ; Next byte is time.
-	ldrb r0, [r10], #1
+	ldrb r0, [r10, #1]!
     mov r0, r0, lsl #3      ; wait value * 8 frames.
     str r0, scroller_delay
-	mov r0, #Scroller_Glyph_Width		; scroller_cur_column
+	mov r0, #0				; scroller_column
     b .5
 
     .2:
@@ -87,7 +93,7 @@ get_next_char:
     bne .3
 
     ; Next byte is speed.
-    ldrb r0, [r10], #1
+	ldrb r0, [r10, #1]!
     str r0, scroller_speed
     b .1
 
@@ -96,21 +102,26 @@ get_next_char:
 	bne .4
 
     ; Loop text.
-	adr r10, scroller_text_string
+	ldr r10, scroller_text_start_p
+	sub r10, r10, #1
     b .1
 
     .4:
+	.if _DJANGO==1
 	adr r9, scroller_font_data
 	sub r0, r0, #ASCII_Space	; start at ' '
 	; TODO: Multiply by constant macros.
 	add r9, r9, r0, lsl #7		; *128 bytes per glyph.
 	str r9, scroller_glyph_data_ptr
+	.endif
+	
 	mov r0, #0	; cur_column
 
 	.5:
 	str r10, scroller_text_ptr
 	mov pc, lr
 
+.if _DJANGO==1
 ; r0=column
 get_next_glyph_word:
 	ldr r9, scroller_glyph_data_ptr
@@ -208,3 +219,102 @@ scroller_scroll_line:
 
 scroller_glyph_column_buffer:
 	.skip Scroller_Glyph_Height * 4
+.else
+
+; Returns R9 = glyph ptr.
+scroller_get_next_glyph:
+    ldrb r0, [r12], #1
+
+	; Loop end of text.
+    cmp r0, #0
+    ldreq r12, scroller_text_start_p
+    beq scroller_get_next_glyph
+
+	; Skip control codes.
+	cmp r0, #ASCII_Space
+	blt scroller_get_next_glyph
+
+	sub r0, r0, #ASCII_Space
+	ldr r9, scroller_font_data_p
+	add r9, r9, r0, lsl #7		; *128 bytes per glyph.
+	mov pc, lr
+
+; Draw entire scroller.
+; R12=screen addr
+scroller_draw:
+    str lr, [sp, #-4]!
+
+    mov r0, #Scroller_Y_Pos
+    add r11, r12, r0, lsl #7
+    add r11, r11, r0, lsl #5        ; assume stride is 160.
+
+    ldr r12, scroller_text_ptr
+	bl scroller_get_next_glyph		; r9=ptr to glyph data
+
+    ldr r8, scroller_column
+
+	; TODO: Deal with shifting 16 columns!
+	; Current approach not going to work!!!
+
+	movs r5, r8, lsr #3				; word parity
+	addne r9, r9, #4				; skip a glyph word
+
+	and r8, r8, #7					; shift within word
+    mov r8, r8, lsl #2              ; shift for second word.
+    rsb r7, r8, #32                 ; shift for first word.
+    mov r10, #0                     ; screen word.
+
+    ; Word loop.
+    .1:
+
+    ; Row loop.
+    mov r6, #Scroller_Glyph_Height
+
+    .2:
+    ldr r0, [r9], #8				; get glyph word, move to next row.
+
+    mov r1, r0, lsr r8              ; second glyph word shifted.
+    mov r0, r0, lsl r7              ; first glyph word shifted.
+
+    cmp r0, #0                      ; if first glyph is empty?
+    beq .3                          ; skip.
+
+    ; display first glyph word in prev screen word.
+    cmp r10, #0
+    beq .3                          ; skip if left hand edge of screen.
+
+    ldr r2, [r11, #-4]              ; load prev screen word.
+    bic r2, r2, r0
+    orr r2, r2, r0                  ; mask in first glyph word.
+    str r2, [r11, #-4]              ; store prev screen word.
+
+    ; display second glyph word in current screen word.
+    .3:
+    cmp r10, #40
+    bge .4                          ; skip if right hand edge of screen.
+
+    ldr r2, [r11]                   ; load current screen word.
+    bic r2, r2, r1
+    orr r2, r2, r1                  ; mask in second glyph word.
+    str r2, [r11]                   ; store prev screen word.
+
+	.4:	
+    add r11, r11, #Screen_Stride
+    subs r6, r6, #1
+    bne .2                          ; next row.
+
+	; Next glyph word.
+	eors r5, r5, #1
+	subne r9, r9, #Scroller_Glyph_Height*8 - 4	; next glyph word on row 0.
+	bleq scroller_get_next_glyph
+
+	; Next screen word.
+    sub r11, r11, #Scroller_Glyph_Height*Screen_Stride - 4
+
+    add r10, r10, #1                ; next screen word.
+    cmp r10, #41                    ; one extra word for scroll!
+    bne .1
+
+    ldr pc, [sp], #4
+
+.endif
