@@ -39,6 +39,7 @@
 .equ IKey_Space, 0x9d
 .equ IKey_Return, 0xB6
 .equ IKey_Escape, 0x8f
+.equ IKey_A, 0xbe
 .equ IKey_S, 0xae
 .equ IKey_D, 0xcd
 .equ IKey_R, 0xcc

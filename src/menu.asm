@@ -29,7 +29,11 @@ update_menu:
 	str lr, [sp, #-4]!
 
 	; check up
+	.if _RASTERMAN
 	mov r1, #RMKey_ArrowUp
+	.else
+	mov r1, #IKey_ArrowUp
+	.endif
 	bl check_key_debounced
 	bne .2
 
@@ -44,7 +48,11 @@ update_menu:
 	
 .2:
 	; check down
+	.if _RASTERMAN
 	mov r1, #RMKey_ArrowDown
+	.else
+	mov r1, #IKey_ArrowDown
+	.endif
 	bl check_key_debounced
 	bne .3
 
@@ -64,22 +72,38 @@ update_menu:
 	bne .5
 
 	; check A for toggle autoplay
+	.if _RASTERMAN
 	mov r1, #RMKey_A
+	.else
+	mov r1, #IKey_A
+	.endif
 	bl check_key_debounced
 	beq .10
 
 	; check return
+	.if _RASTERMAN
 	mov r1, #RMKey_Return
+	.else
+	mov r1, #IKey_Return
+	.endif
 	bl check_key_debounced
 	beq .4
 
     ; and space
-    mov r1, #RMKey_Space
+	.if _RASTERMAN
+	mov r1, #RMKey_Space
+	.else
+    mov r1, #IKey_Space
+	.endif
     bl check_key_debounced
 	beq .4
 
     .if Mouse_Enable
+	.if _RASTERMAN
 	mov r1, #RMKey_LeftClick
+	.else
+	mov r1, #IKey_LeftClick
+	.endif
 	bl check_key_debounced
     .endif
 	bne .5
@@ -186,10 +210,10 @@ plot_menu_selection:
 	ldr pc, [sp], #4
 
 keyboard_scan_debounced:
+	; TODO: Argh! Rationalise all of the keyboard handling.
+
+	.if _RASTERMAN
     swi RasterMan_ScanKeyboard
-;	mov r0, #OSByte_KeyboardScan
-;	mov r1, #1
-;	swi OS_Byte
 
     mov r1, #0xff
     cmp r0, #0 
@@ -208,6 +232,11 @@ keyboard_scan_debounced:
     mov r1, r2, lsr #8
     and r2, r0, #0x000f
     orr r1, r1, r2, lsl #4 
+	.else
+	mov r0, #OSByte_KeyboardScan
+	mov r1, #1
+	swi OS_Byte
+	.endif
 
 .1:
 	; R1 contains key or 0xff if no key.
@@ -221,7 +250,9 @@ keyboard_scan_debounced:
 
 ; R1=IKey no. EOR 0xff
 check_key_debounced:
-;	eor r1, r1, #0xff
+	.if _RASTERMAN==0
+	eor r1, r1, #0xff
+	.endif
 	ldr r0, current_key
 	cmp r0, r1
 	mov pc, lr
