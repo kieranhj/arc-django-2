@@ -2,7 +2,7 @@
 ; arc-django-2 - An Archimedes port of Chipo Django 2 musicdisk by Rabenauge.
 ; ============================================================================
 
-.equ _DEBUG, 1
+.equ _DEBUG, 0
 .equ _DEBUG_RASTERS, (_DEBUG && _RASTERMAN==0 && 1)
 
 .equ _DJANGO, 2
@@ -207,6 +207,14 @@ main:
 	adrl r2, logo_pal_block
 	bl palette_set_block
 
+	; Claim the Event vector.
+	.if _RASTERMAN==0
+	MOV r0, #EventV
+	ADR r1, event_handler
+	MOV r2, #0
+	SWI OS_Claim
+	.endif
+
 	; Claim the Error vector.
 	MOV r0, #ErrorV
 	ADR r1, error_handler
@@ -220,6 +228,11 @@ main:
 	; Fire up the RasterMan!
 	.if _RASTERMAN
 	swi RasterMan_Install
+	.else
+	; Enable Vsync 
+	mov r0, #OSByte_EventEnable
+	mov r1, #Event_VSync
+	SWI OS_Byte
 	.endif
 
 main_loop:
@@ -247,15 +260,20 @@ main_loop:
 	; Block if we've not even had a vsync since last time - we're >50Hz!
 	.if _RASTERMAN
 	swi RasterMan_Wait
-	.else
-	mov r0, #19
-	swi OS_Byte
-	.endif
-
 	mov r0, #1
 	ldr r2, vsync_count
 	add r2, r2, r0
 	str r2, vsync_count
+	.else
+	ldr r1, last_vsync
+.1:
+	ldr r2, vsync_count
+	cmp r1, r2
+	beq .1
+	sub r0, r2, r1
+	str r2, last_vsync
+	.endif
+
 	; R0 = vsync delta since last frame.
 
 	; ========================================================================
@@ -359,6 +377,19 @@ exit:
 	; disable music
 	mov r0, #0
 	swi QTM_Clear
+
+	; disable vsync event
+	.if _RASTERMAN==0
+	mov r0, #OSByte_EventDisable
+	mov r1, #Event_VSync
+	swi OS_Byte
+
+	; release our event handler
+	mov r0, #EventV
+	adr r1, event_handler
+	mov r2, #0
+	swi OS_Release
+	.endif
 
 	; Release our error handler
 	mov r0, #ErrorV
@@ -496,23 +527,21 @@ debug_write_vsync_count:
 	adr r0, debug_string
 	swi OS_WriteO
 
-	swi OS_NewLine
+	; swi OS_NewLine
+	swi OS_WriteI+32
 	ldr r0, song_number
 	bl debug_print_r0
 
-	mov r0, #32
-	swi OS_WriteC
+	swi OS_WriteI+32
 	ldr r0, autoplay_flag
 	bl debug_print_r0
 
-	mov r0, #32
-	swi OS_WriteC
+	swi OS_WriteI+32
 	ldr r0, song_ended
 	bl debug_print_r0
 
 .if Mouse_Enable
-	mov r0, #32
-	swi OS_WriteC
+	swi OS_WriteI+32
 	ldr r0, prev_mouse_y
 	bl debug_print_r0
 .endif
@@ -557,10 +586,13 @@ screen_addr_input:
 scr_bank:
 	.long 0				; current VIDC screen bank being written to.
 
+.if _RASTERMAN==0
 vsync_count:
 	.long 0				; current vsync count from start of exe.
 
-.if 0
+last_vsync:
+	.long 0
+
 ; R0=event number
 event_handler:
 	cmp r0, #Event_VSync
@@ -573,6 +605,7 @@ event_handler:
 	ADD r0, r0, #1
 	STR r0, vsync_count
 
+.if 0
 	; is there a new screen buffer ready to display?
 	LDR r1, buffer_pending
 	CMP r1, #0
@@ -633,20 +666,25 @@ event_handler:
 	MOV r0, r0				; No-op **REQUIRED**
 
 	LDMIA sp!, {r2-r12}
+.endif
+
 	LDMIA sp!, {r0-r1, pc}
 
 palette_pending:
 	.long 0				; (optional) ptr to a block of palette data to set at vsync.
-.endif
 
 buffer_pending:
 	.long 0				; screen bank number to display at vsync.
+.endif
 
 show_screen_at_vsync:
 	; Show current bank at next vsync
 	ldr r1, scr_bank
 	MOV r0, #OSByte_WriteDisplayBank
 	swi OS_Byte
+
+	ldr r1, vsync_count
+	str r1, last_vsync	; we have to wait for the next one.
 	mov pc, lr
 
 get_next_screen_for_writing:
@@ -666,6 +704,17 @@ get_next_screen_for_writing:
 
 error_handler:
 	STMDB sp!, {r0-r2, lr}
+
+	.if _RASTERMAN==0
+	; Release event handler.
+	MOV r0, #OSByte_EventDisable
+	MOV r1, #Event_VSync
+	SWI OS_Byte
+	MOV r0, #EventV
+	ADR r1, event_handler
+	mov r2, #0
+	SWI OS_Release
+	.endif
 
 	; Release error handler.
 	MOV r0, #ErrorV
