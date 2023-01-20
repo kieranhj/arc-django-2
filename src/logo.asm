@@ -1,10 +1,14 @@
 ; Logo plotting.
 
-.equ Logo_Height, 98
+.equ Logo_Height, 86
+
+logo_data_p:
+    .long logo_data_no_adr
 
 ; R9=logo_addr, R12=screen_addr
 ; Assume plotting at top of the screen.
 plot_logo:
+	ldr r9, logo_data_p
     mov r10, #Logo_Height
     mov r11, r12
 

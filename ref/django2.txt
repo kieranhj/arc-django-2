@@ -18,8 +18,10 @@ TODO
   => Control codes are triggered on LHS now not RHS.
 - Add 3D rendering code for cube. - DONE
 - Add 3D cube! - DONE
-- Move screen layout to be roughly that of Bodo's WIP.
+- Move screen layout to be roughly that of Bodo's WIP. - DONE
 - Optimise for 8MHz machines.
+
+https://pdjstone.github.io/arculator-wasm/arculator.html?disc=https://bitshifters.github.io/content/wip/arc-django-2-wip.adf&autoboot=desktop%20filer_run%20adfs::0.$.!Django02
 
 
 WIP Features

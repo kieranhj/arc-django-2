@@ -12,11 +12,11 @@
 
 ; ============================================================================
 
-.if _DJANGO==1
 .p2align 2
 logo_data_no_adr:
 .incbin "build/logo.bin"
 
+.if _DJANGO==1
 .p2align 2
 rabenauge_pal_block_no_adr:
 .incbin "build/rabenauge.bin.pal"
@@ -77,18 +77,6 @@ music_07_mod_no_adr:
 .p2align 2
 music_08_mod_no_adr:
 .incbin "build/music_08.bin"
-
-.p2align 2
-music_09_mod_no_adr:
-.incbin "build/music_09.bin"
-
-.p2align 2
-music_10_mod_no_adr:
-.incbin "build/music_10.bin"
-
-.p2align 2
-music_11_mod_no_adr:
-.incbin "build/music_11.bin"
 
 ; ============================================================================
 

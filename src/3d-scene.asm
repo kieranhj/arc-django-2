@@ -15,7 +15,7 @@
 ; in order to map the viewport onto the entire screen.
 
 .equ VIEWPORT_SCALE,    (Screen_Width /2) * PRECISION_MULTIPLIER
-.equ VIEWPORT_CENTRE_X, (100) * PRECISION_MULTIPLIER
+.equ VIEWPORT_CENTRE_X, (Screen_Width /2) * PRECISION_MULTIPLIER
 .equ VIEWPORT_CENTRE_Y, (Screen_Height/2) * PRECISION_MULTIPLIER
 
 ; ============================================================================

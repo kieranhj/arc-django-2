@@ -65,8 +65,7 @@ assets: build ./build/logo.lz4 ./build/logo.bin.pal ./build/scroller_font.bin \
 .PHONY:music
 music: build ./build/music_01.bin ./build/music_02.bin ./build/music_03.bin \
 	./build/music_04.bin ./build/music_05.bin ./build/music_06.bin \
-	./build/music_07.bin ./build/music_08.bin ./build/music_09.bin \
-	./build/music_10.bin ./build/music_11.bin
+	./build/music_07.bin ./build/music_08.bin
 
 .PHONY:text build
 text: ./build/!run.txt ./build/django01.txt
@@ -89,29 +88,11 @@ clean:
 
 # TODO: Figure out how to not need to make the build dir for every target.
 ./build/logo.lz4: ./build/logo.bin
-./build/logo.bin: ./data/gfx/chipoDjango3.png $(PNG2ARC_DEPS)
+./build/logo.bin: ./data/gfx/CD2-cleanup-logo-green320x86.png $(PNG2ARC_DEPS)
 	$(PYTHON2) $(PNG2ARC) -o $@ -p $@.pal $< 9
 
-./build/scroller_font.bin: ./data/font/font3.png $(PNG2ARC_DEPS)
-	$(PYTHON2) $(PNG2ARC_FONT) -o $@ --glyph-dim 16 16 --max-glyphs 59 $< 9
-
-./build/note1.bin: ./data/gfx/note1.png ./build/logo.bin $(PNG2ARC_DEPS)
-	$(PYTHON2) $(PNG2ARC_FONT) -o $@ --glyph-dim 16 16 --max-glyphs 1 --use-palette ./build/logo.bin.pal --closest-match $< 9
-
-./build/note2.bin: ./data/gfx/note2.png $(PNG2ARC_DEPS)
-	$(PYTHON2) $(PNG2ARC_FONT) -o $@ --glyph-dim 16 16 --max-glyphs 1 --use-palette ./build/logo.bin.pal --closest-match $< 9
-
-./build/note3.bin: ./data/gfx/note3.png $(PNG2ARC_DEPS)
-	$(PYTHON2) $(PNG2ARC_FONT) -o $@ --glyph-dim 16 16 --max-glyphs 1 --use-palette ./build/logo.bin.pal --closest-match $< 9
-
-./build/note4.bin: ./data/gfx/note4.png $(PNG2ARC_DEPS)
-	$(PYTHON2) $(PNG2ARC_FONT) -o $@ --glyph-dim 16 16 --max-glyphs 1 --use-palette ./build/logo.bin.pal --closest-match $< 9
-
-./build/note5.bin: ./data/gfx/note5.png $(PNG2ARC_DEPS)
-	$(PYTHON2) $(PNG2ARC_FONT) -o $@ --glyph-dim 16 16 --max-glyphs 1 --use-palette ./build/logo.bin.pal --closest-match $< 9
-
 ./build/icon.bin: ./data/gfx/icon.png $(PNG2ARC_DEPS)
-	$(PYTHON2) $(PNG2ARC_SPRITE) --name !django01 -o $@ $< 9
+	$(PYTHON2) $(PNG2ARC_SPRITE) --name !django02 -o $@ $< 9
 
 ./build/rabenauge.lz4: ./build/rabenauge.bin
 ./build/rabenauge.bin: ./data/gfx/rabenauge-logo4.png $(PNG2ARC_DEPS)
@@ -124,37 +105,28 @@ clean:
 ##########################################################################
 ##########################################################################
 
-./build/music_01.bin: ./data/music/Juice-switchin-lanes.mod
+./build/music_01.bin: ./data/music2/1IND-birdhouse-indahouz3.mod
 	$(COPY) $(subst /,\\,$+) $(subst /,\\,$@)
 
-./build/music_02.bin: ./data/music/bratgrumbeere.mod
+./build/music_02.bin: ./data/music2/autumn-mood.mod
 	$(COPY) $(subst /,\\,$+) $(subst /,\\,$@)
 
-./build/music_03.bin: ./data/music/mod.okeanos-red-drops_FIXED.mod
+./build/music_03.bin: ./data/music2/ne7-square-circles.mod
 	$(COPY) $(subst /,\\,$+) $(subst /,\\,$@)
 
-./build/music_04.bin: ./data/music/amiga-funeral.mod
+./build/music_04.bin: ./data/music2/mod.okeanos-jesuisk.mod
 	$(COPY) $(subst /,\\,$+) $(subst /,\\,$@)
 
-./build/music_05.bin: ./data/music/dalezy-a-virag-elszaradt.mod
+./build/music_05.bin: ./data/music2/mod.okeanos-la_soupe_aux_choux.mod
 	$(COPY) $(subst /,\\,$+) $(subst /,\\,$@)
 
-./build/music_06.bin: ./data/music/slash-paws-and-claws.mod
+./build/music_06.bin: ./data/music2/bodoaxian.final.mod
 	$(COPY) $(subst /,\\,$+) $(subst /,\\,$@)
 
-./build/music_07.bin: ./data/music/mod.vedder-resurgence.final.mod
+./build/music_07.bin: ./data/music2/dlz-sajt.mod
 	$(COPY) $(subst /,\\,$+) $(subst /,\\,$@)
 
-./build/music_08.bin: ./data/music/curt-cool-quickshot_dramaking.mod
-	$(COPY) $(subst /,\\,$+) $(subst /,\\,$@)
-
-./build/music_09.bin: ./data/music/mod.okeanos-syncopated-groove.mod
-	$(COPY) $(subst /,\\,$+) $(subst /,\\,$@)
-
-./build/music_10.bin: ./data/music/Triace-Paula-at-the-Disco-final.mod
-	$(COPY) $(subst /,\\,$+) $(subst /,\\,$@)
-
-./build/music_11.bin: ./data/music/mA2E-Concordia.mod
+./build/music_08.bin: ./data/music2/virgil-holodash.mod
 	$(COPY) $(subst /,\\,$+) $(subst /,\\,$@)
 
 ##########################################################################

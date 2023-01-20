@@ -290,19 +290,22 @@ main_loop:
 	bl plot_columns
 	SET_BORDER 0x000000
 
+	ldr r12, screen_addr
+	bl plot_logo
+
 	SET_BORDER 0xffff00
 	ldr r12, screen_addr
 	bl scroller_draw
 	SET_BORDER 0x000000
 
-	SET_BORDER 0xff0000
-	bl plot_menu
-	bl plot_menu_selection
-	SET_BORDER 0x000000
-
 	SET_BORDER 0x0000ff
 	ldr r12, screen_addr
 	bl draw_3d_scene
+	SET_BORDER 0x000000
+
+	SET_BORDER 0xff0000
+	bl plot_menu
+	bl plot_menu_selection
 	SET_BORDER 0x000000
 
 	.if _DJANGO==1
@@ -872,8 +875,8 @@ screen_addr:
 .include "src/small-font.asm"
 .include "src/columns.asm"
 .include "src/scroller.asm"
-.if _DJANGO==1
 .include "src/logo.asm"
+.if _DJANGO==1
 .include "src/vubars.asm"
 .include "src/sprites.asm"
 .endif
@@ -901,9 +904,9 @@ music_table:
 	.long music_06_mod_no_adr
 	.long music_07_mod_no_adr
 	.long music_08_mod_no_adr
-	.long music_09_mod_no_adr
-	.long music_10_mod_no_adr
-	.long music_11_mod_no_adr
+	.long music_08_mod_no_adr
+	.long music_08_mod_no_adr
+	.long music_08_mod_no_adr
 
 .p2align 2
 logo_pal_block:
