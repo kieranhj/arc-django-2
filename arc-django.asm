@@ -58,8 +58,8 @@
 
 .equ Glitch_Time, 12
 
-.equ VU_Bars_Effect, 2	; 'effect'
-.equ VU_Bars_Gravity, 2	; lines per vsync
+.equ VU_Bars_Effect, 2					; 'effect'
+.equ VU_Bars_Gravity, 2					; lines per vsync
 
 .equ Mouse_Enable, 1
 .equ Mouse_Sensitivity, 10

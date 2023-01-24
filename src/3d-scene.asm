@@ -55,6 +55,9 @@ object_pos:
 object_rot:
     VECTOR3 0.0, 0.0, 0.0
 
+object_scale:
+    FLOAT_TO_FP 1.0
+    
 object_transform:
     MATRIX33_IDENTITY
 
@@ -72,7 +75,7 @@ temp_vector_2:
 
 .if LERP_3D_SCENE
 lerp_value:
-    .long 0
+    FLOAT_TO_FP 0.0
 .endif
 
 ; ============================================================================
@@ -115,6 +118,8 @@ update_3d_scene:
     adr r1, temp_matrix_1
     adr r2, object_transform
     bl matrix_multiply
+
+    ; TODO: Implement object_scale.
     .else
     ; Updating the rotation matrix in this way resulting in minification.
     ; Presume repeated precision loss during mutiply causing this.
@@ -174,6 +179,7 @@ update_3d_scene:
     bne .2
 
     ; Update any scene vars, camera, object position etc. (Rocket?)
+    .if 0
     mov r1, #MATHS_CONST_HALF    ; ROTATION_X
     ldr r0, object_rot+0
     add r0, r0, r1
@@ -191,6 +197,37 @@ update_3d_scene:
     add r0, r0, r1
     bic r0, r0, #0xff000000         ; brads
     str r0, object_rot+8
+    .else
+	mov r0, #0
+	swi QTM_ReadVULevels
+	; R0 = word containing 1 byte per channel 1-4 VU bar heights 0-64
+
+    and r10, r0, #0xff              ; channel 1 = scale
+    mov r10, r10, asl #16           ; TODO: some sort of mapping of scale.
+    str r10, object_scale
+
+    ; TODO: Make this code more compact.
+  	mov r10, r0, lsr #8             ; channel 2 = inc_x
+	and r10, r10, #0xff
+    mov r10, r10, asl #12           ; TODO: some sort of mapping of rot inc.
+    ldr r1, object_rot + 0
+    add r1, r1, r10
+    str r1, object_rot + 0
+
+  	mov r10, r0, lsr #16            ; channel 3 = inc_y
+	and r10, r10, #0xff
+    mov r10, r10, asl #12           ; TODO: some sort of mapping of rot inc.
+    ldr r1, object_rot + 4
+    add r1, r1, r10
+    str r1, object_rot + 4
+
+  	mov r10, r0, lsr #24            ; channel 4 = inc_z
+	and r10, r10, #0xff
+    mov r10, r10, asl #12           ; TODO: some sort of mapping of rot inc.
+    ldr r1, object_rot + 8
+    add r1, r1, r10
+    str r1, object_rot + 8
+    .endif
 
     ldr pc, [sp], #4
 
