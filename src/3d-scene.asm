@@ -61,6 +61,9 @@ object_scale:
 object_transform:
     MATRIX33_IDENTITY
 
+normal_transform:           ; Rotation only.
+    MATRIX33_IDENTITY
+
 temp_matrix_1:
     MATRIX33_IDENTITY
 
@@ -99,27 +102,34 @@ update_3d_scene:
     ; Create rotation matrix as object transform.
     adr r2, temp_matrix_1
     ldr r0, object_rot + 0
-    bl matrix_make_rotate_x
+    bl matrix_make_rotate_x     ; T1=rot_x
 
     adr r2, object_transform
     ldr r0, object_rot + 4
-    bl matrix_make_rotate_y
+    bl matrix_make_rotate_y     ; OT=rot_y
 
     adr r0, temp_matrix_1
     adr r1, object_transform
     adr r2, temp_matrix_2
-    bl matrix_multiply
+    bl matrix_multiply          ; T2=T1.OT
 
     adr r2, temp_matrix_1
     ldr r0, object_rot + 8
-    bl matrix_make_rotate_z
+    bl matrix_make_rotate_z     ; T1=rot_z
 
     adr r0, temp_matrix_2
     adr r1, temp_matrix_1
-    adr r2, object_transform
+    adr r2, normal_transform    ; NT=T2.T1  <== rotation only.
     bl matrix_multiply
 
-    ; TODO: Implement object_scale.
+    ldr r0, object_scale
+    adr r2, temp_matrix_2
+    bl matrix_make_scale        ; T2=scale
+
+    adr r0, temp_matrix_2
+    adr r1, normal_transform
+    adr r2, object_transform    ; OT=T2.NT
+    bl matrix_multiply
     .else
     ; Updating the rotation matrix in this way resulting in minification.
     ; Presume repeated precision loss during mutiply causing this.
@@ -165,7 +175,7 @@ update_3d_scene:
     bne .1
 
     ; Transform normals.
-    adr r0, object_transform
+    adr r0, normal_transform
     adr r1, object_face_normals
     adr r2, transformed_normals
     ldr r10, object_num_faces
@@ -201,31 +211,32 @@ update_3d_scene:
 	mov r0, #0
 	swi QTM_ReadVULevels
 	; R0 = word containing 1 byte per channel 1-4 VU bar heights 0-64
-
+    ; TODO: Finalise mapping of vu levels to scale & rotation deltas.
     and r10, r0, #0xff              ; channel 1 = scale
-    mov r10, r10, asl #16           ; TODO: some sort of mapping of scale.
-    str r10, object_scale
+    mov r1, #MATHS_CONST_1
+    add r1, r1, r10, asl #9         ; scale maps [1, 1.5]
+    str r1, object_scale
 
     ; TODO: Make this code more compact.
   	mov r10, r0, lsr #8             ; channel 2 = inc_x
 	and r10, r10, #0xff
-    mov r10, r10, asl #12           ; TODO: some sort of mapping of rot inc.
+    mov r10, r10, asl #11           ; inc_x maps [0, 2]
     ldr r1, object_rot + 0
-    add r1, r1, r10
+    add r1, r1, r10                 ; object_rot_x += inc_x
     str r1, object_rot + 0
 
   	mov r10, r0, lsr #16            ; channel 3 = inc_y
 	and r10, r10, #0xff
-    mov r10, r10, asl #12           ; TODO: some sort of mapping of rot inc.
+    mov r10, r10, asl #11           ; inc_y maps [0, 2]
     ldr r1, object_rot + 4
-    add r1, r1, r10
+    add r1, r1, r10                 ; object_rot_y += inc_y
     str r1, object_rot + 4
 
   	mov r10, r0, lsr #24            ; channel 4 = inc_z
 	and r10, r10, #0xff
-    mov r10, r10, asl #12           ; TODO: some sort of mapping of rot inc.
+    mov r10, r10, asl #11           ; inc_z maps [0, 2]
     ldr r1, object_rot + 8
-    add r1, r1, r10
+    add r1, r1, r10                 ; object_rot_z += inc_z
     str r1, object_rot + 8
     .endif
 

@@ -62,6 +62,14 @@
 ;     [ 0   0   1 ]
 matrix_make_identity:
     mov r0, #MATHS_CONST_1
+
+; R0=scale value
+; R2=ptr to 9x9 matrix M
+; Compute:
+; M = [ s   0   0 ]
+;     [ 0   s   0 ]
+;     [ 0   0   s ]
+matrix_make_scale:
     str r0, [r2, #MATRIX_00]
     str r0, [r2, #MATRIX_11]
     str r0, [r2, #MATRIX_22]
