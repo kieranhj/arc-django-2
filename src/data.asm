@@ -44,7 +44,11 @@ note_sprite_data_no_adr:
 
 .p2align 2
 scroller_font_data_no_adr:
-.incbin "build/scroller_font.bin"
+.incbin "build/big-font.bin"
+
+.p2align 2
+menu_font_data_no_adr:
+.incbin "build/small-font.bin"
 
 .p2align 2
 music_01_mod_no_adr:
@@ -77,6 +81,10 @@ music_07_mod_no_adr:
 .p2align 2
 music_08_mod_no_adr:
 .incbin "build/music_08.bin"
+
+.p2align 2
+music_09_mod_no_adr:
+.incbin "build/music_09.bin"
 
 ; ============================================================================
 

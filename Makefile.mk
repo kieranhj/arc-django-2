@@ -57,15 +57,14 @@ loader: build ./build/arc-django.lz4
 	$(VASM) -L build/compile.txt -m250 -Fvobj -opt-adr -o build/arc-django.o arc-django.asm
 
 .PHONY:assets
-assets: build ./build/logo.lz4 ./build/logo.bin.pal ./build/scroller_font.bin \
-	./build/note1.bin ./build/note2.bin ./build/note3.bin ./build/note4.bin \
-	./build/note5.bin ./build/icon.bin ./build/rabenauge.lz4 ./build/rabenauge.bin.pal \
-	./build/bitshifters.lz4 ./build/bitshifters.bin.pal
+assets: build ./build/logo.lz4 ./build/logo.bin.pal ./build/big-font.bin \
+	./build/rabenauge.lz4 ./build/rabenauge.bin.pal ./build/small-font.bin \
+	./build/icon.bin
 
 .PHONY:music
 music: build ./build/music_01.bin ./build/music_02.bin ./build/music_03.bin \
 	./build/music_04.bin ./build/music_05.bin ./build/music_06.bin \
-	./build/music_07.bin ./build/music_08.bin
+	./build/music_07.bin ./build/music_08.bin ./build/music_09.bin
 
 .PHONY:text build
 text: ./build/!run.txt ./build/django01.txt
@@ -90,6 +89,12 @@ clean:
 ./build/logo.lz4: ./build/logo.bin
 ./build/logo.bin: ./data/gfx/CD2-cleanup-logo-green320x86.png $(PNG2ARC_DEPS)
 	$(PYTHON2) $(PNG2ARC) -o $@ -p $@.pal $< 9
+
+./build/big-font.bin: ./data/font/font-big-final.png $(PNG2ARC_DEPS)
+	$(PYTHON2) $(PNG2ARC_FONT) -o $@ --glyph-dim 16 16 $< 9
+
+./build/small-font.bin: ./data/font/font-8x5.png $(PNG2ARC_DEPS)
+	$(PYTHON2) $(PNG2ARC_FONT) -o $@ --glyph-dim 8 5 $< 9
 
 ./build/icon.bin: ./data/gfx/icon.png $(PNG2ARC_DEPS)
 	$(PYTHON2) $(PNG2ARC_SPRITE) --name !django02 -o $@ $< 9
@@ -127,6 +132,9 @@ clean:
 	$(COPY) $(subst /,\\,$+) $(subst /,\\,$@)
 
 ./build/music_08.bin: ./data/music2/virgil-holodash.mod
+	$(COPY) $(subst /,\\,$+) $(subst /,\\,$@)
+
+./build/music_09.bin: ./data/music2/squid_ring.mod
 	$(COPY) $(subst /,\\,$+) $(subst /,\\,$@)
 
 ##########################################################################
