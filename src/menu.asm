@@ -341,7 +341,7 @@ menu_09_string:
 
 .p2align 2
 menu_10_string:
-	.byte 31, MENU_SONG_XPOS+15, MENU_TOP_YPOS+9*MENU_ROW_HEIGHT, "dummy", 31, MENU_ARTIST_XPOS, MENU_TOP_YPOS+9*MENU_ROW_HEIGHT, "maz3", 0
+	.byte 31, MENU_SONG_XPOS+16, MENU_TOP_YPOS+9*MENU_ROW_HEIGHT, "lies", 31, MENU_ARTIST_XPOS, MENU_TOP_YPOS+9*MENU_ROW_HEIGHT, "punnik", 0
 
 .p2align 2
 menu_11_string:

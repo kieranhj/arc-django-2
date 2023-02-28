@@ -1,7 +1,7 @@
 ; Logo plotting.
 
-.equ Logo_Width, 256
-.equ Logo_Height, 71
+.equ Logo_Width, 320
+.equ Logo_Height, 84
 .equ Logo_Gap, Screen_Stride-Logo_Width/Screen_PixelsPerByte
 
 logo_data_p:

@@ -904,9 +904,9 @@ music_table:
 	.long music_06_mod_no_adr
 	.long music_07_mod_no_adr
 	.long music_08_mod_no_adr
-	.long music_08_mod_no_adr
-	.long music_08_mod_no_adr
-	.long music_08_mod_no_adr
+	.long music_09_mod_no_adr
+	.long music_10_mod_no_adr
+	.long music_11_mod_no_adr
 
 .p2align 2
 logo_pal_block:

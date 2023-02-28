@@ -76,13 +76,16 @@ TODO:
   - Expand to 8x shifts at runtime.
   - Plot w/ x,y pos.
   - May need to split this into 3 smaller sprites for perf?
+- Colours:
+  - Uses 32 colours (of course) so need colour split beneath logo.
 - Menu:
   - New layout.
-  - New menu font has no regular/bold.
-  - New menu font is proportional?
+  - New menu small font has no regular/bold.
+  - New menu small font is proportional?
+  - New menu small font plots different colours over cube...
   - New colours for the menu, selection & highlight etc.
 - Cube:
-  - Make smaller.
+  - Make smaller. - DONE
   - Remove lighting, match colours.
   - Check visualiser pulse.
 - Sawtooth:
@@ -92,7 +95,7 @@ TODO:
   - New font, new colour
   - Need text.
 - Remaining tunes.
-  - Ping ToBach & 4mat
+  - Ping ToBach & 4mat - DONE
 - Archie specific:
   - Remove _DJANGO define.
   - Performance on ARM2?

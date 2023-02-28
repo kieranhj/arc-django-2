@@ -64,7 +64,8 @@ assets: build ./build/logo.lz4 ./build/logo.bin.pal ./build/big-font.bin \
 .PHONY:music
 music: build ./build/music_01.bin ./build/music_02.bin ./build/music_03.bin \
 	./build/music_04.bin ./build/music_05.bin ./build/music_06.bin \
-	./build/music_07.bin ./build/music_08.bin ./build/music_09.bin
+	./build/music_07.bin ./build/music_08.bin ./build/music_09.bin \
+	./build/music_10.bin ./build/music_splash.bin
 
 .PHONY:text build
 text: ./build/!run.txt ./build/django01.txt
@@ -87,20 +88,20 @@ clean:
 
 # TODO: Figure out how to not need to make the build dir for every target.
 ./build/logo.lz4: ./build/logo.bin
-./build/logo.bin: ./data/gfx/CD2-cleanup-logo-green256x72.png $(PNG2ARC_DEPS)
-	$(PYTHON2) $(PNG2ARC) -o $@ -p $@.pal -m $@.mask --mask-colour 0x003300ff $< 9
+./build/logo.bin: ./data/gfx/chipodjangofinal-backgroundnasty.png $(PNG2ARC_DEPS)
+	$(PYTHON2) $(PNG2ARC) -o $@ -p $@.pal -m $@.mask --mask-colour 0x00d900ff $< 9
 
-./build/big-font.bin: ./data/font/font-big-final.png $(PNG2ARC_DEPS)
+./build/big-font.bin: ./data/font/font-big-finalFINAL.png $(PNG2ARC_DEPS)
 	$(PYTHON2) $(PNG2ARC_FONT) -o $@ --glyph-dim 16 16 $< 9
 
-./build/small-font.bin: ./data/font/font-8x5.png $(PNG2ARC_DEPS)
+./build/small-font.bin: ./data/font/font-8x5-onelined.png $(PNG2ARC_DEPS)
 	$(PYTHON2) $(PNG2ARC_FONT) -o $@ --glyph-dim 8 5 $< 9
 
 ./build/icon.bin: ./data/gfx/icon.png $(PNG2ARC_DEPS)
 	$(PYTHON2) $(PNG2ARC_SPRITE) --name !django02 -o $@ $< 9
 
 ./build/rabenauge.lz4: ./build/rabenauge.bin
-./build/rabenauge.bin: ./data/gfx/rabenauge-logo4.png $(PNG2ARC_DEPS)
+./build/rabenauge.bin: ./data/gfx/combined-logo.png $(PNG2ARC_DEPS)
 	$(PYTHON2) $(PNG2ARC) -o $@ -p $@.pal $< 9
 
 ./build/bitshifters.lz4: ./build/bitshifters.bin
@@ -135,6 +136,12 @@ clean:
 	$(COPY) $(subst /,\\,$+) $(subst /,\\,$@)
 
 ./build/music_09.bin: ./data/music2/squid_ring.mod
+	$(COPY) $(subst /,\\,$+) $(subst /,\\,$@)
+
+./build/music_10.bin: ./data/music2/punnik-Lies.mod
+	$(COPY) $(subst /,\\,$+) $(subst /,\\,$@)
+
+./build/music_splash.bin: ./data/music2/raven-mono.mod
 	$(COPY) $(subst /,\\,$+) $(subst /,\\,$@)
 
 ##########################################################################
