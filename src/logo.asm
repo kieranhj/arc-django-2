@@ -1,28 +1,40 @@
 ; Logo plotting.
 
-.equ Logo_Height, 86
+.equ Logo_Width, 256
+.equ Logo_Height, 71
+.equ Logo_Gap, Screen_Stride-Logo_Width/Screen_PixelsPerByte
 
 logo_data_p:
     .long logo_data_no_adr
+
+logo_mask_p:
+    .long logo_mask_no_adr
 
 ; R9=logo_addr, R12=screen_addr
 ; Assume plotting at top of the screen.
 plot_logo:
 	ldr r9, logo_data_p
+    ldr r8, logo_mask_p
     mov r10, #Logo_Height
     mov r11, r12
 
     .1:
-    ldmia r9!, {r0-r7}      ; 8 words = 64 pixels.
-    stmia r11!, {r0-r7}
-    ldmia r9!, {r0-r7}      ; 8 words = 64 pixels.
-    stmia r11!, {r0-r7}
-    ldmia r9!, {r0-r7}      ; 8 words = 64 pixels.
-    stmia r11!, {r0-r7}
-    ldmia r9!, {r0-r7}      ; 8 words = 64 pixels.
-    stmia r11!, {r0-r7}
-    ldmia r9!, {r0-r7}      ; 8 words = 64 pixels.
-    stmia r11!, {r0-r7}
+.rept Logo_Width/32
+    ldmia r11, {r0-r3}      ; 4 words of screen.
+    ldmia r8!, {r4-r7}      ; 4 words of mask.
+    bic r0, r0, r4
+    bic r1, r1, r5
+    bic r2, r2, r6
+    bic r3, r3, r7
+    ldmia r9!, {r4-r7}      ; 4 words of logo.
+    orr r0, r0, r4
+    orr r1, r1, r5
+    orr r2, r2, r6
+    orr r3, r3, r7
+    stmia r11!, {r0-r3}     ; 4 words of screen.
+.endr
+
+    add r11, r11, #Logo_Gap
     subs r10, r10, #1
     bne .1
 

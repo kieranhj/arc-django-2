@@ -12,29 +12,49 @@ def save_file(data,path):
 ##########################################################################
 ##########################################################################
 
-def get_palette(boxed_row_flat_pixel):
+def get_palette(boxed_row_flat_pixel, mask_rgba):
     palette = []
     for row in boxed_row_flat_pixel:
         for i in range(0,len(row),4):
-            rgb = [row[i+0],row[i+1],row[i+2]]
-            if rgb not in palette:
-                palette.append(rgb)
+            rgba = [row[i+0],row[i+1],row[i+2],row[i+3]]
+
+            if mask_rgba is not None and rgba == mask_rgba:
+                continue
+
+            if rgba not in palette:
+                palette.append(rgba)
             
     return palette
 
 ##########################################################################
 ##########################################################################
 
-def to_box_row_palette_indices(boxed_row_flat_pixel, palette):
+def to_box_row_palette_indices(boxed_row_flat_pixel, palette, mask_rgba):
     pidxs = []
     for row in boxed_row_flat_pixel:
         pidxs.append([])
         for i in range(0,len(row),4):
-            rgb = [row[i+0],row[i+1],row[i+2]]
-            idx = palette.index(rgb)
+            rgba = [row[i+0],row[i+1],row[i+2],row[i+3]]
+            if mask_rgba is not None and rgba == mask_rgba:
+                idx = 0
+            else:
+                idx = palette.index(rgba)
             pidxs[-1].append(idx)
 
     return pidxs
+
+def to_box_row_mask_pixels(boxed_row_flat_pixel, mask_rgba):
+    midxs = []
+    for row in boxed_row_flat_pixel:
+        midxs.append([])
+        for i in range(0,len(row),4):
+            rgba = [row[i+0],row[i+1],row[i+2],row[i+3]]
+            if rgba == mask_rgba:
+                idx = 0
+            else:
+                idx = 0xf     # TODO: Fixed mask index for now.
+            midxs[-1].append(idx)
+    return midxs
 
 ##########################################################################
 ##########################################################################
@@ -60,7 +80,13 @@ def main(options):
     src_height=png_result[1]
     print 'Source image width: {0} height: {1}'.format(src_width,src_height)
 
-    palette = get_palette(png_result[2])
+    if options.mask_colour is not None:
+        mask = [options.mask_colour >> 24, (options.mask_colour >> 16) & 0xff, (options.mask_colour >> 8) & 0xff, options.mask_colour & 0xff]
+        print 'Using mask colour: {0}'.format(mask)
+    else:
+        mask = None
+
+    palette = get_palette(png_result[2], mask)
     print 'Found {0} palette entries.'.format(len(palette))
     
     if len(palette) > 16:
@@ -72,16 +98,19 @@ def main(options):
 
     if len(palette) < 16:
         # Prefer entry 0 to be black, if not already.
-        if palette[0] != [0, 0, 0]:
-            palette.insert(0, [0, 0, 0])
+        if palette[0] != [0, 0, 0, 255]:
+            palette.insert(0, [0, 0, 0, 255])
 
         # Pad end of palette with white:
         while len(palette) < 16:
-            palette.append([255, 255, 255])
+            palette.append([255, 255, 255, 255])
+
+    if options.loud:
+        print(palette)
 
     # Reading the file again seems wrong?
     png_result=png.Reader(filename=options.input_path).asRGBA8()
-    pixels = to_box_row_palette_indices(png_result[2], palette)
+    pixels = to_box_row_palette_indices(png_result[2], palette, mask)
 
     out_width=src_width/step_x
     out_height=src_height/step_y
@@ -102,6 +131,26 @@ def main(options):
     assert(len(pixel_data)==out_width*out_height/pixels_per_byte)
     save_file(pixel_data,options.output_path)
     print 'Wrote {0} bytes Arc data.'.format(len(pixel_data))
+
+    if options.mask_path is not None:
+        # Reading the file again seems wrong?
+        png_result=png.Reader(filename=options.input_path).asRGBA8()
+        pixel_masks = to_box_row_mask_pixels(png_result[2], mask)
+        mask_data=[]
+        assert(len(pixel_masks)==src_height)
+        for y in range(0,src_height,step_y):
+            row=pixel_masks[y]
+            assert(len(row)==src_width)
+            for x in range(0,src_width,pixels_per_byte*step_x):
+                xs=[]
+                for p in range(0,pixels_per_byte):
+                    xs.append(row[x+p])
+                assert len(xs)==pixels_per_byte
+                mask_data.append(pack(xs))
+
+        assert(len(mask_data)==out_width*out_height/pixels_per_byte)
+        save_file(mask_data,options.mask_path)
+        print 'Wrote {0} bytes MASK data.'.format(len(mask_data))
 
     if options.palette_path is not None:
         pal_data=[]
@@ -127,8 +176,10 @@ if __name__=='__main__':
 
     parser.add_argument('-o',dest='output_path',metavar='FILE',help='output ARC data to %(metavar)s')
     parser.add_argument('-p',dest='palette_path',metavar='FILE',help='output palette data to %(metavar)s')
+    parser.add_argument('-m',dest='mask_path',metavar='FILE',help='output mask data to %(metavar)s')
     parser.add_argument('--loud',action='store_true',help='display warnings')
     parser.add_argument('--x2',action='store_true',help='source image has 2x dimensions')
+    parser.add_argument('--mask-colour',dest='mask_colour',default=None,type=lambda x: int(x,0),help='RGBA colour used as mask.')
     parser.add_argument('input_path',metavar='FILE',help='load PNG data from %(metavar)s')
     parser.add_argument('mode',type=int,help='screen mode')
     main(parser.parse_args())

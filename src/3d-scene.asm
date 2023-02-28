@@ -16,7 +16,7 @@
 
 .equ VIEWPORT_SCALE,    (Screen_Width /2) * PRECISION_MULTIPLIER
 .equ VIEWPORT_CENTRE_X, (Screen_Width /2) * PRECISION_MULTIPLIER
-.equ VIEWPORT_CENTRE_Y, (Screen_Height/2) * PRECISION_MULTIPLIER
+.equ VIEWPORT_CENTRE_Y, 144 * PRECISION_MULTIPLIER
 
 ; ============================================================================
 ; Scene data.
@@ -50,7 +50,7 @@ camera_pos:
 ; TODO: Camera rotation/direction/look at?
 
 object_pos:
-    VECTOR3 0.0, 0.0, 16.0
+    VECTOR3 0.0, 0.0, 32.0
 
 object_rot:
     VECTOR3 0.0, 0.0, 0.0

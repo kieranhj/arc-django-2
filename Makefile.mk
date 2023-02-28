@@ -59,7 +59,7 @@ loader: build ./build/arc-django.lz4
 .PHONY:assets
 assets: build ./build/logo.lz4 ./build/logo.bin.pal ./build/big-font.bin \
 	./build/rabenauge.lz4 ./build/rabenauge.bin.pal ./build/small-font.bin \
-	./build/icon.bin
+	./build/icon.bin ./build/logo.bin.mask
 
 .PHONY:music
 music: build ./build/music_01.bin ./build/music_02.bin ./build/music_03.bin \
@@ -87,8 +87,8 @@ clean:
 
 # TODO: Figure out how to not need to make the build dir for every target.
 ./build/logo.lz4: ./build/logo.bin
-./build/logo.bin: ./data/gfx/CD2-cleanup-logo-green320x86.png $(PNG2ARC_DEPS)
-	$(PYTHON2) $(PNG2ARC) -o $@ -p $@.pal $< 9
+./build/logo.bin: ./data/gfx/CD2-cleanup-logo-green256x72.png $(PNG2ARC_DEPS)
+	$(PYTHON2) $(PNG2ARC) -o $@ -p $@.pal -m $@.mask --mask-colour 0x003300ff $< 9
 
 ./build/big-font.bin: ./data/font/font-big-final.png $(PNG2ARC_DEPS)
 	$(PYTHON2) $(PNG2ARC_FONT) -o $@ --glyph-dim 16 16 $< 9

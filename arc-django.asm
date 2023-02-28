@@ -288,7 +288,7 @@ main_loop:
 
 	ldr r12, screen_addr
 	bl plot_columns
-	SET_BORDER 0x000000
+	SET_BORDER 0xff00ff
 
 	ldr r12, screen_addr
 	bl plot_logo

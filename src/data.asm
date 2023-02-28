@@ -16,6 +16,10 @@
 logo_data_no_adr:
 .incbin "build/logo.bin"
 
+.p2align 2
+logo_mask_no_adr:
+.incbin "build/logo.bin.mask"
+
 .if _DJANGO==1
 .p2align 2
 rabenauge_pal_block_no_adr:

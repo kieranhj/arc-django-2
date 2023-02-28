@@ -64,3 +64,39 @@ Cube visualiser code from Bodo:
     mulu #10,d0                                                         ; d0 *= 10
     add.w #START_SIZE,d0 ; add START_SIZE of scale                      ; d0 += START_SIZE
     move.w d0,scale                                                     ; cube_deltas[0] = d0  
+
+Road to Revision
+~~~
+
+TODO:
+
+- Splash screen with fade out.
+- Hovering masked logo with pixel motion.
+  - Add mask colour support to png2arc.py. - DONE (WELL, HACKED)
+  - Expand to 8x shifts at runtime.
+  - Plot w/ x,y pos.
+  - May need to split this into 3 smaller sprites for perf?
+- Menu:
+  - New layout.
+  - New menu font has no regular/bold.
+  - New menu font is proportional?
+  - New colours for the menu, selection & highlight etc.
+- Cube:
+  - Make smaller.
+  - Remove lighting, match colours.
+  - Check visualiser pulse.
+- Sawtooth:
+  - Has rounded edges
+  - Match colours and speeds.
+- Scrolltext:
+  - New font, new colour
+  - Need text.
+- Remaining tunes.
+  - Ping ToBach & 4mat
+- Archie specific:
+  - Remove _DJANGO define.
+  - Performance on ARM2?
+  - Do we need RasterMan or get RasterMan Lite for stablised interrupts.
+  - Remove redundant code.
+  - Shrink and package etc.
+  - Ask Bodo for an app icon?
