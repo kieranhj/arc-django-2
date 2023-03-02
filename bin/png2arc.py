@@ -4,6 +4,10 @@ import png,argparse,sys,math,arc
 ##########################################################################
 ##########################################################################
 
+# Read 1 byte from our input file
+def get_byte(file):
+    return ord(file.read(1))
+
 def save_file(data,path):
     if path is not None:
         with open(path,'wb') as f:
@@ -26,6 +30,21 @@ def get_palette(boxed_row_flat_pixel, mask_rgba):
             
     return palette
 
+def find_closest_match(palette, rgb):
+    # Do this the lame non-Pythonic way. I'm sure this could be a single line blah blah.
+    closest_idx = -1
+    closest_dist = 256*256
+    for i in range(16):
+        col = palette[i]
+        dist = (rgb[0]-col[0])*(rgb[0]-col[0])
+        + (rgb[1]-col[1])*(rgb[1]-col[2])
+        + (rgb[2]-col[2])*( rgb[2]-col[2])
+        if dist < closest_dist:
+            closest_idx = i
+            closest_dist = dist
+
+    return closest_idx
+
 ##########################################################################
 ##########################################################################
 
@@ -38,7 +57,12 @@ def to_box_row_palette_indices(boxed_row_flat_pixel, palette, mask_rgba):
             if mask_rgba is not None and rgba == mask_rgba:
                 idx = 0
             else:
-                idx = palette.index(rgba)
+                # Prefer towards the end of the palette?
+                # Probably unless zero?
+                try:
+                    idx = len(palette) - palette[::-1].index(rgb) - 1
+                except:
+                    idx = find_closest_match(palette, rgba)
             pidxs[-1].append(idx)
 
     return pidxs
@@ -93,17 +117,29 @@ def main(options):
         print>>sys.stderr,'FATAL: too many colours: %d'%len(palette)
         sys.exit(1)
 
-    # Sort palette by intensity.
-    palette.sort(key=lambda e: e[0]*e[0]+e[1]*e[1]+e[2]*e[2])
+    if options.use_palette is not None:
+        # Open palette binary file.
+        palette_file = open(options.use_palette, 'rb')
 
-    if len(palette) < 16:
-        # Prefer entry 0 to be black, if not already.
-        if palette[0] != [0, 0, 0, 255]:
-            palette.insert(0, [0, 0, 0, 255])
+        palette=[]
+        for i in range(16):
+            r = get_byte(palette_file)
+            g = get_byte(palette_file)
+            b = get_byte(palette_file)
+            a = get_byte(palette_file)
+            palette.append([r, g, b, 255])
+    else:
+        # Sort palette by intensity.
+        palette.sort(key=lambda e: e[0]*e[0]+e[1]*e[1]+e[2]*e[2])
 
-        # Pad end of palette with white:
-        while len(palette) < 16:
-            palette.append([255, 255, 255, 255])
+        if len(palette) < 16:
+            # Prefer entry 0 to be black, if not already.
+            if palette[0] != [0, 0, 0, 255]:
+                palette.insert(0, [0, 0, 0, 255])
+
+            # Pad end of palette with white:
+            while len(palette) < 16:
+                palette.append([255, 255, 255, 255])
 
     if options.loud:
         print(palette)
@@ -180,6 +216,7 @@ if __name__=='__main__':
     parser.add_argument('--loud',action='store_true',help='display warnings')
     parser.add_argument('--x2',action='store_true',help='source image has 2x dimensions')
     parser.add_argument('--mask-colour',dest='mask_colour',default=None,type=lambda x: int(x,0),help='RGBA colour used as mask.')
+    parser.add_argument('--use-palette',dest='use_palette',metavar='FILE',help='use palette binary data from %(metavar)s')
     parser.add_argument('input_path',metavar='FILE',help='load PNG data from %(metavar)s')
     parser.add_argument('mode',type=int,help='screen mode')
     main(parser.parse_args())

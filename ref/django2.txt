@@ -78,11 +78,17 @@ TODO:
   - May need to split this into 3 smaller sprites for perf?
 - Colours:
   - Uses 32 colours (of course) so need colour split beneath logo.
+  - Logo sprite uses 13 colours (including black & white)
+  - Need 6 background colours.. :\
+  => Ask Bodo if Titus can make a 10 colour version...
+
+  
+
 - Menu:
   - New layout.
   - New menu small font has no regular/bold.
   - New menu small font is proportional?
-  - New menu small font plots different colours over cube...
+  - New menu small font plots different colours over cube... - IGNORE FOR NOW!
   - New colours for the menu, selection & highlight etc.
 - Cube:
   - Make smaller. - DONE
@@ -93,9 +99,11 @@ TODO:
   - Match colours and speeds.
 - Scrolltext:
   - New font, new colour
-  - Need text.
-- Remaining tunes.
+  - Need text. - MISSING
+- Music playback.
   - Ping ToBach & 4mat - DONE
+  - Master volume of each tune.
+  - Pause between tunes during autoplay.
 - Archie specific:
   - Remove _DJANGO define.
   - Performance on ARM2?

@@ -8,6 +8,7 @@
 .equ XOS_Word, OS_Word | (1 << 17)
 .equ OS_File, 8
 .equ OS_Exit, 0x11
+.equ OS_EnterOS, 0x16
 .equ OS_BreakPt, 0x17
 .equ OS_Mouse, 0x1c
 .equ OS_ChangeDynamicArea, 0x2a
@@ -16,6 +17,8 @@
 .equ OS_ReadVduVariables, 0x31
 .equ OS_ReadMonotonicTime, 0x42
 .equ OS_Plot, 0x45
+.equ OS_ClaimDeviceVector, 0x4b
+.equ OS_ReleaseDeviceVector, 0x4c
 .equ OS_ReadDynamicArea, 0x5c
 .equ OS_ConvertHex2, 0xd1
 .equ OS_ConvertHex4, 0xd2

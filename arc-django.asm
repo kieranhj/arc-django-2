@@ -2,8 +2,9 @@
 ; arc-django-2 - An Archimedes port of Chipo Django 2 musicdisk by Rabenauge.
 ; ============================================================================
 
-.equ _DEBUG, 0
+.equ _DEBUG, 1
 .equ _DEBUG_RASTERS, (_DEBUG && _RASTERMAN==0 && 1)
+.equ _DEBUG_SHOW, (_DEBUG && 0)
 
 .equ _DJANGO, 2
 .equ _RASTERMAN, 0
@@ -332,7 +333,7 @@ main_loop:
 	.endif
 
 	; show debug
-	.if _DEBUG
+	.if _DEBUG_SHOW
 	bl debug_write_vsync_count
 	.endif
 
@@ -783,7 +784,9 @@ play_song:
 	swi QTM_Volume
 
 	; This seems to help minimise how much RasterMan timing slips after QTM_Start.
+	.if _RASTERMAN
 	swi RasterMan_Wait
+	.endif
 
 	; Play music!
 	swi QTM_Start
@@ -910,7 +913,7 @@ music_table:
 
 .p2align 2
 logo_pal_block:
-.incbin "build/logo.bin.pal"
+.incbin "data/logo-palette-hacked.bin"
 
 ; ============================================================================
 ; DATA Segment

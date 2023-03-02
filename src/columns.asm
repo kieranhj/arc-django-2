@@ -20,11 +20,11 @@ column_y_speed:
     FLOAT_TO_FP 2
 
 column_colours:
-    .long 0xaaaaaaaa
     .long 0xbbbbbbbb
     .long 0xcccccccc
     .long 0xdddddddd
     .long 0xeeeeeeee
+    .long 0xffffffff
 
 ; R11=screen plot pointer
 ; R10=y offset
@@ -127,7 +127,7 @@ clear_left_screen:
 .1:
     stmia r12!, {r0-r9}     ; 80 pixels
     stmia r12!, {r0-r9}     ; 80 pixels
-    stmia r12, {r0-r1}     ; 16 pixels
+    stmia r12, {r0-r1}      ; 16 pixels
     add r12, r12, #Screen_Stride/2
     cmp r12, r11
     blt .1

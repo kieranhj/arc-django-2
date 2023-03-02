@@ -1,7 +1,7 @@
 ; Logo plotting.
 
-.equ Logo_Width, 320
-.equ Logo_Height, 84
+.equ Logo_Width, 208
+.equ Logo_Height, 68
 .equ Logo_Gap, Screen_Stride-Logo_Width/Screen_PixelsPerByte
 
 logo_data_p:
@@ -33,6 +33,16 @@ plot_logo:
     orr r3, r3, r7
     stmia r11!, {r0-r3}     ; 4 words of screen.
 .endr
+.if Logo_Width == 208
+    ldmia r11, {r0-r1}      ; 4 words of screen.
+    ldmia r8!, {r4-r5}      ; 4 words of mask.
+    bic r0, r0, r4
+    bic r1, r1, r5
+    ldmia r9!, {r4-r5}      ; 4 words of logo.
+    orr r0, r0, r4
+    orr r1, r1, r5
+    stmia r11!, {r0-r1}     ; 4 words of screen.
+.endif
 
     add r11, r11, #Logo_Gap
     subs r10, r10, #1

@@ -88,8 +88,8 @@ clean:
 
 # TODO: Figure out how to not need to make the build dir for every target.
 ./build/logo.lz4: ./build/logo.bin
-./build/logo.bin: ./data/gfx/chipodjangofinal-backgroundnasty.png $(PNG2ARC_DEPS)
-	$(PYTHON2) $(PNG2ARC) -o $@ -p $@.pal -m $@.mask --mask-colour 0x00d900ff $< 9
+./build/logo.bin: ./data/gfx/chipodjangofinal-208x68.png ./data/logo-palette-hacked.bin $(PNG2ARC_DEPS)
+	$(PYTHON2) $(PNG2ARC) -o $@ --use-palette data/logo-palette-hacked.bin -m $@.mask --mask-colour 0x00d900ff $< 9
 
 ./build/big-font.bin: ./data/font/font-big-finalFINAL.png $(PNG2ARC_DEPS)
 	$(PYTHON2) $(PNG2ARC_FONT) -o $@ --glyph-dim 16 16 $< 9
