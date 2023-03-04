@@ -8,7 +8,8 @@
 .equ OBJ_VERTS_PER_FACE, 4
 .equ OBJ_MAX_EDGES_PER_FACE, OBJ_VERTS_PER_FACE
 
-.equ LERP_3D_SCENE, 0
+.equ object_num_verts, 8
+.equ object_num_faces, 6
 
 ; The camera viewport is assumed to be [-1,+1] across its widest axis.
 ; Therefore we multiply all projected coordinates by the screen width/2
@@ -76,11 +77,6 @@ temp_vector_1:
 temp_vector_2:
     VECTOR3_ZERO
 
-.if LERP_3D_SCENE
-lerp_value:
-    FLOAT_TO_FP 0.0
-.endif
-
 ; ============================================================================
 ; ============================================================================
 
@@ -97,6 +93,9 @@ init_3d_scene:
 
 update_3d_scene:
     str lr, [sp, #-4]!
+
+    ; TODO: Optimise creation of rotation matrix.
+    ;       Can compute this directly w/out multiplying matrices.
 
     .if 1
     ; Create rotation matrix as object transform.
@@ -145,18 +144,14 @@ update_3d_scene:
     stmia r0!, {r3-r11}
     .endif
 
-    ; Hard coded object lerp.
-    .if LERP_3D_SCENE
-    bl lerp_3d_objects
-    .endif
-
+    ; TODO: Subtract camera pos here?
     adr r11, object_pos
 
     ; Transform vertices in scene.
     adr r0, object_transform
     adr r1, object_verts
     adr r2, transformed_verts
-    ldr r10, object_num_verts
+    mov r10, #object_num_verts
     .1:
     ; R0=ptr to matrix, R1=vector A, R2=vector B
     bl matrix_multiply_vector
@@ -168,6 +163,9 @@ update_3d_scene:
     add r3, r3, r6
     add r4, r4, r7
     add r5, r5, r8
+    ; TODO: Subtract camera position here?
+    ;       Store transformed verts as camera relative?
+
     stmia r2!, {r3-r5}
     
     add r1, r1, #VECTOR3_SIZE
@@ -178,7 +176,7 @@ update_3d_scene:
     adr r0, normal_transform
     adr r1, object_face_normals
     adr r2, transformed_normals
-    ldr r10, object_num_faces
+    mov r10, #object_num_faces
     .2:
     ; R0=ptr to matrix, R1=vector A, R2=vector B
     bl matrix_multiply_vector
@@ -254,7 +252,7 @@ draw_3d_scene:
 
     ; Project vertices to screen.
     adr r2, transformed_verts
-    ldr r11, object_num_verts
+    mov r11, #object_num_verts
     adr r12, projected_verts
     .1:
     ; R2=ptr to world pos vector
@@ -272,15 +270,16 @@ draw_3d_scene:
     ; Plot faces as polys.
     adr r11, object_face_indices
     adr r10, projected_verts
-    adr r6, transformed_normals
-    ldr r9, object_num_faces
+    mov r9, #0                  ; face count
     .2:
     ldrb r5, [r11, #0]          ; vertex0 of polygon.
     
     adr r1, transformed_verts
     add r1, r1, r5, lsl #3
     add r1, r1, r5, lsl #2      ; transformed_verts + index*12
-    mov r2, r6                  ; face_normal
+    adr r2, transformed_normals
+    add r2, r2, r9, lsl #3      ; face_normal
+    add r2, r2, r9, lsl #2      ; face_normal
 
     ; TODO: Inline?
     bl backface_cull_test       ; (vertex0 - camera_pos).face_normal
@@ -290,15 +289,15 @@ draw_3d_scene:
 
     mov r2, r10                 ; projected vertex array.
     ldr r3, [r11]               ; quad indices.
-    stmfd sp!, {r6, r9-r12}
+    stmfd sp!, {r9-r12}
     add r4, r9, #6              ; colour index.
     bl polygon_plot_quad
-    ldmfd sp!, {r6, r9-r12}
+    ldmfd sp!, {r9-r12}
 
     .3:
-    add r6, r6, #VECTOR3_SIZE
     add r11, r11, #4
-    subs r9, r9, #1
+    add r9, r9, #1
+    cmp r9, #object_num_faces
     bne .2
 
     ldr pc, [sp], #4
@@ -311,7 +310,7 @@ draw_3d_scene:
 ;  R0=dot product of (v0-cp).n
 ; Trashes: r3-r8
 backface_cull_test:
-    stmfd sp!, {r6, lr}
+    str lr, [sp, #-4]!
 
     ldmia r1, {r3-r5}
     ldr r6, camera_pos+0
@@ -324,7 +323,7 @@ backface_cull_test:
     ; vector A already in (r3, r4, r5)
     ; vector B = face normal
     bl vector_dot_product_load_B
-    ldmfd sp!, {r6, pc}
+    ldr pc, [sp], #4
 
 
 ; Project world position to screen coordinates.
@@ -374,30 +373,6 @@ project_to_screen:
     ldr pc, [sp], #4
 
 
-.if LERP_3D_SCENE
-; Simple linear interpolation of objects.
-; Current fixed between cube and column object.
-; NB. Only lerps vertex positions.
-;     Doesn't lerp face normals!
-;
-lerp_3d_objects:
-    str lr, [sp, #-4]!
-    adr r1, cube_verts
-    adr r2, column_verts
-    adr r0, object_verts
-    ldr r10, object_num_verts
-    ldr r9, lerp_value          ; [1.16]
-.1:
-    bl vector_lerp
-    add r0, r0, #VECTOR3_SIZE
-    add r1, r1, #VECTOR3_SIZE
-    add r2, r2, #VECTOR3_SIZE
-    ; TODO: Decide whether vector functions just advance ptrs.
-    subs r10, r10, #1
-    bne .1
-    ldr pc, [sp], #4
-.endif
-
 ; ============================================================================
 ; Object data: CUBE
 ;
@@ -413,9 +388,6 @@ lerp_3d_objects:
 ;      3        2
 ; ============================================================================
 
-object_num_verts:
-    .long 8
-
 object_verts:
     VECTOR3 -16.0,  16.0, -16.0
     VECTOR3  16.0,  16.0, -16.0
@@ -425,31 +397,6 @@ object_verts:
     VECTOR3  16.0,  16.0,  16.0
     VECTOR3  16.0, -16.0,  16.0
     VECTOR3 -16.0, -16.0,  16.0
-
-.if LERP_3D_SCENE
-cube_verts:     ; CUBE
-    VECTOR3 -32.0,  32.0, -32.0
-    VECTOR3  32.0,  32.0, -32.0
-    VECTOR3  32.0, -32.0, -32.0
-    VECTOR3 -32.0, -32.0, -32.0
-    VECTOR3 -32.0,  32.0,  32.0
-    VECTOR3  32.0,  32.0,  32.0
-    VECTOR3  32.0, -32.0,  32.0
-    VECTOR3 -32.0, -32.0,  32.0
-
-column_verts:   ; COLUMN
-    VECTOR3 -16.0,  64.0, -16.0
-    VECTOR3  16.0,  64.0, -16.0
-    VECTOR3  16.0, -64.0, -16.0
-    VECTOR3 -16.0, -64.0, -16.0
-    VECTOR3 -16.0,  64.0,  16.0
-    VECTOR3  16.0,  64.0,  16.0
-    VECTOR3  16.0, -64.0,  16.0
-    VECTOR3 -16.0, -64.0,  16.0
-.endif
-
-object_num_faces:
-    .long 6
 
 ; Winding order is clockwise (from outside)
 object_face_indices:
@@ -488,14 +435,3 @@ polygon_buffer:
     .skip OBJ_VERTS_PER_FACE * 2 * 4
 
 ; ============================================================================
-
-.if 0 ; PYRAMID - but would have to make the face normals correct...
-    VECTOR3 -16.0,  32.0, -16.0
-    VECTOR3  16.0,  32.0, -16.0
-    VECTOR3  64.0, -32.0, -64.0
-    VECTOR3 -64.0, -32.0, -64.0
-    VECTOR3 -16.0,  32.0,  16.0
-    VECTOR3  16.0,  32.0,  16.0
-    VECTOR3  64.0, -32.0,  64.0
-    VECTOR3 -64.0, -32.0,  64.0
-.endif
