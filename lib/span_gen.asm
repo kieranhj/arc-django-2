@@ -4,7 +4,7 @@
 ; Kindly provided by Progen (Sarah Walker).
 ; ============================================================================
 
-.equ MAXSPAN, Screen_Width/4	; TODO: Can probably reduce this for this demo.
+.equ MAXSPAN, Screen_Width/3	; TODO: Can probably reduce this for this demo.
 .equ _SPAN_GEN_MULTI_WORD, 1	; TODO: multiword plotting for regular polys.
 
 gen_code_pointers_p:

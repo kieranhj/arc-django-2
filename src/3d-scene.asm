@@ -53,6 +53,9 @@ camera_pos:
 object_pos:
     VECTOR3 0.0, 0.0, 32.0
 
+object_pos_camera_relative:
+    VECTOR3 0.0, 0.0, 0.0
+
 object_rot:
     VECTOR3 0.0, 0.0, 0.0
 
@@ -144,8 +147,20 @@ update_3d_scene:
     stmia r0!, {r3-r11}
     .endif
 
-    ; TODO: Subtract camera pos here?
+    ; Subtract camera position from object position.
+    adr r12, camera_pos
+    ldmia r12, {r3-r5}
+
     adr r11, object_pos
+    ldmia r11, {r6-r8}
+
+    sub r6, r6, r3
+    sub r7, r7, r4
+    sub r8, r8, r5
+
+    ; Camera relative object position.
+    adr r11, object_pos_camera_relative
+    stmia r11, {r6-r8}
 
     ; Transform vertices in scene.
     adr r0, object_transform
@@ -157,15 +172,12 @@ update_3d_scene:
     bl matrix_multiply_vector
     ; TODO: Array version of this function.
 
-    ; Add object position here to move into world space!
     ldmia r2, {r3-r5}
+    ; Add camera relative object position to transform vertex.
     ldmia r11, {r6-r8}
     add r3, r3, r6
     add r4, r4, r7
     add r5, r5, r8
-    ; TODO: Subtract camera position here?
-    ;       Store transformed verts as camera relative?
-
     stmia r2!, {r3-r5}
     
     add r1, r1, #VECTOR3_SIZE
@@ -304,7 +316,7 @@ draw_3d_scene:
 
 ; Backfacing culling test.
 ; Parameters:
-;  R1=ptr to vertex in world space
+;  R1=ptr to transformed vertex in camera relative space
 ;  R2=ptr to face normal vector
 ; Return:
 ;  R0=dot product of (v0-cp).n
@@ -313,13 +325,6 @@ backface_cull_test:
     str lr, [sp, #-4]!
 
     ldmia r1, {r3-r5}
-    ldr r6, camera_pos+0
-    ldr r7, camera_pos+4
-    ldr r8, camera_pos+8
-    sub r3, r3, r6
-    sub r4, r4, r7
-    sub r5, r5, r8          ; vertex - camera_pos
-
     ; vector A already in (r3, r4, r5)
     ; vector B = face normal
     bl vector_dot_product_load_B
@@ -328,7 +333,7 @@ backface_cull_test:
 
 ; Project world position to screen coordinates.
 ;
-; R2=ptr to position in world space vector
+; R2=ptr to camera relative transformed position
 ; Returns:
 ;  R0=screen x
 ;  R1=screen y
@@ -336,15 +341,8 @@ backface_cull_test:
 project_to_screen:
     str lr, [sp, #-4]!
 
+    ; Vertex already transformed and camera relative.
     ldmia r2, {r3-r5}           ; (x,y,z)
-    ldr r6, camera_pos
-    ldr r7, camera_pos+4
-    ldr r8, camera_pos+8
-
-    ; eye_pos = world_pos - camera_pos
-    sub r3, r3, r6
-    sub r4, r4, r7
-    sub r5, r5, r8
 
     ; vp_centre_x + vp_scale * (x-cx) / (z-cz)
     mov r0, r3                  ; (x-cx)
