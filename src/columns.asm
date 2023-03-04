@@ -26,76 +26,44 @@ column_colours:
     .long 0xeeeeeeee
     .long 0xffffffff
 
-; R11=screen plot pointer
-; R10=y offset
-; R9=colour word
-; R8=narrow flag
-; Trashes: r5-r8
-plot_column:
-    ; Copy colour word.
-    mov r7, r9
-    mov r6, r9
-
-    mov r5, #0              ; line loop.
-.1:
-    ; assumes 'tooth' size is 16 pixels
-    movs r0, r10, lsr #16+5     ; parity in C
-
-    ; if carry set draw tooth
-    stmcsia r11, {r6-r7}    ; plot 16 pixels
-    add r11, r11, #8        ; skip 16 pixels
-    
-    stmia r11!, {r6-r7}     ; plot 16 pixels
-
-    cmp r8, #0
-    stmeqia r11, {r6-r7}    ; plot 16 pixels
-
-    add r11, r11, #Screen_Stride-16
-
-    add r10, r10, #1<<16    ; next y offset
-    add r5, r5, #1          ; next line
-    cmp r5, #256
-    blt .1
-
-    mov pc, lr
-
 ; R12=screen addr
 plot_columns:
     str lr, [sp, #-4]!
-
-    mov r8, #0
 
     ; Start in the middle.
     add r11, r12, #Screen_Stride/2 + 0
     ldr r10, column_y_offset + 0
     ldr r9, column_colours + 0
-    bl plot_column
+    mov r4, #0  ; bg
+    bl plot_narrow_column
 
     add r11, r12, #Screen_Stride/2 + 16
     ldr r10, column_y_offset + 4
+    mov r4, r9  ; bg
     ldr r9, column_colours + 4
-    bl plot_column
+    bl plot_narrow_column
 
     add r11, r12, #Screen_Stride/2 + 32
     ldr r10, column_y_offset + 8
+    mov r4, r9  ; bg
     ldr r9, column_colours + 8
-    bl plot_column
+    bl plot_narrow_column
 
     add r11, r12, #Screen_Stride/2 + 48
     ldr r10, column_y_offset + 12
+    mov r4, r9  ; bg
     ldr r9, column_colours + 12
-    bl plot_column
+    bl plot_narrow_column
 
     add r11, r12, #Screen_Stride/2 + 64
     ldr r10, column_y_offset + 16
+    mov r4, r9  ; bg
     ldr r9, column_colours + 16
-    mov r8, #1  ; narrow
-    bl plot_column
+    bl plot_narrow_column
 
     ldr pc, [sp], #4
 
 update_columns:
-
     adr r9, column_y_offset
     adr r8, column_y_speed
     mov r7, #5
@@ -123,13 +91,37 @@ clear_left_screen:
     mov r8, r0
     mov r9, r0
 
-    add r11, r12, #Screen_Bytes
-.1:
+.rept Screen_Height
     stmia r12!, {r0-r9}     ; 80 pixels
     stmia r12!, {r0-r9}     ; 80 pixels
-    stmia r12, {r0-r1}      ; 16 pixels
     add r12, r12, #Screen_Stride/2
-    cmp r12, r11
-    blt .1
+.endr
 
+    mov pc, lr
+
+; R11=screen plot pointer
+; R10=y offset
+; R9=colour word
+; R4=bg colour
+; Trashes: r3-r8
+plot_narrow_column:
+    ; Copy colour word.
+    mov r8, r9
+    mov r7, r9
+    mov r6, r9
+    ; Copy bg word.
+    mov r3, r4
+
+.rept Screen_Height
+    ; assumes 'tooth' size is 16 pixels
+    movs r0, r10, lsr #16+5     ; parity in C
+
+    ; if carry set draw tooth
+    stmcsia r11!, {r6-r9}       ; plot 32 pixels of tooth
+    stmccia r11!, {r3-r4,r8-r9} ; else plot 16 pixels of bg + 16 pixels of tooth
+    
+    add r11, r11, #Screen_Stride-16
+
+    add r10, r10, #1<<16    ; next y offset
+.endr
     mov pc, lr

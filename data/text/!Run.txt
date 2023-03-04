@@ -16,7 +16,7 @@ RMASIZE 0K
 SCREENSIZE 80K
 RMKILL MemAlloc 
 |
-RMLOAD <Demo$Dir>.QTM146c_24 { > null: }
+RMLOAD <Demo$Dir>.QTM149a { > null: }
 RMLOAD <Demo$Dir>.RasterM29 { > null: }
 |
 wimpslot -min 1500K

@@ -10,6 +10,8 @@
 .equ _RASTERMAN, 0
 .equ _USE_MODE9_FONT, 1	; convert font to MODE 9 at runtime.
 
+.equ Sample_Speed, 48		; ideally 24us for ARM250+
+
 .equ Screen_Banks, _DJANGO
 .equ Screen_Mode, 9
 .equ Screen_Width, 320
@@ -129,10 +131,12 @@ main:
 
 	; QTM Init.
 	; Required to make QTM play nicely with RasterMan.
+	.if _RASTERMAN
 	mov r0, #4
 	mov r1, #-1
 	mov r2, #-1
 	swi QTM_SoundControl
+	.endif
 
 	mov r0, #8    ;set bit 3 of music options byte = QTM retains control of sound system after Pause/Stop/Clear
 	mov r1, #8
@@ -145,6 +149,9 @@ main:
 	mov r0, #0
 	mov r1, #Stereo_Positions
 	swi QTM_Stereo
+
+	mov r0, #Sample_Speed
+	swi QTM_SetSampleSpeed
 
 	; QTM callback.
 	bl claim_music_interrupt
@@ -283,32 +290,31 @@ main_loop:
 
 	bl get_next_screen_for_writing
 
-	SET_BORDER 0x00ff00
+	SET_BORDER 0x00ff00		; green = screen clear
 	ldr r12, screen_addr
-    bl clear_left_screen
+	bl clear_left_screen
 
-	ldr r12, screen_addr
+	SET_BORDER 0x00ffff		; yellow = columns
+	ldr r12, screen_addr	
 	bl plot_columns
-	SET_BORDER 0xff00ff
 
+	SET_BORDER 0xff00ff		; magenta = masked logo
 	ldr r12, screen_addr
 	bl plot_logo
 
-	SET_BORDER 0xffff00
+	SET_BORDER 0xffff00		; cyan = masked scroller
 	ldr r12, screen_addr
 	bl scroller_draw
-	SET_BORDER 0x000000
 
-	SET_BORDER 0x0000ff
+	SET_BORDER 0x0000ff		; red = plot cube
 	ldr r12, screen_addr
 	bl draw_3d_scene
-	SET_BORDER 0x000000
 
-	SET_BORDER 0xff0000
+	SET_BORDER 0xff0000		; blue = plot menu
 	bl plot_menu
 	bl plot_menu_selection
-	SET_BORDER 0x000000
 
+	SET_BORDER 0x000000
 	.if _DJANGO==1
 	; do VU bars.
 	bl update_vu_bars

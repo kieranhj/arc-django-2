@@ -71,6 +71,7 @@ plot_logo:
 
 ; R9=logo_addr, R12=screen_addr
 ; Assume plotting at top of the screen.
+.if _DJANGO==1
 plot_logo_glitched:
     str lr, [sp, #-4]!
     mov r14, #Logo_Height
@@ -124,3 +125,4 @@ plot_logo_glitched:
     bne .1
 
 	ldr pc, [sp], #4
+.endif
