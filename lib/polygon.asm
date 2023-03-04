@@ -340,18 +340,28 @@ polygon_plot_spans:
     cmp r5, #0
     bmi .3                      ; nothing to do.
 
-    ldr r4, gen_code_pointers_p
-    ldr r7, polygon_span_table_p
+    ldr r12, gen_code_pointers_p
 
     ldr r8, polygon_min_y       ; y
-	ADD r11, r11, r8, LSL #7
-	ADD r11, r11, r8, LSL #5    ;r11 = screen scanline addr
-	.if Screen_Width != 320
-	.err Screen_Width calculation not accounted for!
+	add r11, r11, r8, lsl #7
+	add r11, r11, r8, lsl #5    ;r11 = screen scanline addr
+	.if Screen_Stride != 160
+	.err Expected Screen_Stride to be 160 bytes!
 	.endif
 
+    ldr r7, polygon_span_table_p
+    add r7, r7, r8, lsl #2      ; &span[min_y]
+
+    sub r5, r5, r8              ; max_y - min_y
+    add r8, r11, r5, lsl #7     ;
+    add r8, r8, r5, lsl #5      ; r8 = screen scanline addr of max_y
+
+    mov r2, r9
+    mov r4, r9
+    mov r5, r9
+
 .1:
-    ldr r0, [r7, r8, lsl #2]    ; packed span [x1, x2] for scanline y
+    ldr r0, [r7]                ; packed span [x1, x2] for scanline y
     cmp r0, #0
     beq .2                      ; skip empty line.
 
@@ -379,23 +389,24 @@ polygon_plot_spans:
     subs r3, r1, r0             ; length of span
     bmi .2                      ; skip if no pixels.
 
-	mov r2, r0, lsr #3
-	add r10, r11, r2, lsl #2    ; ptr to start word
+	mov r6, r0, lsr #3
+	add r10, r11, r6, lsl #2    ; ptr to start word
 
-    and r2, r0, #7              ; x start offset [0-7] pixel
-    add r2, r2, r3, lsl #3      ; + span length * 8
+    and r0, r0, #7              ; x start offset [0-7] pixel
+    add r0, r0, r3, lsl #3      ; + span length * 8
     adr lr, .2                  ; link address.
-    ldr pc, [r4, r2, lsl #2]    ; jump to plot function.
+    ; MULTI_WORD uses R2, R4, R5 as well as R9.
+    ldr pc, [r12, r0, lsl #2]   ; jump to plot function.
+    ; Uses R1, R3, R6, R9, R10, R11
 
     .2:
     ; Clear completed line.
     mov r0, #0
-    str r0, [r7, r8, lsl #2]    ; [0, 0]
+    str r0, [r7], #4            ; [0, 0]
 
     ; Next line.
     add r11, r11, #Screen_Stride
-    add r8, r8, #1
-    cmp r8, r5
+    cmp r11, r8
     blt .1
 
     ; Reset polygon min/max y.

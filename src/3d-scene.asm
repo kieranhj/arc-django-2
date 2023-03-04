@@ -269,96 +269,11 @@ draw_3d_scene:
 
     ldr r12, [sp], #4           ; pop screen addr
 
-    ; Plot vertices as pixels.
-    .if 0
-    adr r3, projected_verts
-    ldr r9, object_num_verts
-    .2:
-    ldmia r3!, {r0, r1}
-
-    ; TODO: Clipping.
-
-    mov r4, #0x07               ; colour.
-    bl plot_pixel
-    subs r9, r9, #1
-    bne .2
-    .endif
-
-    ; Plot faces as lines.
-    .if 0
-    adr r11, object_face_indices
-    adr r10, projected_verts
-    adr r6, transformed_normals
-    ldr r9, object_num_faces
-    .2:
-    ldrb r5, [r11, #0]          ; vertex0 of polygon.
-
-    adr r1, transformed_verts
-    add r1, r1, r5, lsl #3
-    add r1, r1, r5, lsl #2      ; transformed_verts + index*12
-    mov r2, r6                  ; face_normal
-
-    bl backface_cull_test       ; (vertex0 - camera_pos).face_normal
-
-    cmp r0, #0
-    bpl .3                      ; normal facing away from the view direction.
-
-    mov r4, #0x07               ; colour.
-
-    ldrb r5, [r11, #0]          ; vertex0 of polygon.
-    add r7, r10, r5, lsl #3     ; projected_verts + index*8
-    ldmia r7, {r0, r1}          ; x_start, y_start
-
-    ldrb r5, [r11, #1]
-    add r7, r10, r5, lsl #3     ; projected_verts + index*8
-    ldmia r7, {r2, r3}          ; x_end, y_end
-
-    bl drawline
-
-    ldrb r5, [r11, #1]
-    add r7, r10, r5, lsl #3     ; projected_verts + index*8
-    ldmia r7, {r0, r1}          ; x_start, y_start
-
-    ldrb r5, [r11, #2]
-    add r7, r10, r5, lsl #3     ; projected_verts + index*8
-    ldmia r7, {r2, r3}          ; x_end, y_end
-
-    bl drawline
-
-    ldrb r5, [r11, #2]
-    add r7, r10, r5, lsl #3     ; projected_verts + index*8
-    ldmia r7, {r0, r1}          ; x_start, y_start
-
-    ldrb r5, [r11, #3]
-    add r7, r10, r5, lsl #3     ; projected_verts + index*8
-    ldmia r7, {r2, r3}          ; x_end, y_end
-
-    bl drawline
-
-    ldrb r5, [r11, #3]
-    add r7, r10, r5, lsl #3     ; projected_verts + index*8
-    ldmia r7, {r0, r1}          ; x_start, y_start
-
-    ldrb r5, [r11, #0]
-    add r7, r10, r5, lsl #3     ; projected_verts + index*8
-    ldmia r7, {r2, r3}          ; x_end, y_end
-
-    bl drawline
-
-    .3:
-    add r6, r6, #VECTOR3_SIZE
-    add r11, r11, #4
-    subs r9, r9, #1
-    bne .2
-    .endif
-
     ; Plot faces as polys.
-    .if 1
     adr r11, object_face_indices
     adr r10, projected_verts
     adr r6, transformed_normals
     ldr r9, object_num_faces
-    mov r4, #0x01               ; colour.
     .2:
     ldrb r5, [r11, #0]          ; vertex0 of polygon.
     
@@ -367,23 +282,16 @@ draw_3d_scene:
     add r1, r1, r5, lsl #2      ; transformed_verts + index*12
     mov r2, r6                  ; face_normal
 
+    ; TODO: Inline?
     bl backface_cull_test       ; (vertex0 - camera_pos).face_normal
 
     cmp r0, #0                  
     bpl .3                      ; normal facing away from the view direction.
 
-    ; Simple directional lighting from -z.
-    ldr r4, [r6, #8]            ; face_normal.z
-    cmp r4, #0
-    rsbmi r4, r4, #0            ; make positive. [0.16]
-                                ; otherwise it should be v small.
-    mov r4, r4, lsr #12         ; [0.4]
-    cmp r4, #0x10
-    movge r4, #0x0f             ; clamp to [0-15]
-
     mov r2, r10                 ; projected vertex array.
-    ldr r3, [r11]               ; quad indices
+    ldr r3, [r11]               ; quad indices.
     stmfd sp!, {r6, r9-r12}
+    add r4, r9, #6              ; colour index.
     bl polygon_plot_quad
     ldmfd sp!, {r6, r9-r12}
 
@@ -392,7 +300,6 @@ draw_3d_scene:
     add r11, r11, #4
     subs r9, r9, #1
     bne .2
-    .endif
 
     ldr pc, [sp], #4
 
