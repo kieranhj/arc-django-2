@@ -6,7 +6,8 @@
 .equ MENU_ARTIST_XPOS, 26
 .equ MENU_TOP_YPOS, 100
 .equ MENU_ROW_HEIGHT, 7
-.equ MENU_COLOUR, 15
+.equ MENU_ITEM_COLOUR, 10
+.equ MENU_PLAYING_COLOUR, 15
 
 current_key:
 	.long 0
@@ -28,6 +29,16 @@ selection_colour:
 update_menu:
 	str lr, [sp, #-4]!
 
+	; Update selected item colour.
+    ldr r1, vsync_count
+    and r1, r1, #1
+
+	ldr r0, selection_colour
+	add r0, r0, r1
+	cmp r0, #15
+	movgt r0, #0
+	str r0, selection_colour
+
 	; check up
 	.if _RASTERMAN
 	mov r1, #RMKey_ArrowUp
@@ -40,9 +51,6 @@ update_menu:
 	ldr r3, selection_number
 	cmp r3, #0
 	beq .2
-	.if _DJANGO==1
-	bl plot_menu_item
-	.endif
 	sub r3, r3, #1
 	str r3, selection_number
 	
@@ -59,9 +67,6 @@ update_menu:
 	ldr r3, selection_number
 	cmp r3, #MAX_SONGS
 	bge .3
-	.if _DJANGO==1
-	bl plot_menu_item
-	.endif
 	add r3, r3, #1
 	str r3, selection_number
 
@@ -122,10 +127,14 @@ update_menu:
 	eor r0, r0, #MAX_SONGS
 	str r0, autoplay_flag
 
+	; Update autoplay string.
+	adr r1, menu_autoplay_off_string
+	adr r2, menu_autoplay_on_string
+	cmp r0, #0
+	movne r1, r2
+	str r1, menu_item_autoplay
+
 	mov r3, #MAX_SONGS
-	.if _DJANGO==1
-	bl plot_menu_item
-	.endif
 	b .5
 
 	.9:
@@ -135,9 +144,6 @@ update_menu:
 
 	; Play song in R0.
 	bl play_song
-	.if _DJANGO==1
-	bl plot_menu_item
-	.endif
 
 .5:
 
@@ -162,9 +168,6 @@ update_menu:
 	ldr r3, selection_number
 	cmp r2, r3
 	beq .6
-	.if _DJANGO==1
-	bl plot_menu_item
-	.endif
 
     ; Absolute Y.
 	mov r0, #1023
@@ -177,36 +180,6 @@ update_menu:
 .endif
 
 .6:
-	.if _DJANGO==1
-	bl plot_menu_selection
-	.endif
-	
-	ldr pc, [sp], #4
-
-plot_menu_selection:
-	str lr, [sp, #-4]!
-
-	; Update selected item.
-    ldr r1, vsync_count
-    and r1, r1, #1
-
-	ldr r0, selection_colour
-	add r0, r0, r1
-	cmp r0, #15
-	movgt r0, #0
-	str r0, selection_colour
-    str r0, small_font_colour
-	mov r0, #SmallFont_BoldBase
-	str r0, small_font_bold_flag
-    str r0, small_font_ripple_flag
-	ldr r3, selection_number
-	bl plot_menu_item_ex
-    mov r10, #MENU_COLOUR
-    str r10, small_font_colour
-    mov r10, #0
-    str r10, small_font_ripple_flag
-
-    .8:
 	ldr pc, [sp], #4
 
 keyboard_scan_debounced:
@@ -257,51 +230,58 @@ check_key_debounced:
 	cmp r0, r1
 	mov pc, lr
 
-plot_menu:
+; R12=screen addr.
+plot_new_menu:
 	str lr, [sp, #-4]!
-    mov r10, #MENU_COLOUR
-    bl small_font_colour
-	mov r3, #MAX_SONGS
-	.1:
-	bl plot_menu_item
-	subs r3, r3, #1
-	bpl .1
-	ldr pc, [sp], #4
 
-; R3=item # (preserved)
-plot_menu_item:
-	mov r0, #0
-	ldr r1, song_number
-	cmp r3, #MAX_SONGS		; autoplay hack.
-	ldreq r1, autoplay_flag
-	cmp r3, r1
-	moveq r0, #SmallFont_BoldBase
-	str r0, small_font_bold_flag
-; Fall through!
-plot_menu_item_ex:
-	str lr, [sp, #-4]!
+	mov r5, #0
 	adr r2, menu_table
-	ldr r1, [r2, r3, lsl #2]	; r0 * 4
-	add r0, r1, r2				; string address
-	bl small_font_plot_string
-    mov r0, #0
-    str r0, small_font_bold_flag
-	ldr pc, [sp], #4
+	ldr r7, selection_number
+	ldr r8, song_number
+.1:
+	; set colour word.
+	mov r10, #MENU_ITEM_COLOUR
+
+	; song_number = what's playing
+	cmp r5, r8
+	moveq r10, #MENU_PLAYING_COLOUR
+
+	; selection_number = what's flashing
+	cmp r5, r7
+	ldreq r10, selection_colour
+
+	orr r10, r10, r10, lsl #4
+	orr r10, r10, r10, lsl #8
+	orr r10, r10, r10, lsl #16
+
+	ldr r0, [r2], #4
+	bl new_font_plot_string
+
+	add r5, r5, #1
+	cmp r5, #MAX_SONGS
+	ble .1
+
+	ldr pc, [sp], #4	
+
+; ============================================================================
 
 .p2align 2
 menu_table:
-	.long menu_01_string - menu_table
-	.long menu_02_string - menu_table
-	.long menu_03_string - menu_table
-	.long menu_04_string - menu_table
-	.long menu_05_string - menu_table
-	.long menu_06_string - menu_table
-	.long menu_07_string - menu_table
-	.long menu_08_string - menu_table
-	.long menu_09_string - menu_table
-	.long menu_10_string - menu_table
-	.long menu_11_string - menu_table
-	.long menu_12_string - menu_table
+	.long menu_01_string
+	.long menu_02_string
+	.long menu_03_string
+	.long menu_04_string
+	.long menu_05_string
+	.long menu_06_string
+	.long menu_07_string
+	.long menu_08_string
+	.long menu_09_string
+	.long menu_10_string
+	.long menu_11_string
+menu_item_autoplay:
+	.long menu_autoplay_on_string
+
+; ============================================================================
 
 .p2align 2
 menu_01_string:
@@ -348,7 +328,12 @@ menu_11_string:
 	.byte 31, MENU_SONG_XPOS+15, MENU_TOP_YPOS+10*MENU_ROW_HEIGHT, "dummy", 31, MENU_ARTIST_XPOS, MENU_TOP_YPOS+10*MENU_ROW_HEIGHT, "lord", 0
 
 .p2align 2
-menu_12_string:
-	.byte 31, 0, MENU_TOP_YPOS+11*MENU_ROW_HEIGHT, "AUTOPLAY ON", 0
+menu_autoplay_on_string:
+	.byte 31, 0, MENU_TOP_YPOS+11*MENU_ROW_HEIGHT, "autoplay on", 0
 
 .p2align 2
+menu_autoplay_off_string:
+	.byte 31, 0, MENU_TOP_YPOS+11*MENU_ROW_HEIGHT, "autoplay off", 0
+
+.p2align 2
+; ============================================================================

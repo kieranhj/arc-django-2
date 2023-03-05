@@ -8,7 +8,6 @@
 
 .equ _DJANGO, 2
 .equ _RASTERMAN, 0
-.equ _USE_MODE9_FONT, 1	; convert font to MODE 9 at runtime.
 
 .equ Sample_Speed, 48		; ideally 24us for ARM250+
 
@@ -117,10 +116,7 @@ main:
 	str r0, rnd_seed
 
 	; EARLY INIT / LOAD STUFF HERE!
-	.if _USE_MODE9_FONT
-	bl mode9_font_init
-	.endif
-
+	bl new_font_init
 	bl maths_init
 	bl init_3d_scene
 
@@ -205,11 +201,11 @@ main:
 	ldr r12, screen_addr
 	adrl r9, logo_data
 	bl plot_logo
-	.endif
 
 	; Draw menu to screen.
 	ldr r12, screen_addr
 	bl plot_menu
+	.endif
 
 	; Set palette (shows screen).
 	adrl r2, logo_pal_block
@@ -311,32 +307,10 @@ main_loop:
 	bl draw_3d_scene
 
 	SET_BORDER 0xff0000		; blue = plot menu
-	bl plot_menu
-	bl plot_menu_selection
-
-	SET_BORDER 0x000000
-	.if _DJANGO==1
-	; do VU bars.
-	bl update_vu_bars
-
-	; do glitch.
-	ldr r0, glitch_timer
-	cmp r0, #0
-	beq .8
-
-	subs r0, r0, #1
-	str r0, glitch_timer
-
 	ldr r12, screen_addr
-	adrl r9, logo_data
-	bleq plot_logo
-	blne plot_logo_glitched
-	.8:
+	bl plot_new_menu
 
-	SET_BORDER 0x00ff00
-	bl update_sprites
 	SET_BORDER 0x000000
-	.endif
 
 	; show debug
 	.if _DEBUG_SHOW
@@ -406,26 +380,6 @@ exit:
 	adr r1, error_handler
 	mov r2, #0
 	swi OS_Release
-
-	.if _DJANGO==1 && _DEBUG==0
-	; Pause.
-	mov r4, #Menu_Beat_Frames
-	bl wait_frames
-
-	; Bitshifters.
-	adr r0, bitshifters_splash
-	ldr r1, screen_addr
-	bl unlz4
-
-	adrl r2, bitshifters_pal_block
-	bl palette_init_fade_from_black
-	; Fade.
-	bl fade_in
-
-	; Pause.
-	mov r4, #Menu_Beat_Frames*2
-	bl wait_frames
-	.endif
 
 	; Display whichever bank we've just written to
 	mov r0, #OSByte_WriteDisplayBank
@@ -836,11 +790,6 @@ check_autoplay:
 	movge, r0, #0
 	bl play_song
 
-	; R3=old item,
-	bl plot_menu_item
-	ldr r3, song_number
-	bl plot_menu_item
-
 	ldr pc, [sp], #4
 
 claim_music_interrupt:
@@ -881,14 +830,10 @@ screen_addr:
 
 .include "lib/mode9-palette.asm"
 .include "src/menu.asm"
-.include "src/small-font.asm"
+.include "src/new-font.asm"
 .include "src/columns.asm"
 .include "src/scroller.asm"
 .include "src/logo.asm"
-.if _DJANGO==1
-.include "src/vubars.asm"
-.include "src/sprites.asm"
-.endif
 .if _RASTERMAN
 .include "src/rasters.asm"
 .endif

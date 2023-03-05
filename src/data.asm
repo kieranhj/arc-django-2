@@ -28,27 +28,15 @@ rabenauge_pal_block_no_adr:
 .p2align 2
 rabenauge_splash_no_adr:
 .incbin "build/rabenauge.lz4"
-
-.p2align 2
-bitshifters_pal_block_no_adr:
-.incbin "build/bitshifters.bin.pal"
-
-.p2align 2
-bitshifters_splash_no_adr:
-.incbin "build/bitshifters.lz4"
-
-.p2align 2
-note_sprite_data_no_adr:
-.incbin "build/note1.bin"
-.incbin "build/note2.bin"
-.incbin "build/note3.bin"
-.incbin "build/note4.bin"
-.incbin "build/note5.bin"
 .endif
 
 .p2align 2
 scroller_font_data_no_adr:
 .incbin "build/big-font.bin"
+
+.p2align 2
+new_menu_font_data_no_adr:
+.incbin "build/small-font.bin"
 
 .p2align 2
 menu_font_data_no_adr:
