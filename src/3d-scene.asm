@@ -281,7 +281,6 @@ draw_3d_scene:
 
     ; Plot faces as polys.
     adr r11, object_face_indices
-    adr r10, projected_verts
     mov r9, #0                  ; face count
     .2:
     ldrb r5, [r11, #0]          ; vertex0 of polygon.
@@ -293,18 +292,26 @@ draw_3d_scene:
     add r2, r2, r9, lsl #3      ; face_normal
     add r2, r2, r9, lsl #2      ; face_normal
 
-    ; TODO: Inline?
-    bl backface_cull_test       ; (vertex0 - camera_pos).face_normal
+    ; Backfacing culling test (vertex - camera_pos).face_normal
+    ; Parameters:
+    ;  R1=ptr to transformed vertex in camera relative space
+    ;  R2=ptr to face normal vector
+    ; Return:
+    ;  R0=dot product of (v0-cp).n
+    ; Trashes: r3-r8
+    ; vector A = (v0 - camera_pos)
+    ; vector B = face_normal
+    bl vector_dot_product
 
     cmp r0, #0                  
     bpl .3                      ; normal facing away from the view direction.
 
-    mov r2, r10                 ; projected vertex array.
+    adr r2, projected_verts     ; projected vertex array.
     ldr r3, [r11]               ; quad indices.
-    stmfd sp!, {r9-r12}
+    stmfd sp!, {r9,r11,r12}
     add r4, r9, #6              ; colour index.
     bl polygon_plot_quad
-    ldmfd sp!, {r9-r12}
+    ldmfd sp!, {r9,r11,r12}
 
     .3:
     add r11, r11, #4
@@ -312,22 +319,6 @@ draw_3d_scene:
     cmp r9, #object_num_faces
     bne .2
 
-    ldr pc, [sp], #4
-
-; Backfacing culling test.
-; Parameters:
-;  R1=ptr to transformed vertex in camera relative space
-;  R2=ptr to face normal vector
-; Return:
-;  R0=dot product of (v0-cp).n
-; Trashes: r3-r8
-backface_cull_test:
-    str lr, [sp, #-4]!
-
-    ldmia r1, {r3-r5}
-    ; vector A already in (r3, r4, r5)
-    ; vector B = face normal
-    bl vector_dot_product_load_B
     ldr pc, [sp], #4
 
 

@@ -289,6 +289,8 @@ polygon_plot_quad:
     str r4, polygon_colour
     str r12, polygon_screen_addr    ; stash screen addr for now.
 
+    ; TODO: Combine quad edge determination with rasterisation.
+
     ; Convert polygon indices to an edge list.
     adr r12, polygon_edge_list      ; ptr to edge_list [xs, m, ys, ye]
     bl polygon_quad_to_edge_list
@@ -356,6 +358,7 @@ polygon_plot_spans:
     add r8, r11, r5, lsl #7     ;
     add r8, r8, r5, lsl #5      ; r8 = screen scanline addr of max_y
 
+    ; Span plot routines write 4x words.
     mov r2, r9
     mov r4, r9
     mov r5, r9
