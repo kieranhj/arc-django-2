@@ -4,6 +4,7 @@
 
 .equ Scroller_Y_Pos, 234
 
+.equ Scroller_Max_Glyphs, 60
 .equ Scroller_Glyph_Width, 16
 .equ Scroller_Glyph_Height, 16
 
@@ -253,9 +254,6 @@ scroller_draw:
 
     ldr r8, scroller_column
 
-	; TODO: Deal with shifting 16 columns!
-	; Current approach not going to work!!!
-
 	movs r5, r8, lsr #3				; word parity
 	addne r9, r9, #4				; skip a glyph word
 
@@ -275,6 +273,7 @@ scroller_draw:
 
     mov r1, r0, lsr r8              ; second glyph word shifted.
     mov r0, r0, lsl r7              ; first glyph word shifted.
+	; 6c
 
     cmp r0, #0                      ; if first glyph is empty?
     beq .3                          ; skip.
@@ -287,6 +286,7 @@ scroller_draw:
     bic r2, r2, r0
     orr r2, r2, r0                  ; mask in first glyph word.
     str r2, [r11, #-4]              ; store prev screen word.
+	; 10c
 
     ; display second glyph word in current screen word.
     .3:
@@ -297,6 +297,7 @@ scroller_draw:
     bic r2, r2, r1
     orr r2, r2, r1                  ; mask in second glyph word.
     str r2, [r11]                   ; store prev screen word.
+	; 10c
 
 	.4:	
     add r11, r11, #Screen_Stride
@@ -314,7 +315,60 @@ scroller_draw:
     add r10, r10, #1                ; next screen word.
     cmp r10, #41                    ; one extra word for scroll!
     bne .1
+	; 41 * 16 * 26c minimum ~= 17kc min.
+	; Currently 100 scanlines!
 
     ldr pc, [sp], #4
+
+.if 0	; TODO: Pre-shift all font glyphs?
+scroller_font_data_shifted_p:
+	.long scroller_font_data_shifted_no_adr
+
+scroller_init:
+    str lr, [sp, #-4]!
+
+	ldr r11, scroller_font_data_shifted_p	; write ptr
+	ldr r12, scroller_font_colour
+
+	mov r10, #0					; pixel shift
+.1:
+    mov r8, r10, lsl #2         ; word shift
+    rsb r7, r8, #32             ; reverse word shift
+
+	ldr r9, scroller_font_data_p			; read ptr
+	mov r6, #0					; glyph number
+.2:
+
+	mov r5, #0					; glyph row
+.3:
+	ldmia r9!, {r0-r1}			; 2 glyph words
+
+	and r0, r0, r12
+	and r1, r1, r12				; mask font colour
+
+	mov r2, r0, lsl r8			; shifting left moves pixels right
+	mov r3, r0, lsr r7			; shift right to recover lost pixels to next word
+	orr r3, r3, r1, lsl r8		; shift left to move pixels right
+	mov r4, r1, lsr r8			; shift right to recover lost pixels to next word
+
+	stmia r11!, {r2-r4}			; 3 glyph words shifted right by N pixels
+
+	add r5, r5, #1
+	cmp r5, #Scroller_Glyph_Height
+	blt .3
+
+	add r6, r6, #1
+	cmp r6, #Scroller_Max_Glyphs
+	blt .2
+
+	add r10, r10, #1
+	cmp r10, #8					; max shift
+	blt .1
+	
+    ldr pc, [sp], #4
+
+scroller_font_colour:
+	.long 0x88888888
+.endif
 
 .endif

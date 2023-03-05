@@ -34,6 +34,13 @@ mode9_font_data_no_adr:
 
 ; ============================================================================
 
+.if 0	; TODO: Pre-shift all font glyphs?
+scroller_font_data_shifted_no_adr:
+	.skip Scroller_Max_Glyphs * Scroller_Glyph_Height * 12 * 8
+.endif
+
+; ============================================================================
+
 .include "lib/lib_bss.asm"
 
 ; ============================================================================
