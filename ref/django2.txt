@@ -86,19 +86,21 @@ TODO:
 
 - Menu:
   - New layout.
-  - New menu small font has no regular/bold.
-  - New menu small font is proportional?
+  - New menu small font has no regular/bold. - DONE
+  - New menu small font is proportional? - HMMM
   - New menu small font plots different colours over cube... - IGNORE FOR NOW!
   - New colours for the menu, selection & highlight etc.
 - Cube:
   - Make smaller. - DONE
-  - Remove lighting, match colours.
+  - Remove lighting - DONE
+  - Match colours.
   - Check visualiser pulse.
 - Sawtooth:
   - Has rounded edges
-  - Match colours and speeds.
+  - Match colours - DONE
+  - Match speeds.
 - Scrolltext:
-  - New font, new colour
+  - New font - DONE, new colour
   - Need text. - MISSING
   - Very slow - needs optimising...
     => 40 words across width of screen.
@@ -115,6 +117,14 @@ TODO:
 - Archie specific:
   - Remove _DJANGO define.
   - Performance on ARM2? <== NEED TO SORT THIS AS A PRIORITY!
+    1. Scrolltext
+    2. Menu
+    3. Cube
+    4. Logo
+    5. Cube
+    6. Screen clear
+    => Keyboard scan is also surprisingly high...
+    => Imrpove update_3D_scene as well. => DONE
   - Do we need RasterMan or get RasterMan Lite for stablised interrupts.
   - Remove redundant code.
   - Shrink and package etc.

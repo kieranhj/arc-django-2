@@ -245,6 +245,7 @@ main_loop:
 	; TICK
 	; ========================================================================
 
+	SET_BORDER 0xffffff		; white = tick
 	; do menu.
 	bl keyboard_scan_debounced
 	bl update_menu
@@ -256,6 +257,7 @@ main_loop:
 	bl update_columns
 	bl scroller_update
 	bl update_3d_scene
+	SET_BORDER 0x000000
 
 	; ========================================================================
 	; VSYNC
