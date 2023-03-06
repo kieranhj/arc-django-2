@@ -9,12 +9,6 @@
 .equ MENU_ITEM_COLOUR, 10
 .equ MENU_PLAYING_COLOUR, 15
 
-current_key:
-	.long 0
-
-held_key:
-	.long 0
-
 .if Mouse_Enable
 prev_mouse_y:
 	.long 0
@@ -26,8 +20,18 @@ selection_number:
 selection_colour:
 	.long 0
 
+keyboard_prev_mask:
+	.long 0
+
+; R0=keyboard pressed mask
 update_menu:
 	str lr, [sp, #-4]!
+
+	ldr r2, keyboard_prev_mask
+	mvn r2, r2				; ~old
+	and r2, r0, r2			; new & ~old		; diff bits
+	str r0, keyboard_prev_mask
+	and r4, r2, r0			; diff bits & key down bits	
 
 	; Update selected item colour.
     ldr r1, vsync_count
@@ -40,13 +44,8 @@ update_menu:
 	str r0, selection_colour
 
 	; check up
-	.if _RASTERMAN
-	mov r1, #RMKey_ArrowUp
-	.else
-	mov r1, #IKey_ArrowUp
-	.endif
-	bl check_key_debounced
-	bne .2
+	tst r4, #1<<KeyBit_ArrowUp	; key changed & down?
+	beq .2
 
 	ldr r3, selection_number
 	cmp r3, #0
@@ -56,13 +55,8 @@ update_menu:
 	
 .2:
 	; check down
-	.if _RASTERMAN
-	mov r1, #RMKey_ArrowDown
-	.else
-	mov r1, #IKey_ArrowDown
-	.endif
-	bl check_key_debounced
-	bne .3
+	tst r4, #1<<KeyBit_ArrowDown	; key changed & down?
+	beq .3
 
 	ldr r3, selection_number
 	cmp r3, #MAX_SONGS
@@ -76,42 +70,16 @@ update_menu:
 	cmp r0, #0
 	bne .5
 
-	; check A for toggle autoplay
-	.if _RASTERMAN
-	mov r1, #RMKey_A
-	.else
-	mov r1, #IKey_A
-	.endif
-	bl check_key_debounced
-	beq .10
+	tst r4, #1<<KeyBit_A	; key changed & down?
+	bne .10
 
-	; check return
-	.if _RASTERMAN
-	mov r1, #RMKey_Return
-	.else
-	mov r1, #IKey_Return
-	.endif
-	bl check_key_debounced
-	beq .4
-
-    ; and space
-	.if _RASTERMAN
-	mov r1, #RMKey_Space
-	.else
-    mov r1, #IKey_Space
-	.endif
-    bl check_key_debounced
-	beq .4
-
+	; check return & space
     .if Mouse_Enable
-	.if _RASTERMAN
-	mov r1, #RMKey_LeftClick
-	.else
-	mov r1, #IKey_LeftClick
+	tst r4, #1<<KeyBit_Return|1<<KeyBit_Space|1<<KeyBit_LeftClick	; key changed & down?
+    .else
+	tst r4, #1<<KeyBit_Return|1<<KeyBit_Space	; key changed & down?
 	.endif
-	bl check_key_debounced
-    .endif
-	bne .5
+	beq .5
 
 	; Select menu item.
 	.4:
@@ -182,53 +150,6 @@ update_menu:
 .6:
 	ldr pc, [sp], #4
 
-keyboard_scan_debounced:
-	; TODO: Argh! Rationalise all of the keyboard handling.
-
-	.if _RASTERMAN
-    swi RasterMan_ScanKeyboard
-
-    mov r1, #0xff
-    cmp r0, #0 
-    beq .1
-
-    and r2, r0, #0xf000
-    cmp r2, #0xc000
-    bne .1
-
-    and r2, r0, #0x00f0
-    cmp r2, #0x00c0
-    bne .1
-
-    ; 0xcLcH
-    and r2, r0, #0x0f00
-    mov r1, r2, lsr #8
-    and r2, r0, #0x000f
-    orr r1, r1, r2, lsl #4 
-	.else
-	mov r0, #OSByte_KeyboardScan
-	mov r1, #1
-	swi OS_Byte
-	.endif
-
-.1:
-	; R1 contains key or 0xff if no key.
-	mov r2, r1	; key pressed
-	ldr r0, held_key
-	cmp r1, r0
-	moveq r2, #0xff
-	str r1, held_key
-	str r2, current_key
-	mov pc, lr
-
-; R1=IKey no. EOR 0xff
-check_key_debounced:
-	.if _RASTERMAN==0
-	eor r1, r1, #0xff
-	.endif
-	ldr r0, current_key
-	cmp r0, r1
-	mov pc, lr
 
 ; R12=screen addr.
 plot_new_menu:

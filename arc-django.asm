@@ -69,6 +69,13 @@
 .equ AutoPlay_Default, MAX_SONGS
 .equ Stereo_Positions, 1		; Amiga (full) stereo positions.
 
+.equ KeyBit_Space, 0
+.equ KeyBit_Return, 1
+.equ KeyBit_ArrowUp, 2
+.equ KeyBit_ArrowDown, 3
+.equ KeyBit_A, 4
+.equ KeyBit_LeftClick, 5
+
 ; ============================================================================
 ; Code Start
 ; ============================================================================
@@ -233,9 +240,14 @@ main:
 	.if _RASTERMAN
 	swi RasterMan_Install
 	.else
-	; Enable Vsync 
+	; Enable Vsync
 	mov r0, #OSByte_EventEnable
 	mov r1, #Event_VSync
+	SWI OS_Byte
+
+	; Enable key pressed event.
+	mov r0, #OSByte_EventEnable
+	mov r1, #Event_KeyPressed
 	SWI OS_Byte
 	.endif
 
@@ -247,7 +259,7 @@ main_loop:
 
 	SET_BORDER 0xffffff		; white = tick
 	; do menu.
-	bl keyboard_scan_debounced
+	ldr r0, keyboard_pressed_mask
 	bl update_menu
 
 	; autoplay!
@@ -368,6 +380,10 @@ exit:
 	.if _RASTERMAN==0
 	mov r0, #OSByte_EventDisable
 	mov r1, #Event_VSync
+	swi OS_Byte
+
+	mov r0, #OSByte_EventDisable
+	mov r1, #Event_KeyPressed
 	swi OS_Byte
 
 	; release our event handler
@@ -512,6 +528,14 @@ debug_write_vsync_count:
 	bl debug_print_r0
 .endif
 
+	swi OS_WriteI+32
+	ldr r0, keyboard_pressed_mask
+	adr r1, debug_string
+	mov r2, #8
+	swi OS_ConvertHex4
+	adr r0, debug_string
+	swi OS_WriteO
+
 .if 0
 	; display frame count / frame rate etc.
 	ldr r0, vsync_count	; vsync_delta
@@ -559,88 +583,71 @@ vsync_count:
 last_vsync:
 	.long 0
 
+keyboard_pressed_mask:
+	.long 0
+
 ; R0=event number
 event_handler:
+	cmp r0, #Event_KeyPressed
+	bne .1
+
+	; R1=0 key up or 1 key down
+	; R2=internal key number (RMKey_*)
+
+	str r0, [sp, #-4]!
+
+	ldr r0, keyboard_pressed_mask
+	cmp r1, #0
+	beq .2
+
+	; Key down
+	cmp r2, #RMKey_Space
+	orreq r0, r0, #1<<KeyBit_Space
+	cmp r2, #RMKey_Return
+	orreq r0, r0, #1<<KeyBit_Return
+	cmp r2, #RMKey_ArrowUp
+	orreq r0, r0, #1<<KeyBit_ArrowUp
+	cmp r2, #RMKey_ArrowDown
+	orreq r0, r0, #1<<KeyBit_ArrowDown
+	cmp r2, #RMKey_A
+	orreq r0, r0, #1<<KeyBit_A
+	cmp r2, #RMKey_LeftClick
+	orreq r0, r0, #1<<KeyBit_LeftClick
+	b .3
+
+.2:
+	; Key up
+	cmp r2, #RMKey_Space
+	biceq r0, r0, #1<<KeyBit_Space
+	cmp r2, #RMKey_Return
+	biceq r0, r0, #1<<KeyBit_Return
+	cmp r2, #RMKey_ArrowUp
+	biceq r0, r0, #1<<KeyBit_ArrowUp
+	cmp r2, #RMKey_ArrowDown
+	biceq r0, r0, #1<<KeyBit_ArrowDown
+	cmp r2, #RMKey_A
+	biceq r0, r0, #1<<KeyBit_A
+	cmp r2, #RMKey_LeftClick
+	biceq r0, r0, #1<<KeyBit_LeftClick
+
+.3:
+	str r0, keyboard_pressed_mask
+	ldr r0, [sp], #4
+	mov pc, lr
+
+.1:
 	cmp r0, #Event_VSync
 	movnes pc, r14
 
-	STMDB sp!, {r0-r1, lr}
+	str r0, [sp, #-4]!
 
 	; update the vsync counter
 	LDR r0, vsync_count
 	ADD r0, r0, #1
 	STR r0, vsync_count
 
-.if 0
-	; is there a new screen buffer ready to display?
-	LDR r1, buffer_pending
-	CMP r1, #0
-	LDMEQIA sp!, {r0-r1, pc}
-
-	; set the display buffer
-	MOV r0, #0
-	STR r0, buffer_pending
-	MOV r0, #OSByte_WriteDisplayBank
-
-	; Allow SWIs to be safely called from within interrupt handler.
-	; See Archimedes Operating System book pp.264
-	STMDB sp!, {r2-r12}
-	MOV r9, pc     		; save the current PC & mode in R9.
-	ORR r8, r9, #3 		; use R9 to make R8 a supervisor version.
-	TEQP r8, #0			; use R8 to change mode.
-	MOV r0,r0			; no-op **REQUIRED**
-	STR lr, [sp, #-4]!	; stack the supervisor LR.
-	; Now safe to call SWIs.
-	
-	SWI XOS_Byte
-
-	; set full palette if there is a pending palette block
-	ldr r2, palette_pending
-	cmp r2, #0
-	beq .4
-
-    adr r1, palette_osword_block
-    mov r0, #16
-    strb r0, [r1, #1]       ; physical colour
-
-    mov r3, #0
-    .3:
-    strb r3, [r1, #0]       ; logical colour
-
-    ldr r4, [r2], #4        ; rgbx
-    and r0, r4, #0xff
-    strb r0, [r1, #2]       ; red
-    mov r0, r4, lsr #8
-    strb r0, [r1, #3]       ; green
-    mov r0, r4, lsr #16
-    strb r0, [r1, #4]       ; blue
-    mov r0, #12
-    swi XOS_Word
-
-    add r3, r3, #1
-    cmp r3, #16
-    blt .3
-
-	mov r0, #0
-	str r0, palette_pending
-.4:
-
-	; Allow SWIs to be safely called from within interrupt handler.
-	; See Archimedes Operating System book pp.264
-	LDR lr, [sp], #4		; Get supervisor LR back.
-	TEQP r9, #0 			; Restore the original state.
-	MOV r0, r0				; No-op **REQUIRED**
-
-	LDMIA sp!, {r2-r12}
-.endif
-
-	LDMIA sp!, {r0-r1, pc}
-
-palette_pending:
-	.long 0				; (optional) ptr to a block of palette data to set at vsync.
-
-buffer_pending:
-	.long 0				; screen bank number to display at vsync.
+	ldr r0, [sp], #4
+	mov pc, lr
 .endif
 
 show_screen_at_vsync:

@@ -72,6 +72,7 @@
 .equ ErrorV, 0x01
 .equ EventV, 0x10
 .equ Event_VSync, 4
+.equ Event_KeyPressed, 11
 
 .equ QTM_Load, 0x47E40
 .equ QTM_Start, 0x47E41

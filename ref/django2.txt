@@ -118,13 +118,16 @@ TODO:
   - Remove _DJANGO define.
   - Performance on ARM2? <== NEED TO SORT THIS AS A PRIORITY!
     1. Scrolltext
+      => Plot glyphs in one go and deal with edges separately.
     2. Menu
     3. Cube
+      => Could combine edge determination & rasterisation.
     4. Logo
-    5. Cube
+    5. Columns
     6. Screen clear
     => Keyboard scan is also surprisingly high...
-    => Imrpove update_3D_scene as well. => DONE
+      - Rich says use key pressed event and store a mask... DONE!
+    => Improve update_3D_scene as well. => DONE
   - Do we need RasterMan or get RasterMan Lite for stablised interrupts.
   - Remove redundant code.
   - Shrink and package etc.
