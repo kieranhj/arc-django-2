@@ -117,14 +117,14 @@ TODO:
 - Archie specific:
   - Remove _DJANGO define.
   - Performance on ARM2? <== NEED TO SORT THIS AS A PRIORITY!
-    1. Scrolltext
+    1. Scrolltext - cyan
       => Plot glyphs in one go and deal with edges separately.
-    2. Menu
-    3. Cube
+    2. Menu - blue
+    3. Cube - red
       => Could combine edge determination & rasterisation.
-    4. Logo
-    5. Columns
-    6. Screen clear
+    4. Logo - magenta
+    5. Columns - yellow
+    6. Screen clear - green
     => Keyboard scan is also surprisingly high...
       - Rich says use key pressed event and store a mask... DONE!
     => Improve update_3D_scene as well. => DONE

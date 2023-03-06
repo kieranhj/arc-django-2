@@ -7,7 +7,6 @@
 .equ _DEBUG_SHOW, (_DEBUG && 0)
 
 .equ _DJANGO, 2
-.equ _RASTERMAN, 0
 
 .equ Sample_Speed, 48		; ideally 24us for ARM250+
 
@@ -335,31 +334,15 @@ main_loop:
 	bl show_screen_at_vsync
 
 	; exit if Escape is pressed
-	.if _RASTERMAN
-	swi RasterMan_ScanKeyboard
-	mov r1, #0xc0c0
-	cmp r0, r1
-	beq exit
-	.else
 	swi OS_ReadEscapeState
 	bcs exit
-	.endif
 
 	; repeat!
 	b main_loop
 
 exit:
 	; wait for vsync (any pending buffers)
-	.if _RASTERMAN
-	swi RasterMan_Wait
-	.endif
-
 	bl release_music_interrupt
-
-	.if _RASTERMAN
-	swi RasterMan_Release
-	swi RasterMan_Wait
-	.endif
 
 	; Fade out.
 	.if _DJANGO==1 && _DEBUG==0
@@ -377,7 +360,6 @@ exit:
 	swi QTM_Clear
 
 	; disable vsync event
-	.if _RASTERMAN==0
 	mov r0, #OSByte_EventDisable
 	mov r1, #Event_VSync
 	swi OS_Byte
@@ -391,7 +373,6 @@ exit:
 	adr r1, event_handler
 	mov r2, #0
 	swi OS_Release
-	.endif
 
 	; Release our error handler
 	mov r0, #ErrorV
@@ -576,7 +557,6 @@ screen_addr_input:
 scr_bank:
 	.long 0				; current VIDC screen bank being written to.
 
-.if _RASTERMAN==0
 vsync_count:
 	.long 0				; current vsync count from start of exe.
 
@@ -648,7 +628,6 @@ event_handler:
 
 	ldr r0, [sp], #4
 	mov pc, lr
-.endif
 
 show_screen_at_vsync:
 	; Show current bank at next vsync
@@ -678,7 +657,6 @@ get_next_screen_for_writing:
 error_handler:
 	STMDB sp!, {r0-r2, lr}
 
-	.if _RASTERMAN==0
 	; Release event handler.
 	MOV r0, #OSByte_EventDisable
 	MOV r1, #Event_VSync
@@ -687,7 +665,6 @@ error_handler:
 	ADR r1, event_handler
 	mov r2, #0
 	SWI OS_Release
-	.endif
 
 	; Release error handler.
 	MOV r0, #ErrorV
@@ -702,9 +679,6 @@ error_handler:
 
 	; Do these help?
 	swi QTM_Stop
-	.if _RASTERMAN
-	swi RasterMan_Release
-	.endif
 
 	LDMIA sp!, {r0-r2, lr}
 	MOVS pc, lr
@@ -736,6 +710,7 @@ volume_fade:
 
 play_song:
 	swi QTM_Stop
+
 	; Unload the current module.
 	mov r1, r0
 	mov r0, #-1
@@ -751,11 +726,6 @@ play_song:
 
 	mov r0, #64					; max volume
 	swi QTM_Volume
-
-	; This seems to help minimise how much RasterMan timing slips after QTM_Start.
-	.if _RASTERMAN
-	swi RasterMan_Wait
-	.endif
 
 	; Play music!
 	swi QTM_Start
@@ -843,9 +813,6 @@ screen_addr:
 .include "src/columns.asm"
 .include "src/scroller.asm"
 .include "src/logo.asm"
-.if _RASTERMAN
-.include "src/rasters.asm"
-.endif
 .include "lib/lz4-decode.asm"
 .include "lib/maths.asm"
 .include "src/3d-scene.asm"
