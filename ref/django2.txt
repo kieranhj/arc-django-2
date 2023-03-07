@@ -118,7 +118,7 @@ TODO:
   - Remove _DJANGO define.
   - Performance on ARM2? <== NEED TO SORT THIS AS A PRIORITY!
     1. Scrolltext - cyan
-      => Plot glyphs in one go and deal with edges separately.
+      => Plot glyphs in one go and deal with edges separately. - DONE
     2. Menu - blue
     3. Cube - red
       => Could combine edge determination & rasterisation.
@@ -135,14 +135,9 @@ TODO:
 
 Scrolltext
 ~~~
-Ideally:
-- Load 2x words of glyph.
-- Shift 2x words into 4x words.
-- Read/mask/store 4x potential words of screen (3 max)
-- Unroll for 16x lines.
-Hmm, this only works for shifting by 8 pixels, whilst font width is 16..
-
 If pre-shifted glyph?
 - Load 3x words of glyph.
 - Read/mask/store to screen (potentially everything shifted by +1 word for >8 pixels)
 - Invert the shift so +7 is offset to the right rather than left.
+- Plot entire glyph, don't worry about screen edge just yet.
+- Plot slices of glyph on LHS & RHS as required.

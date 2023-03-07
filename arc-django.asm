@@ -7,6 +7,7 @@
 .equ _DEBUG_SHOW, (_DEBUG && 0)
 
 .equ _DJANGO, 2
+.equ _RASTERMAN, 0
 
 .equ Sample_Speed, 48		; ideally 24us for ARM250+
 
@@ -125,6 +126,7 @@ main:
 	bl new_font_init
 	bl maths_init
 	bl init_3d_scene
+	bl scroller_init
 
 	; RasterMan Init.
 	.if _RASTERMAN
@@ -266,7 +268,7 @@ main_loop:
 
 	; tick modules
 	bl update_columns
-	bl scroller_update
+	bl scroller_update_new
 	bl update_3d_scene
 	SET_BORDER 0x000000
 
@@ -313,7 +315,7 @@ main_loop:
 
 	SET_BORDER 0xffff00		; cyan = masked scroller
 	ldr r12, screen_addr
-	bl scroller_draw
+	bl scroller_draw_new
 
 	SET_BORDER 0x0000ff		; red = plot cube
 	ldr r12, screen_addr
