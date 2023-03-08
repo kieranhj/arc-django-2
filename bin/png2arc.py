@@ -36,9 +36,7 @@ def find_closest_match(palette, rgb):
     closest_dist = 256*256
     for i in range(16):
         col = palette[i]
-        dist = (rgb[0]-col[0])*(rgb[0]-col[0])
-        + (rgb[1]-col[1])*(rgb[1]-col[2])
-        + (rgb[2]-col[2])*( rgb[2]-col[2])
+        dist = (rgb[0]-col[0])*(rgb[0]-col[0]) + (rgb[1]-col[1])*(rgb[1]-col[1]) + (rgb[2]-col[2])*(rgb[2]-col[2])
         if dist < closest_dist:
             closest_idx = i
             closest_dist = dist
@@ -60,7 +58,7 @@ def to_box_row_palette_indices(boxed_row_flat_pixel, palette, mask_rgba):
                 # Prefer towards the end of the palette?
                 # Probably unless zero?
                 try:
-                    idx = len(palette) - palette[::-1].index(rgb) - 1
+                    idx = len(palette) - palette[::-1].index(rgba) - 1
                 except:
                     idx = find_closest_match(palette, rgba)
             pidxs[-1].append(idx)

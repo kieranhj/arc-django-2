@@ -402,7 +402,9 @@ draw_3d_scene:
     adr r2, projected_verts     ; projected vertex array.
     ldr r3, [r11]               ; quad indices.
     stmfd sp!, {r9,r11,r12}
-    add r4, r9, #6              ; colour index.
+    add r4, r9, #1              ; colour index.
+    cmp r4, #4
+    subge r4, r4, #3            ; [1-3]
     bl polygon_plot_quad
     ldmfd sp!, {r9,r11,r12}
 
@@ -485,9 +487,9 @@ object_verts:
 object_face_normals:
     VECTOR3  0.0,  0.0, -1.0
     VECTOR3  1.0,  0.0,  0.0
+    VECTOR3  0.0,  1.0,  0.0
     VECTOR3  0.0,  0.0,  1.0
     VECTOR3 -1.0,  0.0,  0.0
-    VECTOR3  0.0,  1.0,  0.0
     VECTOR3  0.0  -1.0,  0.0
 
 ; !VERTEX AND NORMAL ARRAYS MUST BE CONSECUTIVE!
@@ -496,9 +498,9 @@ object_face_normals:
 object_face_indices:
     .byte 0, 1, 2, 3
     .byte 1, 5, 6, 2
+    .byte 0, 4, 5, 1
     .byte 5, 4, 7, 6
     .byte 4, 0, 3, 7
-    .byte 0, 4, 5, 1
     .byte 2, 3, 7, 6
 
  ;TODO: Object face colours or vertex colours etc.

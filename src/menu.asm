@@ -6,8 +6,8 @@
 .equ MENU_ARTIST_XPOS, 26
 .equ MENU_TOP_YPOS, 100
 .equ MENU_ROW_HEIGHT, 7
-.equ MENU_ITEM_COLOUR, 10
-.equ MENU_PLAYING_COLOUR, 15
+.equ MENU_ITEM_COLOUR, 4
+.equ MENU_PLAYING_COLOUR, 8
 
 .if Mouse_Enable
 prev_mouse_y:
@@ -35,12 +35,9 @@ update_menu:
 
 	; Update selected item colour.
     ldr r1, vsync_count
-    and r1, r1, #1
-
-	ldr r0, selection_colour
-	add r0, r0, r1
-	cmp r0, #15
-	movgt r0, #0
+    ands r1, r1, #1
+	moveq r0, #MENU_PLAYING_COLOUR
+	movne r0, #MENU_ITEM_COLOUR
 	str r0, selection_colour
 
 	; check up

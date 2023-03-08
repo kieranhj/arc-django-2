@@ -102,13 +102,14 @@ TODO:
 - Scrolltext:
   - New font - DONE, new colour
   - Need text. - MISSING
-  - Very slow - needs optimising...
+  - Very slow - needs optimising... DONE
     => 40 words across width of screen.
     => For each word column we read 1x glyph word but write 2x.
     => Read/mask/write 1x into previous column (shifted)
     => Read/mask/write 1x into current column (shifted)
     => 16x for font height.
     => Total read/mask/write = 41*16*lots
+  - Could have scroller glyphs on a modest sine wave if we wanted?
 
 - Music playback.
   - Ping ToBach & 4mat - DONE
@@ -141,3 +142,41 @@ If pre-shifted glyph?
 - Invert the shift so +7 is offset to the right rather than left.
 - Plot entire glyph, don't worry about screen edge just yet.
 - Plot slices of glyph on LHS & RHS as required.
+
+
+Colours
+~~~
+0 = background
+1 - 10 = logo
+11 - 15 = columns
+COLORBAR0=$122 ; main background
+COLORBAR1=$443 ;
+COLORBAR2=$654 ;
+COLORBAR3=$975 ;
+COLORBAR4=$c97 ;
+COLORBAR5=$fb8 ;
+
+<TBC>
+CUBE COLOURS
+; cube-colors	
+  dc.w color01,$2a9     ; 0x0001 ; 1
+	dc.w color02,$167     ; 0x0010 ; 2
+	dc.w color03,$234     ; 0x0011 ; 3
+
+MENU COLOURS
+; menu-colors
+    dc.w color04,$ac7  - regular menu   ; 0x100 ; 4
+    dc.w color05,$cfa  ; under the cube ; 0x101 ; 5
+    dc.w color06,$bfa  ; under the cube ; 0x110 ; 6
+    dc.w color07,$bf7  ; under the cube ; 0x111 ; 7
+
+                       - selected in this colour
+                       - playing flickers between both
+    dc.w color12,$191  ; line marker  is set via menu ; 8
+    dc.w color13,$3b3  ; line marker under the cube   ; ?
+    dc.w color14,$2b3  ; line marker under the cube   ; ?
+    dc.w color15,$2b2  ; line marker under the cube   ; ?
+
+SCROLLER COLOUR...
+    dc.w color01,$c31  ; scroller color               ; 10
+  

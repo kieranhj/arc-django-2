@@ -3,12 +3,12 @@
 ; ============================================================================
 
 .equ _DEBUG, 1
-.equ _DEBUG_RASTERS, (_DEBUG && _RASTERMAN==0 && 1)
+.equ _DEBUG_RASTERS, (_DEBUG && 1)
 .equ _DEBUG_SHOW, (_DEBUG && 0)
 
 .equ _DJANGO, 2
-.equ _RASTERMAN, 0
 
+; TODO: Get this lower!
 .equ Sample_Speed, 48		; ideally 24us for ARM250+
 
 .equ Screen_Banks, _DJANGO
@@ -128,20 +128,7 @@ main:
 	bl init_3d_scene
 	bl scroller_init
 
-	; RasterMan Init.
-	.if _RASTERMAN
-	bl rasters_init
-	.endif
-
-	; QTM Init.
-	; Required to make QTM play nicely with RasterMan.
-	.if _RASTERMAN
-	mov r0, #4
-	mov r1, #-1
-	mov r2, #-1
-	swi QTM_SoundControl
-	.endif
-
+	; QTM Config.
 	mov r0, #8    ;set bit 3 of music options byte = QTM retains control of sound system after Pause/Stop/Clear
 	mov r1, #8
 	SWI QTM_MusicOptions
@@ -220,12 +207,10 @@ main:
 	bl palette_set_block
 
 	; Claim the Event vector.
-	.if _RASTERMAN==0
 	MOV r0, #EventV
 	ADR r1, event_handler
 	MOV r2, #0
 	SWI OS_Claim
-	.endif
 
 	; Claim the Error vector.
 	MOV r0, #ErrorV
@@ -237,20 +222,13 @@ main:
 	mov r0, #0
 	bl play_song
 
-	; Fire up the RasterMan!
-	.if _RASTERMAN
-	swi RasterMan_Install
-	.else
-	; Enable Vsync
-	mov r0, #OSByte_EventEnable
-	mov r1, #Event_VSync
-	SWI OS_Byte
-
 	; Enable key pressed event.
 	mov r0, #OSByte_EventEnable
 	mov r1, #Event_KeyPressed
 	SWI OS_Byte
-	.endif
+
+	; But install our own IRQ handler - thanks Steve! :)
+	bl install_irq_handler
 
 main_loop:
 
@@ -277,13 +255,6 @@ main_loop:
 	; ========================================================================
 
 	; Block if we've not even had a vsync since last time - we're >50Hz!
-	.if _RASTERMAN
-	swi RasterMan_Wait
-	mov r0, #1
-	ldr r2, vsync_count
-	add r2, r2, r0
-	str r2, vsync_count
-	.else
 	ldr r1, last_vsync
 .1:
 	ldr r2, vsync_count
@@ -291,7 +262,6 @@ main_loop:
 	beq .1
 	sub r0, r2, r1
 	str r2, last_vsync
-	.endif
 
 	; R0 = vsync delta since last frame.
 
@@ -343,7 +313,11 @@ main_loop:
 	b main_loop
 
 exit:
-	; wait for vsync (any pending buffers)
+	; Wait for vsync (any pending buffers)
+	mov r0, #0
+	swi OS_Byte
+
+	; Remove music autoplay handler.
 	bl release_music_interrupt
 
 	; Fade out.
@@ -353,24 +327,24 @@ exit:
 	bl fade_out_with_volume
 	.endif
 
+	; Return QTM to a normal state.
 	mov r0, #8	;clear bit 3 of music options byte
 	mov r1, #0
 	swi QTM_MusicOptions
 
-	; disable music
+	; Disable music
 	mov r0, #0
 	swi QTM_Clear
 
-	; disable vsync event
-	mov r0, #OSByte_EventDisable
-	mov r1, #Event_VSync
-	swi OS_Byte
+	; Remove our IRQ handler
+	bl uninstall_irq_handler
 
+	; Disable key press event
 	mov r0, #OSByte_EventDisable
 	mov r1, #Event_KeyPressed
 	swi OS_Byte
 
-	; release our event handler
+	; Release our event handler
 	mov r0, #EventV
 	adr r1, event_handler
 	mov r2, #0
@@ -397,6 +371,10 @@ exit:
 	swi OS_Byte
 
 	SWI OS_Exit
+
+; ============================================================================
+; Sequence helpers.
+; ============================================================================
 
 .if _DJANGO==1
 wait_frames:
@@ -571,7 +549,7 @@ keyboard_pressed_mask:
 ; R0=event number
 event_handler:
 	cmp r0, #Event_KeyPressed
-	bne .1
+	movne pc, lr
 
 	; R1=0 key up or 1 key down
 	; R2=internal key number (RMKey_*)
@@ -617,19 +595,6 @@ event_handler:
 	ldr r0, [sp], #4
 	mov pc, lr
 
-.1:
-	cmp r0, #Event_VSync
-	movnes pc, r14
-
-	str r0, [sp, #-4]!
-
-	; update the vsync counter
-	LDR r0, vsync_count
-	ADD r0, r0, #1
-	STR r0, vsync_count
-
-	ldr r0, [sp], #4
-	mov pc, lr
 
 show_screen_at_vsync:
 	; Show current bank at next vsync
@@ -659,10 +624,13 @@ get_next_screen_for_writing:
 error_handler:
 	STMDB sp!, {r0-r2, lr}
 
+	bl uninstall_irq_handler
+
 	; Release event handler.
 	MOV r0, #OSByte_EventDisable
-	MOV r1, #Event_VSync
+	MOV r1, #Event_KeyPressed
 	SWI OS_Byte
+
 	MOV r0, #EventV
 	ADR r1, event_handler
 	mov r2, #0
@@ -684,6 +652,131 @@ error_handler:
 
 	LDMIA sp!, {r0-r2, lr}
 	MOVS pc, lr
+
+; ============================================================================
+; Interrupt handling.
+; ============================================================================
+
+oldirqhandler:
+	.long 0
+
+oldirqjumper:
+	.long 0
+
+vsyncstartdelay:
+	.long 127*152  ;2000000/50.08
+
+install_irq_handler:
+	mov r1, #0x18					; IRQ vector.
+	
+	; Remember previous IRQ branch call.
+	ldr r0, [r1]					; old IRQ handler.
+	str r0, oldirqjumper
+
+	; Calculate old IRQ hanlder address from branch opcode.
+	bic r0, r0, #0xff000000
+	mov r0, r0, lsl #2
+	add r0, r0, #32
+	str r0, oldirqhandler
+
+	; Set Timer 1.
+	SWI		OS_EnterOS
+	MOV     R12,#0x3200000           ;IOC address
+
+	TEQP    PC,#0b11<<26 | 0b11  ;jam all interrupts!
+
+	LDR     R0,vsyncstartdelay
+	STRB    R0,[R12,#0x50]
+	MOV     R0,R0,LSR#8
+	STRB    R0,[R12,#0x54]           ;prepare timer 1 for waiting until screen start
+									;don't start timer1, done on next Vs...
+	TEQP    PC,#0
+	MOV     R0,R0
+
+	; Install our IRQ handler.
+	swi OS_IntOff
+	adr r0, irq_handler
+	sub r0, r0, #32
+	mov r0, r0, lsr #2
+	add r0, r0, #0xea000000			; B irq_handler.
+	str r0, [r1]
+	swi OS_IntOn
+
+	mov pc, lr
+
+uninstall_irq_handler:
+	mov r1, #0x18					; IRQ vector.
+	
+	; Restore previous IRQ branch call.
+	ldr r0, oldirqjumper
+	str r0, [r1]
+
+	mov pc, lr
+
+irq_handler:
+	STMFD   R13!,{R0-R1,R11-R12}
+	MOV     R12,#0x3200000           ;IOC address
+	LDRB    R0,[R12,#0x14+0]
+	TST     R0,#1<<6 | (1<<3)
+	BEQ     nottimer1orVs           ;not T1 or Vs, back to RISCOS
+
+	TEQP    PC,#0b11<<26 | 0b11
+	MOV     R0,R0
+
+	MOV     R11,#VIDC_Write
+	TST     R0,#1<<3
+	BNE     vsync                   ;...Vs higher priority than T1
+
+timer1:
+	adr	r1, timer1_vidc_regs_list
+	.1:
+	ldr r0, [r1], #4
+	cmp r0, #-1
+	beq .2
+	str r0, [r11]					; why Steve has ,#0x40?
+	b .1
+	.2:
+
+	LDRB    R0,[R12,#0x18]
+	BIC     R0,R0,#1<<6
+	STRB    R0,[R12,#0x18]           ;stop T1 irq...
+
+exittimer1:
+	TEQP    PC,#0b10<<26 | 0b10
+	MOV     R0,R0
+	LDMFD   R13!,{R0-R1,R11-R12}
+	SUBS    PC,R14,#4
+
+vsync:
+	adr	r1, vsync_vidc_regs_list
+	.1:
+	ldr r0, [r1], #4
+	cmp r0, #-1
+	beq .2
+	str r0, [r11]					; why Steve has ,#0x40?
+	b .1
+	.2:
+
+	STRB    R0,[R12,#0x58]           ;T1 GO (latch already set up)
+	LDRB    R0,[R12,#0x18]
+	ORR     R0,R0,#1<<6
+	STRB    R0,[R12,#0x18]           ;enable T1 irq...
+	MOV     R0,#1<<6
+	STRB    R0,[R12,#0x14]           ;clear any pending T1 irq
+
+	; update the vsync counter
+	LDR r0, vsync_count
+	ADD r0, r0, #1
+	STR r0, vsync_count
+
+exitVs:
+	TEQP    PC,#0b10<<26 | 0b10
+	MOV     R0,R0
+
+nottimer1orVs:
+	LDMFD   R13!,{R0-R1,R11-R12}
+	ldr pc, oldirqhandler
+
 
 ; ============================================================================
 ; Play the music!
@@ -840,9 +933,34 @@ music_table:
 	.long music_10_mod_no_adr
 	.long music_11_mod_no_adr
 
-.p2align 2
 logo_pal_block:
 .incbin "data/logo-palette-hacked.bin"
+
+timer1_vidc_regs_list: ; bgr
+	.long VIDC_Col1  | 0x9a2			; cube colours
+	.long VIDC_Col2  | 0x761
+	.long VIDC_Col3  | 0x432
+	.long VIDC_Col4  | 0x7ca			; menu colours
+	.long VIDC_Col5  | 0xafc			; (under cube)
+	.long VIDC_Col6  | 0xafb
+	.long VIDC_Col7  | 0x7fb
+	.long VIDC_Col8  | 0x191			; line marker
+	;
+	.long VIDC_Col10 | 0x13c			; scroller
+	.long -1
+
+vsync_vidc_regs_list:
+	.long VIDC_Col1  | 0x700			; logo colours
+	.long VIDC_Col2  | 0x821
+	.long VIDC_Col3  | 0xa42
+	.long VIDC_Col4  | 0xb73
+	.long VIDC_Col5  | 0xc94
+	.long VIDC_Col6  | 0xec7
+	.long VIDC_Col7  | 0xfeb
+	.long VIDC_Col8  | 0xfed
+	;
+	.long VIDC_Col10 | 0x000
+	.long -1
 
 ; ============================================================================
 ; DATA Segment

@@ -34,7 +34,7 @@ scroller_font_data_shifted_p:
 	.long scroller_font_data_shifted_no_adr
 
 scroller_font_colour:
-	.long 0x88888888
+	.long 0xaaaaaaaa
 
 scroller_font_shift_table:
 	.skip 8*4

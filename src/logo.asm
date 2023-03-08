@@ -18,6 +18,10 @@ plot_logo:
     mov r10, #Logo_Height
     mov r11, r12
 
+    ; TODO: Plot logo in (x,y)
+    add r11, r11, #28       ; 56 pixels
+    add r11, r11, #Screen_Stride * 10
+
     .1:
 .rept Logo_Width/32
     ldmia r11, {r0-r3}      ; 4 words of screen.

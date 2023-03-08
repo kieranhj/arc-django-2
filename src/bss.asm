@@ -14,23 +14,6 @@ stack_base_no_adr:
 
 ; ============================================================================
 
-.if _RASTERMAN
-vidc_table_1_no_adr:
-	.skip 256*4*4
-
-; TODO: Can we get rid of these?
-vidc_table_2_no_adr:
-	.skip 256*4*4
-
-vidc_table_3_no_adr:
-	.skip 256*8*4
-
-memc_table_no_adr:
-	.skip 256*2*4
-.endif
-
-; ============================================================================
-
 new_font_map_no_adr:
 	.skip 256			; maps ASCII to small font glyph no.
 

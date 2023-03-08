@@ -8,6 +8,8 @@
 .equ XOS_Word, OS_Word | (1 << 17)
 .equ OS_File, 8
 .equ OS_Exit, 0x11
+.equ OS_IntOn, 0x13
+.equ OS_IntOff, 0x14
 .equ OS_EnterOS, 0x16
 .equ OS_BreakPt, 0x17
 .equ OS_Mouse, 0x1c
