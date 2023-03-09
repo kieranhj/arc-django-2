@@ -57,7 +57,7 @@ loader: build ./build/arc-django.lz4
 	$(VASM) -L build/compile.txt -m250 -Fvobj -opt-adr -o build/arc-django.o arc-django.asm
 
 .PHONY:assets
-assets: build ./build/logo.lz4 ./build/logo.bin.pal ./build/big-font.bin \
+assets: build ./build/logo.lz4 ./data/logo-palette-hacked.bin ./build/big-font.bin \
 	./build/rabenauge.lz4 ./build/rabenauge.bin.pal ./build/small-font.bin \
 	./build/icon.bin ./build/logo.bin.mask
 
