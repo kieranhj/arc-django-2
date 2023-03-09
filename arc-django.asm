@@ -679,6 +679,20 @@ install_irq_handler:
 	add r0, r0, #32
 	str r0, oldirqhandler
 
+	; Set Timer 1.
+	SWI		OS_EnterOS
+	MOV     R12,#0x3200000           ;IOC address
+
+	TEQP    PC,#0b11<<26 | 0b11  ;jam all interrupts!
+
+	LDR     R0,vsyncstartdelay
+	STRB    R0,[R12,#0x50]
+	MOV     R0,R0,LSR#8
+	STRB    R0,[R12,#0x54]           ;prepare timer 1 for waiting until screen start
+									;don't start timer1, done on next Vs...
+	TEQP    PC,#0
+	MOV     R0,R0
+
 	; Install our IRQ handler.
 	swi OS_IntOff
 	adr r0, irq_handler
@@ -687,24 +701,6 @@ install_irq_handler:
 	add r0, r0, #0xea000000			; B irq_handler.
 	str r0, [r1]
 	swi OS_IntOn
-
-	; Set Timer 1.
-	SWI		OS_EnterOS
-	MOV     R12,#0x3200000          ;IOC address
-
-	TEQP    PC,#0b11<<26 | 0b11  	;jam all interrupts!
-
-	LDRB    R0,[R12,#0x18]
-	ORR     R0,R0,#1<<6
-	STRB    R0,[R12,#0x18]           ;progen - just turn the IRQ on
-
-	LDR     R0,vsyncstartdelay
-	STRB    R0,[R12,#0x50]
-	MOV     R0,R0,LSR#8
-	STRB    R0,[R12,#0x54]          ;prepare timer 1 for waiting until screen start
-									;don't start timer1, done on next Vs...
-	TEQP    PC,#0
-	MOV     R0,R0
 
 	mov pc, lr
 
@@ -732,10 +728,6 @@ irq_handler:
 	BNE     vsync                   ;...Vs higher priority than T1
 
 timer1:
-	MOV     R0, #1<<6               ;progen - just ACK T1
-	STRB    R0, [R12, #0x14]
-
-	; Do colour thing.
 	adr	r1, timer1_vidc_regs_list
 	.1:
 	ldr r0, [r1], #4
@@ -745,6 +737,10 @@ timer1:
 	b .1
 	.2:
 
+	LDRB    R0,[R12,#0x18]
+	BIC     R0,R0,#1<<6
+	STRB    R0,[R12,#0x18]           ;stop T1 irq...
+
 exittimer1:
 	TEQP    PC,#0b10<<26 | 0b10
 	MOV     R0,R0
@@ -752,14 +748,6 @@ exittimer1:
 	SUBS    PC,R14,#4
 
 vsync:
-	STRB    R0,[R12,#0x58]           ;T1 GO (latch already set up)
-
-	; update the vsync counter
-	LDR r0, vsync_count
-	ADD r0, r0, #1
-	STR r0, vsync_count
-
-	; Do colour thing.
 	adr	r1, vsync_vidc_regs_list
 	.1:
 	ldr r0, [r1], #4
@@ -768,6 +756,18 @@ vsync:
 	str r0, [r11]					; why Steve has ,#0x40?
 	b .1
 	.2:
+
+	STRB    R0,[R12,#0x58]           ;T1 GO (latch already set up)
+	LDRB    R0,[R12,#0x18]
+	ORR     R0,R0,#1<<6
+	STRB    R0,[R12,#0x18]           ;enable T1 irq...
+	MOV     R0,#1<<6
+	STRB    R0,[R12,#0x14]           ;clear any pending T1 irq
+
+	; update the vsync counter
+	LDR r0, vsync_count
+	ADD r0, r0, #1
+	STR r0, vsync_count
 
 exitVs:
 	TEQP    PC,#0b10<<26 | 0b10
