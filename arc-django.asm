@@ -74,6 +74,8 @@
 .equ KeyBit_A, 4
 .equ KeyBit_LeftClick, 5
 
+.equ RasterSplitLine, 150		; TODO: Final location for ARM2 and maybe increase gap to menu..?
+
 ; ============================================================================
 ; Code Start
 ; ============================================================================
@@ -663,7 +665,7 @@ oldirqjumper:
 	.long 0
 
 vsyncstartdelay:
-	.long 127*152  ;2000000/50.08
+	.long 127*RasterSplitLine  ;2000000/50.08
 
 install_irq_handler:
 	mov r1, #0x18					; IRQ vector.
