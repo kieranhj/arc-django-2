@@ -74,7 +74,8 @@
 .equ KeyBit_A, 4
 .equ KeyBit_LeftClick, 5
 
-.equ RasterSplitLine, 150		; TODO: Final location for ARM2 and maybe increase gap to menu..?
+; TODO: Final location for ARM2 and maybe increase gap to menu..?
+.equ RasterSplitLine, 56+104			; 56 lines from vsync to screen start
 
 ; ============================================================================
 ; Code Start
