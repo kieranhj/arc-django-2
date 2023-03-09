@@ -1,8 +1,13 @@
 ; Logo plotting.
 
-.equ Logo_Width, 208
+.equ Logo_Width, 216
 .equ Logo_Height, 68
 .equ Logo_Gap, Screen_Stride-Logo_Width/Screen_PixelsPerByte
+.equ Logo_Stride, Logo_Width/Screen_PixelsPerByte
+.equ Logo_Bytes, Logo_Stride*Logo_Height
+
+.equ Logo_X, 50
+.equ Logo_Y, 8
 
 logo_data_p:
     .long logo_data_no_adr
@@ -10,17 +15,64 @@ logo_data_p:
 logo_mask_p:
     .long logo_mask_no_adr
 
-; R9=logo_addr, R12=screen_addr
-; Assume plotting at top of the screen.
+logo_data_shifted_p:
+    .long logo_data_shifted_no_adr
+
+logo_mask_shifted_p:
+    .long logo_mask_shifted_no_adr
+
+logo_data_shift_table:
+    .skip 8*4
+
+logo_mask_shift_table:
+    .skip 8*4
+
+logo_xSinus_p:
+    .long xSinus_no_adr
+
+logo_ySinus_p:
+    .long ySinus_no_adr
+
+logo_index:
+    .long 0
+
 plot_logo:
-	ldr r9, logo_data_p
-    ldr r8, logo_mask_p
+    ldrb r2, logo_index
+    ldr r3, logo_xSinus_p
+    ldr r4, logo_ySinus_p
+
+    ldrb r0, [r3, r2]
+    ldrb r1, [r4, r2]
+
+    add r0, r0, #Logo_X
+    add r1, r1, #Logo_Y
+
+    add r2, r2, #1
+    strb r2, logo_index
+
+    ; Fall through!
+
+; R0=x
+; R1=y
+; R12=screen address
+plot_logo_at_xy:
     mov r10, #Logo_Height
     mov r11, r12
 
-    ; TODO: Plot logo in (x,y)
-    add r11, r11, #28       ; 56 pixels
-    add r11, r11, #Screen_Stride * 10
+    ; Calculate screen address.
+    add r11, r12, r1, lsl #7
+    add r11, r11, r1, lsl #5        ; y * 160
+
+    and r2, r0, #7                  ; pixel shift [0-7]
+    bic r0, r0, #7
+    add r11, r11, r0, asr #1        ; + x / 2
+
+    ; Locate pre-shifted data & mask.
+    adr r9, logo_data_shift_table
+    ldr r9, [r9, r2, lsl #2]
+
+    adr r8, logo_mask_shift_table
+    ldr r8, [r8, r2, lsl #2]
 
     .1:
 .rept Logo_Width/32
@@ -37,15 +89,19 @@ plot_logo:
     orr r3, r3, r7
     stmia r11!, {r0-r3}     ; 4 words of screen.
 .endr
-.if Logo_Width == 208
-    ldmia r11, {r0-r1}      ; 4 words of screen.
-    ldmia r8!, {r4-r5}      ; 4 words of mask.
+.if Logo_Width == 216
+    ldmia r11, {r0-r2}      ; 4 words of screen.
+    ldmia r8!, {r4-r6}      ; 4 words of mask.
     bic r0, r0, r4
     bic r1, r1, r5
-    ldmia r9!, {r4-r5}      ; 4 words of logo.
+    bic r2, r2, r6
+    ldmia r9!, {r4-r6}      ; 4 words of logo.
     orr r0, r0, r4
     orr r1, r1, r5
-    stmia r11!, {r0-r1}     ; 4 words of screen.
+    orr r2, r2, r6
+    stmia r11!, {r0-r2}     ; 4 words of screen.
+.else
+    .err "Assuming Logo_Width is 216 pixels!"
 .endif
 
     add r11, r11, #Logo_Gap
@@ -73,60 +129,89 @@ plot_logo:
     orr r1, r1, r0, lsr r11
 .endm
 
-; R9=logo_addr, R12=screen_addr
-; Assume plotting at top of the screen.
-.if _DJANGO==1
-plot_logo_glitched:
+; R9=src address
+; R12=dst address
+; R10=pixel shift   [0-7]
+logo_shift_image:
     str lr, [sp, #-4]!
+    
+    mov r10, r10, lsl #2        ; word shift
+    rsb r11, r10, #32           ; reverse word shift
+
     mov r14, #Logo_Height
+.1:
+    add r9, r9, #104            ; end of src
+    add r12, r12, #108          ; end of dst
 
-    .1:
-    ldr r0, rnd_seed
-    mov r1, #1              ; need a spare bit!
-    RND R0, R1, R2
-    str r0, rnd_seed
-
-    ; Pixel offset shift.
-    and r0, r0, #0x03
-    mov r10, r0, lsl #2     ; pixel shift (4*n)
-    rsb r11, r10, #32       ; reverse pixel shift (32-4*n)
-
-    add r9, r9, #124        ; 4th chunk.
-    add r12, r12, #128      ; 4th chunk.
-    ldmia r9, {r0-r8}       ; 9 words = 68 pixels.
+    sub r9, r9, #32             ; last chunk.
+    sub r12, r12, #32           ; last chunk.
+    ldmia r9, {r0-r8}           ; 9 words = 68 pixels.
     logo_shift_right_by_pixels
-    stmia r12, {r1-r8}      ; 8 words = 64 pixels.
+    stmia r12, {r1-r8}          ; 8 words = 64 pixels.
 
-    sub r9, r9, #32         ; 3rd chunk.
-    sub r12, r12, #32       ; 3rd chunk.
-    ldmia r9, {r0-r8}       ; 9 words = 68 pixels.
+    sub r9, r9, #32             ; next chunk.
+    sub r12, r12, #32           ; next chunk.
+    ldmia r9, {r0-r8}           ; 9 words = 68 pixels.
     logo_shift_right_by_pixels
-    stmia r12, {r1-r8}      ; 8 words = 64 pixels.
+    stmia r12, {r1-r8}          ; 8 words = 64 pixels.
 
-    sub r9, r9, #32         ; 2nd chunk.
-    sub r12, r12, #32       ; 2nd chunk.
-    ldmia r9, {r0-r8}       ; 9 words = 68 pixels.
+    sub r9, r9, #32             ; first chunk.
+    sub r12, r12, #32           ; first chunk.
+    ldmia r9, {r0-r8}           ; 9 words = 68 pixels.
     logo_shift_right_by_pixels
-    stmia r12, {r1-r8}      ; 8 words = 64 pixels.
+    stmia r12, {r1-r8}          ; 8 words = 64 pixels.
 
-    sub r9, r9, #32         ; 1st chunk.
-    sub r12, r12, #32       ; 1st chunk.
-    ldmia r9, {r0-r8}       ; 9 words = 68 pixels.
-    logo_shift_right_by_pixels
-    stmia r12, {r1-r8}      ; 8 words = 64 pixels.
-
-    sub r9, r9, #28         ; 0th chunk.
-    sub r12, r12, #32       ; 0th chunk.
+    ; two words left over..
+    sub r9, r9, #8              ; left over bit.
+    sub r12, r12, #12           ; left over bit.
     mov r0, #0
-    ldmia r9, {r1-r8}       ; 9 words = 68 pixels.
-    logo_shift_right_by_pixels
-    stmia r12, {r1-r8}      ; 8 words = 64 pixels.
+    ldmia r9, {r1-r3}
+    mov r3, r3, lsl r10
+    orr r3, r3, r2, lsr r11
+    mov r2, r2, lsl r10
+    orr r2, r2, r1, lsr r11
+    mov r1, r1, lsl r10
+    orr r1, r1, r0, lsr r11
+    stmia r12, {r1-r3}
 
-    add r9, r9, #Screen_Stride
-    add r12, r12, #Screen_Stride
+    add r9, r9, #Logo_Stride
+    add r12, r12, #Logo_Stride
 
     subs r14, r14, #1
     bne .1
 
-	ldr pc, [sp], #4
-.endif
+    mov r10, r10, lsr #2        ; restore r10
+    ldr pc, [sp], #4
+
+logo_init:
+    str lr, [sp, #-4]!
+
+    ldr r9, logo_data_p
+    str r9, logo_data_shift_table
+    ldr r12, logo_data_shifted_p
+
+    mov r10, #1
+.1:
+    adr r0, logo_data_shift_table
+    str r12, [r0, r10, lsl #2]
+    ldr r9, logo_data_p
+    bl logo_shift_image         ; copies r9 into r12, shifted by r10 pixels.
+    add r10, r10, #1
+    cmp r10, #8
+    bne .1
+
+    ldr r9, logo_mask_p
+    str r9, logo_mask_shift_table
+    ldr r12, logo_mask_shifted_p
+
+    mov r10, #1
+.2:
+    adr r0, logo_mask_shift_table
+    str r12, [r0, r10, lsl #2]
+    ldr r9, logo_mask_p
+    bl logo_shift_image         ; copies r9 into r12, shifted by r10 pixels.
+    add r10, r10, #1
+    cmp r10, #8
+    bne .2
+
+    ldr pc, [sp], #4

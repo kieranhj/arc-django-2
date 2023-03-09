@@ -58,8 +58,6 @@
 .endif
 .equ Menu_Beat_Frames, 25				; 0.5 seconds.
 
-.equ Glitch_Time, 12
-
 .equ VU_Bars_Effect, 2					; 'effect'
 .equ VU_Bars_Gravity, 2					; lines per vsync
 
@@ -127,6 +125,7 @@ main:
 	bl maths_init
 	bl init_3d_scene
 	bl scroller_init
+	bl logo_init
 
 	; QTM Config.
 	mov r0, #8    ;set bit 3 of music options byte = QTM retains control of sound system after Pause/Stop/Clear
@@ -782,9 +781,6 @@ nottimer1orVs:
 ; Play the music!
 ; ============================================================================
 
-glitch_timer:
-	.long 0
-
 song_number:
 	.long -1
 
@@ -824,9 +820,6 @@ play_song:
 
 	; Play music!
 	swi QTM_Start
-
-	mov r0, #Glitch_Time
-	str r0, glitch_timer
 	mov pc, lr
 
 check_autoplay:
