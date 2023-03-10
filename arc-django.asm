@@ -8,8 +8,8 @@
 
 .equ _DJANGO, 2
 
-; TODO: Get this lower!
-.equ Sample_Speed, 48		; ideally 24us for ARM250+
+.equ Sample_Speed_SlowCPU, 48		; ideally get this down for ARM2
+.equ Sample_Speed_FastCPU, 16		; ideally 16us for ARM250+
 
 .equ Screen_Banks, _DJANGO
 .equ Screen_Mode, 9
@@ -113,6 +113,20 @@ main:
 	ADRCC r0, error_noscreenmem
 	SWICC OS_GenerateError
 
+	; Clear all screen buffers
+	mov r1, #1
+	str r1, scr_bank
+.1:
+	; CLS bank N
+	mov r0, #OSByte_WriteVDUBank
+	swi OS_Byte
+	mov r0, #12
+	SWI OS_WriteC
+
+	add r1, r1, #1
+	cmp r1, #Screen_Banks
+	ble .1
+
 	; Grab mouse.
 	.if Mouse_Enable
 	swi OS_Mouse
@@ -123,6 +137,9 @@ main:
 	swi OS_ReadMonotonicTime
 	str r0, rnd_seed
 
+	; But install our own IRQ handler - thanks Steve! :)
+	bl install_irq_handler
+
 	; EARLY INIT / LOAD STUFF HERE!
 	bl new_font_init
 	bl maths_init
@@ -131,7 +148,15 @@ main:
 	bl logo_init
 
 	; QTM Config.
-	mov r0, #8    ;set bit 3 of music options byte = QTM retains control of sound system after Pause/Stop/Clear
+
+	; Count how long the init takes as a very rough estimate of CPU speed.
+	ldr r1, vsync_count
+	cmp r1, #80		; ARM3~=20, ARM250~=70, ARM2~=108
+	movge r0, #Sample_Speed_SlowCPU
+	movlt r0, #Sample_Speed_FastCPU
+	swi QTM_SetSampleSpeed
+
+	mov r0, #8    	; set bit 3 of music options byte = QTM retains control of sound system after Pause/Stop/Clear
 	mov r1, #8
 	SWI QTM_MusicOptions
 
@@ -143,31 +168,8 @@ main:
 	mov r1, #Stereo_Positions
 	swi QTM_Stereo
 
-	mov r0, #Sample_Speed
-	swi QTM_SetSampleSpeed
-
 	; QTM callback.
 	bl claim_music_interrupt
-
-	; Clear all screen buffers
-	mov r1, #1
-.1:
-	str r1, scr_bank
-
-	; CLS bank N
-	mov r0, #OSByte_WriteVDUBank
-	swi OS_Byte
-	mov r0, #12
-	SWI OS_WriteC
-
-	ldr r1, scr_bank
-	add r1, r1, #1
-	cmp r1, #Screen_Banks
-	ble .1
-
-	; Start with bank 1.
-	mov r1, #1
-	str r1, scr_bank
 
 	; LATE INITALISATION HERE!
 	bl get_screen_addr
@@ -229,8 +231,9 @@ main:
 	mov r1, #Event_KeyPressed
 	SWI OS_Byte
 
-	; But install our own IRQ handler - thanks Steve! :)
-	bl install_irq_handler
+	; Wait for vsync on first frame.
+	ldr r0, vsync_count
+	str r0, last_vsync
 
 main_loop:
 

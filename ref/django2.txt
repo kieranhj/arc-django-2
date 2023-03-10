@@ -71,7 +71,7 @@ Road to Revision
 TODO:
 
 - Splash screen with fade out.
-- Hovering masked logo with pixel motion.
+- Hovering masked logo with pixel motion. - DONE
   - Add mask colour support to png2arc.py. - DONE (WELL, HACKED)
   - Expand to 8x shifts at runtime.
   - Plot w/ x,y pos.
@@ -80,20 +80,18 @@ TODO:
   - Uses 32 colours (of course) so need colour split beneath logo.
   - Logo sprite uses 13 colours (including black & white)
   - Need 6 background colours.. :\
-  => Ask Bodo if Titus can make a 10 colour version...
-
-
+  => Ask Bodo if Titus can make a 10 colour version... DONE
 
 - Menu:
   - New layout.
   - New menu small font has no regular/bold. - DONE
   - New menu small font is proportional? - HMMM
   - New menu small font plots different colours over cube... - IGNORE FOR NOW!
-  - New colours for the menu, selection & highlight etc.
+  - New colours for the menu, selection & highlight etc. - DONE SOME
 - Cube:
   - Make smaller. - DONE
   - Remove lighting - DONE
-  - Match colours.
+  - Match colours. - DONE
   - Check visualiser pulse.
 - Sawtooth:
   - Has rounded edges
@@ -129,7 +127,7 @@ TODO:
     => Keyboard scan is also surprisingly high...
       - Rich says use key pressed event and store a mask... DONE!
     => Improve update_3D_scene as well. => DONE
-  - Do we need RasterMan or get RasterMan Lite for stablised interrupts.
+  - Do we need RasterMan or get RasterMan Lite for stablised interrupts. => NO.
   - Remove redundant code.
   - Shrink and package etc.
   - Ask Bodo for an app icon?
@@ -142,7 +140,6 @@ If pre-shifted glyph?
 - Invert the shift so +7 is offset to the right rather than left.
 - Plot entire glyph, don't worry about screen edge just yet.
 - Plot slices of glyph on LHS & RHS as required.
-
 
 Colours
 ~~~
@@ -179,4 +176,10 @@ MENU COLOURS
 
 SCROLLER COLOUR...
     dc.w color01,$c31  ; scroller color               ; 10
-  
+
+Archie custom features...?
+- Small Y offset for scroller?
+- Reinstate logo glitch when loading tune? Or a wibble?
+- Add cube lighting back?
+- Make the scrolltext appear nicely from behind the last column?
+- Swap sample speed depending on CPU speed... - DONE
