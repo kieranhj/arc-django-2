@@ -24,6 +24,9 @@ scroller_shift:
 scroller_text_ptr:
 	.long scroller_text_string_end_no_adr - 2
 
+scroller_ctrl_ptr:
+	.long scroller_text_string_end_no_adr - 2
+
 scroller_text_start_p:
 	.long scroller_text_string_no_adr
 
@@ -40,8 +43,10 @@ scroller_font_shift_table:
 	.skip 8*4
 
 
-get_next_char:
-	ldr r10, scroller_text_ptr
+; Use a separate ptr to check control codes so that these take effect
+; when hit on the RHS of the screen as per Amiga specification.
+check_scrolltext_ctrl_code:
+	ldr r10, scroller_ctrl_ptr
     
     .1:
 	ldrb r0, [r10, #1]!
@@ -52,7 +57,7 @@ get_next_char:
 	ldrb r0, [r10, #1]!
     mov r0, r0, lsl #3      ; wait value * 8 frames.
     str r0, scroller_delay
-    b .5
+    b .1
 
     .2:
     cmp r0, #Scroller_Code_Speed
@@ -73,8 +78,31 @@ get_next_char:
     b .1
 
 	.5:
-	str r10, scroller_text_ptr
+	str r10, scroller_ctrl_ptr
 	mov pc, lr
+
+
+update_scrolltext_ptr:
+    str lr, [sp, #-4]!
+
+	; Check control codes first.
+	bl check_scrolltext_ctrl_code
+
+	; Get next ASCII.
+	ldr r10, scroller_text_ptr
+    .1:
+	ldrb r0, [r10, #1]!
+    cmp r0, #Scroller_Code_EOF
+    ldreq r10, scroller_text_start_p
+	subeq r10, r10, #1
+    beq .1
+
+	; Skip control codes.
+	cmp r0, #ASCII_Space
+	blt .1
+
+	str r10, scroller_text_ptr
+    ldr pc, [sp], #4
 
 
 scroller_init:
@@ -120,7 +148,14 @@ scroller_init:
 	add r10, r10, #1
 	cmp r10, #8					; max shift
 	blt .1
-	
+
+	; Move control code ptr to RHS of screen.
+	mov r11, #20
+.4:
+	bl check_scrolltext_ctrl_code
+	subs r11, r11, #1
+	bne .4
+
     ldr pc, [sp], #4
 
 
@@ -231,7 +266,7 @@ scroller_plot_glyph_2_columns:
 
 
 
-; Returns R9 = glyph ptr.
+; Returns R0 = glyph no.
 scroller_get_next_glyph_no:
     ldrb r0, [r12], #1
 
@@ -317,10 +352,7 @@ scroller_update_new:
     str r0, scroller_delay
 	ldrne pc, [sp], #4
 
-	; jump to next char.
-	str r0, scroller_shift
     .1:
-
 	; next column index
 	ldr r0, scroller_shift
     ldr r1, scroller_speed
@@ -329,6 +361,6 @@ scroller_update_new:
 	str r0, scroller_shift
 
 	; next string char?
-	blmi get_next_char
+	blmi update_scrolltext_ptr
 
 	ldr pc, [sp], #4

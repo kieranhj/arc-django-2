@@ -142,6 +142,8 @@ ySinus_no_adr:  ; used by the CD2-Logo
 
 .p2align 2
 scroller_text_string_no_adr:
+; Add 20 blank chars so that scroller begins on RHS of the screen, as per Amiga.
+.byte "                    "
 .include "src/scrolltxt-final.asm"
 scroller_text_string_end_no_adr:
 

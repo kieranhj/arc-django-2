@@ -75,7 +75,7 @@
 .equ KeyBit_LeftClick, 5
 
 ; TODO: Final location for ARM2 and maybe increase gap to menu..?
-.equ RasterSplitLine, 56+102			; 56 lines from vsync to screen start
+.equ RasterSplitLine, 56+100			; 56 lines from vsync to screen start
 ; Check MENU_TOP_YPOS definition.
 
 ; ============================================================================
