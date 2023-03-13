@@ -2,7 +2,7 @@
 ; arc-django-2 - An Archimedes port of Chipo Django 2 musicdisk by Rabenauge.
 ; ============================================================================
 
-.equ _DEBUG, 1
+.equ _DEBUG, 0
 .equ _DEBUG_RASTERS, (_DEBUG && 1)
 .equ _DEBUG_SHOW, (_DEBUG && 0)
 
@@ -47,7 +47,7 @@
 ; App defines
 ; ============================================================================
 
-.equ MAX_SONGS, 11
+.equ MAX_SONGS, 14
 
 .if _DEBUG
 .equ Splash_Frames, 3
@@ -75,7 +75,8 @@
 .equ KeyBit_LeftClick, 5
 
 ; TODO: Final location for ARM2 and maybe increase gap to menu..?
-.equ RasterSplitLine, 56+104			; 56 lines from vsync to screen start
+.equ RasterSplitLine, 56+102			; 56 lines from vsync to screen start
+; Check MENU_TOP_YPOS definition.
 
 ; ============================================================================
 ; Code Start
@@ -931,21 +932,24 @@ music_table:
 	.long music_09_mod_no_adr
 	.long music_10_mod_no_adr
 	.long music_11_mod_no_adr
+	.long music_12_mod_no_adr
+	.long music_13_mod_no_adr
+	.long music_14_mod_no_adr
 
 logo_pal_block:
 .incbin "data/logo-palette-hacked.bin"
 
 timer1_vidc_regs_list: ; bgr
-	.long VIDC_Col1  | 0x9a2			; cube colours
-	.long VIDC_Col2  | 0x761
-	.long VIDC_Col3  | 0x432
-	.long VIDC_Col4  | 0x7ca			; menu colours
+	.long VIDC_Col1  | 0x533			; cube colours
+	.long VIDC_Col2  | 0xb88
+	.long VIDC_Col3  | 0x756
+	.long VIDC_Col4  | 0xacd			; menu colours
 	.long VIDC_Col5  | 0xafc			; (under cube)
 	.long VIDC_Col6  | 0xafb
 	.long VIDC_Col7  | 0x7fb
-	.long VIDC_Col8  | 0x191			; line marker
+	.long VIDC_Col8  | 0xfff			; line marker
 	;
-	.long VIDC_Col10 | 0x13c			; scroller
+	.long VIDC_Col10 | 0x4ca			; scroller
 	.long -1
 
 vsync_vidc_regs_list:

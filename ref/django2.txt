@@ -177,6 +177,20 @@ MENU COLOURS
 SCROLLER COLOUR...
     dc.w color01,$c31  ; scroller color               ; 10
 
+Final colours?
+ 
+; cube-colors   
+    dc.w color01,$0335
+    dc.w color02,$088b
+    dc.w color03,$657 
+; menu-colors
+    dc.w color04,$0dca
+
+    dc.w color12,$0fff  ; line marker 
+
+Scroller? 170, 204, 68 $0ac4
+
+
 Archie custom features...?
 - Small Y offset for scroller?
 - Reinstate logo glitch when loading tune? Or a wibble?

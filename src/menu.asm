@@ -4,7 +4,7 @@
 
 .equ MENU_SONG_XPOS, 0
 .equ MENU_ARTIST_XPOS, 26
-.equ MENU_TOP_YPOS, 110
+.equ MENU_TOP_YPOS, 106
 .equ MENU_ROW_HEIGHT, 7
 .equ MENU_ITEM_COLOUR, 4
 .equ MENU_PLAYING_COLOUR, 8
@@ -196,6 +196,9 @@ menu_table:
 	.long menu_09_string
 	.long menu_10_string
 	.long menu_11_string
+	.long menu_12_string
+	.long menu_13_string
+	.long menu_14_string
 menu_item_autoplay:
 	.long menu_autoplay_on_string
 
@@ -243,15 +246,27 @@ menu_10_string:
 
 .p2align 2
 menu_11_string:
-	.byte 31, MENU_SONG_XPOS+15, MENU_TOP_YPOS+10*MENU_ROW_HEIGHT, "dummy", 31, MENU_ARTIST_XPOS, MENU_TOP_YPOS+10*MENU_ROW_HEIGHT, "lord", 0
+	.byte 31, MENU_SONG_XPOS+6, MENU_TOP_YPOS+10*MENU_ROW_HEIGHT, "changing waves", 31, MENU_ARTIST_XPOS, MENU_TOP_YPOS+10*MENU_ROW_HEIGHT, "4mat", 0
+
+.p2align 2
+menu_12_string:
+	.byte 31, MENU_SONG_XPOS+13, MENU_TOP_YPOS+11*MENU_ROW_HEIGHT, "vectrax", 31, MENU_ARTIST_XPOS, MENU_TOP_YPOS+11*MENU_ROW_HEIGHT, "lord", 0
+
+.p2align 2
+menu_13_string:
+	.byte 31, MENU_SONG_XPOS+9, MENU_TOP_YPOS+12*MENU_ROW_HEIGHT, "placeholder", 31, MENU_ARTIST_XPOS, MENU_TOP_YPOS+12*MENU_ROW_HEIGHT, "artist", 0
+
+.p2align 2
+menu_14_string:
+	.byte 31, MENU_SONG_XPOS+9, MENU_TOP_YPOS+13*MENU_ROW_HEIGHT, "placeholder", 31, MENU_ARTIST_XPOS, MENU_TOP_YPOS+13*MENU_ROW_HEIGHT, "artist", 0
 
 .p2align 2
 menu_autoplay_on_string:
-	.byte 31, 0, MENU_TOP_YPOS+11*MENU_ROW_HEIGHT, "autoplay on", 0
+	.byte 31, 0, MENU_TOP_YPOS+14*MENU_ROW_HEIGHT, "autoplay on", 0
 
 .p2align 2
 menu_autoplay_off_string:
-	.byte 31, 0, MENU_TOP_YPOS+11*MENU_ROW_HEIGHT, "autoplay off", 0
+	.byte 31, 0, MENU_TOP_YPOS+14*MENU_ROW_HEIGHT, "autoplay off", 0
 
 .p2align 2
 ; ============================================================================

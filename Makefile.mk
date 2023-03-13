@@ -65,7 +65,8 @@ assets: build ./build/logo.lz4 ./data/logo-palette-hacked.bin ./build/big-font.b
 music: build ./build/music_01.bin ./build/music_02.bin ./build/music_03.bin \
 	./build/music_04.bin ./build/music_05.bin ./build/music_06.bin \
 	./build/music_07.bin ./build/music_08.bin ./build/music_09.bin \
-	./build/music_10.bin ./build/music_splash.bin
+	./build/music_10.bin ./build/music_11.bin ./build/music_12.bin \
+	./build/music_splash.bin
 
 .PHONY:text build
 text: ./build/!run.txt ./build/django01.txt
@@ -139,6 +140,12 @@ clean:
 	$(COPY) $(subst /,\\,$+) $(subst /,\\,$@)
 
 ./build/music_10.bin: ./data/music2/punnik-Lies.mod
+	$(COPY) $(subst /,\\,$+) $(subst /,\\,$@)
+
+./build/music_11.bin: ./data/music2/changing-waves.mod
+	$(COPY) $(subst /,\\,$+) $(subst /,\\,$@)
+
+./build/music_12.bin: ./data/music2/vectrax-longplay-by-lord_sp.mod
 	$(COPY) $(subst /,\\,$+) $(subst /,\\,$@)
 
 ./build/music_splash.bin: ./data/music2/raven-mono.mod

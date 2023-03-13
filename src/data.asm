@@ -88,8 +88,17 @@ music_09_mod_no_adr:
 
 .p2align 2
 music_10_mod_no_adr:
-music_11_mod_no_adr:
 .incbin "build/music_10.bin"
+
+.p2align 2
+music_11_mod_no_adr:
+.incbin "build/music_11.bin"
+
+.p2align 2
+music_12_mod_no_adr:
+music_13_mod_no_adr:
+music_14_mod_no_adr:
+.incbin "build/music_12.bin"
 
 ; ============================================================================
 
