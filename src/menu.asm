@@ -2,12 +2,18 @@
 ; Menu stuff.
 ; ============================================================================
 
-.equ MENU_SONG_XPOS, 0
-.equ MENU_ARTIST_XPOS, 26
-.equ MENU_TOP_YPOS, 106
-.equ MENU_ROW_HEIGHT, 7
-.equ MENU_ITEM_COLOUR, 4
-.equ MENU_PLAYING_COLOUR, 8
+.equ Menu_MaxSprites, 30
+.equ Menu_Song_Column, 20			; aligned right.
+.equ Menu_Artist_Column, 26			; aligned left.
+
+.equ Menu_MaxSpriteStride, 20
+
+.equ Menu_Top_YPos, 106
+.equ Menu_Row_Height, 7
+.equ Menu_Item_Colour, 4
+.equ Menu_Playing_Colour, 8
+
+.equ Menu_Autoplay_Column, 1
 
 .if Mouse_Enable
 prev_mouse_y:
@@ -36,8 +42,8 @@ update_menu:
 	; Update selected item colour.
     ldr r1, vsync_count
     ands r1, r1, #1
-	moveq r0, #MENU_PLAYING_COLOUR
-	movne r0, #MENU_ITEM_COLOUR
+	moveq r0, #Menu_Playing_Colour
+	movne r0, #Menu_Item_Colour
 	str r0, selection_colour
 
 	; check up
@@ -89,15 +95,8 @@ update_menu:
 .10:
 	; Toggle autplay.
 	ldr r0, autoplay_flag
-	eor r0, r0, #MAX_SONGS
+	eor r0, r0, #1
 	str r0, autoplay_flag
-
-	; Update autoplay string.
-	adr r1, menu_autoplay_off_string
-	adr r2, menu_autoplay_on_string
-	cmp r0, #0
-	movne r1, r2
-	str r1, menu_item_autoplay
 
 	mov r3, #MAX_SONGS
 	b .5
@@ -147,126 +146,353 @@ update_menu:
 .6:
 	ldr pc, [sp], #4
 
+; ============================================================================
+
+; R7=sprite stride in bytes.
+plot_menu_sprite:
+	ldr r0, gen_sprite_code_pointers_p
+	mov r7, r7, lsr #2		; sprite stride words.
+	sub r7, r7, #1
+	; R8=sprite no.
+	; R9=sprite data ptr.
+	; R10=colour word.
+	; R11=screen addr.
+	; R12=scanline start addr.
+	ldr pc, [r0, r7, lsl #2]
 
 ; R12=screen addr.
-plot_new_menu:
+plot_menu_sprites:
 	str lr, [sp, #-4]!
 
-	mov r5, #0
-	adr r2, menu_table
-	ldr r7, selection_number
-	ldr r8, song_number
+	; Start of line.
+	mov r0, #Menu_Top_YPos
+	add r12, r12, r0, lsl #7
+	add r12, r12, r0, lsl #5
+
+	; For all sprites.
+	mov r8, #0
 .1:
 	; set colour word.
-	mov r10, #MENU_ITEM_COLOUR
+	mov r10, #Menu_Item_Colour
 
 	; song_number = what's playing
-	cmp r5, r8
-	moveq r10, #MENU_PLAYING_COLOUR
+	ldr r3, song_number
+	mov r3, r3, lsl #1
+	cmp r8, r3
+	moveq r10, #Menu_Playing_Colour
 
 	; selection_number = what's flashing
-	cmp r5, r7
+	ldr r4, selection_number
+	mov r4, r4, lsl #1
+	cmp r8, r4
 	ldreq r10, selection_colour
 
+	; set colour word.
 	orr r10, r10, r10, lsl #4
 	orr r10, r10, r10, lsl #8
 	orr r10, r10, r10, lsl #16
 
-	ldr r0, [r2], #4
-	bl new_font_plot_string
+	; Plot song sprite.
+	adr r7, menu_sprite_strides
+	ldr r7, [r7, r8, lsl #2]		; sprite stride.
+	adr r9, menu_sprite_buffer_ptrs
+	ldr r9, [r9, r8, lsl #2]		; sprite ptr.
 
+	add r11, r12, #Menu_Song_Column*4
+	sub r11, r11, r7				; right align.
+	bl plot_menu_sprite
+
+	; Plot artist sprite.
+	add r8, r8, #1
+	adr r7, menu_sprite_strides
+	ldr r7, [r7, r8, lsl #2]		; sprite stride.
+	adr r9, menu_sprite_buffer_ptrs
+	ldr r9, [r9, r8, lsl #2]		; sprite ptr.
+
+	add r11, r12, #Menu_Artist_Column*4
+	bl plot_menu_sprite
+
+	; Next menu row.
+	add r12, r12, #Screen_Stride*Menu_Row_Height
+	add r8, r8, #1
+	cmp r8, #MAX_SONGS*2
+	blt .1
+
+	; Plot autoplay string.
+	mov r10, #Menu_Item_Colour
+	ldr r4, selection_number
+	mov r4, r4, lsl #1
+	cmp r8, r4
+	ldreq r10, selection_colour
+
+	; set colour word.
+	orr r10, r10, r10, lsl #4
+	orr r10, r10, r10, lsl #8
+	orr r10, r10, r10, lsl #16
+
+	; Choose correct string.
+	ldr r0, autoplay_flag
+	add r8, r8, r0
+
+	adr r7, menu_sprite_strides
+	ldr r7, [r7, r8, lsl #2]		; sprite stride.
+	adr r9, menu_sprite_buffer_ptrs
+	ldr r9, [r9, r8, lsl #2]		; sprite ptr.
+
+	add r11, r12, #Menu_Autoplay_Column*4
+	bl plot_menu_sprite
+	
+	ldr pc, [sp], #4	
+
+; ============================================================================
+
+; Pre-render all strings as 'sprites' for fast plotting.
+menu_init:
+	str lr, [sp, #-4]!
+
+	; R12=available RAM for generated code.
+	bl gen_sprite_code
+
+	ldr r11, menu_sprite_buffer_p
+	adr r1, menu_strings
+
+	mov r5, #0
+.1:
+	; End of string list.
+	ldrb r0, [r1]
+	cmp r0, #-1
+	beq .2
+
+	; Store ptr to sprite buffer.
+	adr r3, menu_sprite_buffer_ptrs
+	str r11, [r3, r5, lsl #2]
+
+	; Right or left adjusted?
+	cmp r5, #MAX_SONGS*2
+	movge r10, #0
+	andlt r10, r5, #1
+	eorlt r10, r10, #1			; for now.
+
+	; Plot string into a sprite buffer at R11.
+	bl new_font_plot_string_as_sprite
+
+	; Store buffer stride.
+	adr r3, menu_sprite_strides
+	str r12, [r3, r5, lsl #2]
+
+	; Next string.
 	add r5, r5, #1
-	cmp r5, #MAX_SONGS
-	ble .1
+	cmp r5, #Menu_MaxSprites
+	blt .1
+
+.2:
+	; TODO: Assert num strings, buffer overflow etc.
 
 	ldr pc, [sp], #4	
 
 ; ============================================================================
 
-.p2align 2
-menu_table:
-	.long menu_01_string
-	.long menu_02_string
-	.long menu_03_string
-	.long menu_04_string
-	.long menu_05_string
-	.long menu_06_string
-	.long menu_07_string
-	.long menu_08_string
-	.long menu_09_string
-	.long menu_10_string
-	.long menu_11_string
-	.long menu_12_string
-	.long menu_13_string
-	.long menu_14_string
-menu_item_autoplay:
-	.long menu_autoplay_on_string
+menu_sprite_buffer_p:
+	.long menu_sprite_buffer_no_adr
+
+menu_sprite_buffer_ptrs:
+	.skip Menu_MaxSprites * 4
+
+menu_sprite_strides:				; in bytes
+	.skip Menu_MaxSprites * 4
 
 ; ============================================================================
 
 .p2align 2
-menu_01_string:
-	.byte 31, MENU_SONG_XPOS, MENU_TOP_YPOS, "birdhouse in da houz3", 31, MENU_ARTIST_XPOS, MENU_TOP_YPOS, "slime", 0
+menu_strings:
+	.byte "birdhouse in da houz3", 0, "slime", 0
+	.byte "autumn mood", 0, "triace", 0
+	.byte "square circles", 0, "ne7", 0
+	.byte "je suis k", 0, "okeanos", 0
+	.byte "la soupe aux choux", 0, "okeanos", 0
+	.byte "booaxian", 0, "slash", 0
+	.byte "sajt", 0, "dalezy", 0
+	.byte "holodash", 0, "virgill", 0
+	.byte "squid ring", 0, "curt cool", 0
+	.byte "lies", 0, "punnik", 0
+	.byte "changing waves", 0, "4mat", 0
+	.byte "vectrax", 0, "lord", 0
+	.byte "placeholder", 0, "artist", 0
+	.byte "placeholder", 0, "artist", 0
+	.byte "autoplay off", 0
+	.byte "autoplay on", 0
+; End of string list.
+	.byte -1
 
 .p2align 2
-menu_02_string:
-	.byte 31, MENU_SONG_XPOS+9, MENU_TOP_YPOS+1*MENU_ROW_HEIGHT, "autumn mood", 31, MENU_ARTIST_XPOS, MENU_TOP_YPOS+1*MENU_ROW_HEIGHT, "triace", 0
 
-.p2align 2
-menu_03_string:
-	.byte 31, MENU_SONG_XPOS+6, MENU_TOP_YPOS+2*MENU_ROW_HEIGHT, "square circles", 31, MENU_ARTIST_XPOS, MENU_TOP_YPOS+2*MENU_ROW_HEIGHT, "ne7", 0
+; ============================================================================
 
-.p2align 2
-menu_04_string:
-	.byte 31, MENU_SONG_XPOS+11, MENU_TOP_YPOS+3*MENU_ROW_HEIGHT, "je suis k", 31, MENU_ARTIST_XPOS, MENU_TOP_YPOS+3*MENU_ROW_HEIGHT, "okeanos", 0
+; R9=sprite buffer ptr.
+; R10=colour word.
+; R11=screen addr.
+; Stride is known and baked into code.
+; Preserve:
+;  R8=menu entry + selection + playing (!)
+;  R12=start of scanline ptr.
 
-.p2align 2
-menu_05_string:
-	.byte 31, MENU_SONG_XPOS+2, MENU_TOP_YPOS+4*MENU_ROW_HEIGHT, "la soupe aux choux", 31, MENU_ARTIST_XPOS, MENU_TOP_YPOS+4*MENU_ROW_HEIGHT, "okeanos", 0
+sprite_mask_gen_4:
+	ldmia r9!, {r0-r3}		; load 4 words.
+	ldmia r11, {r4-r7}
+	bic r4, r4, r0
+	bic r5, r5, r1
+	bic r6, r6, r2
+	bic r7, r7, r3
+	and r0, r0, r10
+	and r1, r1, r10
+	and r2, r2, r10
+	and r3, r3, r10
+	orr r4, r4, r0
+	orr r5, r5, r1
+	orr r6, r6, r2
+	orr r7, r7, r3
+	stmia r11!, {r4-r7}
+sprite_mask_gen_4_end:
 
-.p2align 2
-menu_06_string:
-	.byte 31, MENU_SONG_XPOS+12, MENU_TOP_YPOS+5*MENU_ROW_HEIGHT, "booaxian", 31, MENU_ARTIST_XPOS, MENU_TOP_YPOS+5*MENU_ROW_HEIGHT, "slash", 0
+sprite_mask_gen_3:
+	ldmia r9!, {r0-r2}		; load 3 words.
+	ldmia r11, {r4-r6}
+	bic r4, r4, r0
+	bic r5, r5, r1
+	bic r6, r6, r2
+	and r0, r0, r10
+	and r1, r1, r10
+	and r2, r2, r10
+	orr r4, r4, r0
+	orr r5, r5, r1
+	orr r6, r6, r2
+	stmia r11!, {r4-r6}
+sprite_mask_gen_3_end:
 
-.p2align 2
-menu_07_string:
-	.byte 31, MENU_SONG_XPOS+16, MENU_TOP_YPOS+6*MENU_ROW_HEIGHT, "sajt", 31, MENU_ARTIST_XPOS, MENU_TOP_YPOS+6*MENU_ROW_HEIGHT, "dalezy", 0
+sprite_mask_gen_2:
+	ldmia r9!, {r0-r1}		; load 2 words.
+	ldmia r11, {r4-r5}
+	bic r4, r4, r0
+	bic r5, r5, r1
+	and r0, r0, r10
+	and r1, r1, r10
+	orr r4, r4, r0
+	orr r5, r5, r1
+	stmia r11!, {r4-r5}
+sprite_mask_gen_2_end:
 
-.p2align 2
-menu_08_string:
-	.byte 31, MENU_SONG_XPOS+12, MENU_TOP_YPOS+7*MENU_ROW_HEIGHT, "holodash", 31, MENU_ARTIST_XPOS, MENU_TOP_YPOS+7*MENU_ROW_HEIGHT, "virgill", 0
+sprite_mask_gen_1:
+	ldr r0, [r9], #4		; load 1 word.
+	ldr r4, [r11]
+	bic r4, r4, r0
+	and r0, r0, r10
+	orr r4, r4, r0
+	str r4, [r11], #4
+sprite_mask_gen_1_end:
 
-.p2align 2
-menu_09_string:
-	.byte 31, MENU_SONG_XPOS+10, MENU_TOP_YPOS+8*MENU_ROW_HEIGHT, "squid ring", 31, MENU_ARTIST_XPOS, MENU_TOP_YPOS+8*MENU_ROW_HEIGHT, "curt cool", 0
+sprite_end_of_row:
+	add r11, r11, #Screen_Stride	; next line.
+	sub r11, r11, #0				; sprite stride (will be baked)
+sprite_end_of_row_end:
 
-.p2align 2
-menu_10_string:
-	.byte 31, MENU_SONG_XPOS+16, MENU_TOP_YPOS+9*MENU_ROW_HEIGHT, "lies", 31, MENU_ARTIST_XPOS, MENU_TOP_YPOS+9*MENU_ROW_HEIGHT, "punnik", 0
+sprite_end_of_sprite:
+	; TODO: Update r11?
+	mov pc, lr
+sprite_end_of_sprite_end:
 
-.p2align 2
-menu_11_string:
-	.byte 31, MENU_SONG_XPOS+6, MENU_TOP_YPOS+10*MENU_ROW_HEIGHT, "changing waves", 31, MENU_ARTIST_XPOS, MENU_TOP_YPOS+10*MENU_ROW_HEIGHT, "4mat", 0
+; ============================================================================
+; Generate code for plotting masked sprites using up to 4 word loads at a time.
+; ============================================================================
 
-.p2align 2
-menu_12_string:
-	.byte 31, MENU_SONG_XPOS+13, MENU_TOP_YPOS+11*MENU_ROW_HEIGHT, "vectrax", 31, MENU_ARTIST_XPOS, MENU_TOP_YPOS+11*MENU_ROW_HEIGHT, "lord", 0
+gen_sprite_code_pointers_p:
+	.long gen_sprite_code_pointers_no_adr
 
-.p2align 2
-menu_13_string:
-	.byte 31, MENU_SONG_XPOS+9, MENU_TOP_YPOS+12*MENU_ROW_HEIGHT, "placeholder", 31, MENU_ARTIST_XPOS, MENU_TOP_YPOS+12*MENU_ROW_HEIGHT, "artist", 0
+; R12=start of code.
+gen_sprite_code:
+	STR lr, [sp, #-4]!
 
-.p2align 2
-menu_14_string:
-	.byte 31, MENU_SONG_XPOS+9, MENU_TOP_YPOS+13*MENU_ROW_HEIGHT, "placeholder", 31, MENU_ARTIST_XPOS, MENU_TOP_YPOS+13*MENU_ROW_HEIGHT, "artist", 0
+	LDR r11, gen_sprite_code_pointers_p
 
-.p2align 2
-menu_autoplay_on_string:
-	.byte 31, 0, MENU_TOP_YPOS+14*MENU_ROW_HEIGHT, "autoplay on", 0
+	mov r1, #1			; length in words.
+.1:
+	ADD r12, r12, #0xc ;Align to 16 byte boundary
+	BIC r12, r12, #0xc
+	STR r12, [r11], #4
 
-.p2align 2
-menu_autoplay_off_string:
-	.byte 31, 0, MENU_TOP_YPOS+14*MENU_ROW_HEIGHT, "autoplay off", 0
+	mov r6, #NewFont_GlyphHeight
+.10:
 
-.p2align 2
+	mov r5, r1			; remaining words.
+.2:
+	cmp r5, #4
+	blt .3
+
+	sub r5, r5, #4
+	adr r2, sprite_mask_gen_4
+	adr r3, sprite_mask_gen_4_end
+	bl copy_code
+	b .2
+
+.3:
+	cmp r5, #3
+	blt .4
+
+	sub r5, r5, #3
+	adr r2, sprite_mask_gen_3
+	adr r3, sprite_mask_gen_3_end
+	bl copy_code
+	b .2
+
+.4:
+	cmp r5, #2
+	blt .5
+
+	sub r5, r5, #2
+	adr r2, sprite_mask_gen_2
+	adr r3, sprite_mask_gen_2_end
+	bl copy_code
+	b .2
+
+.5:
+	cmp r5, #0
+	beq .6
+
+	sub r5, r5, #1
+	adr r2, sprite_mask_gen_1
+	adr r3, sprite_mask_gen_1_end
+	bl copy_code
+
+.6:
+	; End of line.
+	adr r2, sprite_end_of_row
+	adr r3, sprite_end_of_row_end
+	bl copy_code
+
+	mov r0, r1, lsl #2		; stride in bytes
+	strb r0, [r12, #-4]		; poke into lsb of prev word.
+
+	subs r6, r6, #1
+	bne .10
+
+	; End of sprite.
+	adr r2, sprite_end_of_sprite
+	adr r3, sprite_end_of_sprite_end
+	bl copy_code
+
+	add r1, r1, #1
+	cmp r1, #Menu_MaxSpriteStride
+	ble .1
+
+	ldr pc, [sp], #4
+
+; R2=src
+; R3=end
+; R12=dst
+copy_code:
+	ldr r0, [r2], #4
+	str r0, [r12], #4
+	cmp r2, r3
+	blt copy_code
+	mov pc, lr
+
 ; ============================================================================

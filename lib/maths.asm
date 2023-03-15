@@ -38,6 +38,7 @@ maths_init:
     .if _INCLUDE_SPAN_GEN
     bl gen_code
     .endif
+    ; Keep this last so R12 returns top of RAM.
     ldr pc, [sp], #4
 
 .if _DEBUG

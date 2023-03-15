@@ -438,6 +438,7 @@ gen_code_end_copy:
 	CMP r1, #MAXSPAN
 	BLE gen_code_main_loop
 	LDR pc, [sp], #4
+	; Return R12=RAM top.
 
 
 gen_code_same_word:

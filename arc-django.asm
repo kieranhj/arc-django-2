@@ -2,7 +2,7 @@
 ; arc-django-2 - An Archimedes port of Chipo Django 2 musicdisk by Rabenauge.
 ; ============================================================================
 
-.equ _DEBUG, 0
+.equ _DEBUG, 1
 .equ _DEBUG_RASTERS, (_DEBUG && 1)
 .equ _DEBUG_SHOW, (_DEBUG && 0)
 
@@ -64,7 +64,7 @@
 .equ Mouse_Enable, 1
 .equ Mouse_Sensitivity, 10
 
-.equ AutoPlay_Default, MAX_SONGS
+.equ AutoPlay_Default, 1
 .equ Stereo_Positions, 1		; Amiga (full) stereo positions.
 
 .equ KeyBit_Space, 0
@@ -144,6 +144,8 @@ main:
 	; EARLY INIT / LOAD STUFF HERE!
 	bl new_font_init
 	bl maths_init
+	; R12=top of RAM used.
+	bl menu_init		; must come after new_font_init.
 	bl init_3d_scene
 	bl scroller_init
 	bl logo_init
@@ -299,7 +301,7 @@ main_loop:
 
 	SET_BORDER 0xff0000		; blue = plot menu
 	ldr r12, screen_addr
-	bl plot_new_menu
+	bl plot_menu_sprites
 
 	SET_BORDER 0x000000
 
@@ -792,7 +794,7 @@ song_number:
 	.long -1
 
 autoplay_flag:
-	.long AutoPlay_Default		; set to MAX_SONGS when enabled.
+	.long AutoPlay_Default
 
 song_ended:
 	.long 0
@@ -903,12 +905,12 @@ screen_addr:
 	.long 0					; ptr to the current VIDC screen bank being written to.
 
 .include "lib/mode9-palette.asm"
-.include "src/menu.asm"
 .include "src/new-font.asm"
+.include "src/menu.asm"
 .include "src/columns.asm"
 .include "src/scroller.asm"
 .include "src/logo.asm"
-.include "lib/lz4-decode.asm"
+;.include "lib/lz4-decode.asm"
 .include "lib/maths.asm"
 .include "src/3d-scene.asm"
 

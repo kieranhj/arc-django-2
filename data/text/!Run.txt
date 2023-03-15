@@ -4,9 +4,6 @@ Set RISCOS$version 3.5
 RMEnsure UtilityModule 3.5 Set RISCOS$version 3.1
 If "<RISCOS$version>"<>"3.1" Then Error This will only run on Archimedes computers, not RiscPC or later.
 |
-Set CPU$Type ARM3
-RMEnsure Arm3Support 0.0 Set CPU$Type ARM2
-|
 Set Demo$Dir <Obey$Dir>
 |
 RMLoad <Demo$Dir>.MemAlloc
@@ -16,11 +13,9 @@ RMASIZE 0K
 SCREENSIZE 80K
 RMKILL MemAlloc 
 |
-RMLOAD <Demo$Dir>.QTM149a { > null: }
-|RMLOAD <Demo$Dir>.RasterM29 { > null: }
+RMLOAD <Demo$Dir>.QTM149x { > null: }
 |
 wimpslot -min 1500K
 <Demo$Dir>.!RunImage
 |
-|RMKILL RasterMan
 RMKILL QTMTracker

@@ -92,14 +92,14 @@ TODO:
   - Make smaller. - DONE
   - Remove lighting - DONE
   - Match colours. - DONE
-  - Check visualiser pulse.
+  - Check visualiser pulse. - AS LONG AS IT LOOKS GOOD...
 - Sawtooth:
   - Has rounded edges
   - Match colours - DONE
   - Match speeds.
 - Scrolltext:
-  - New font - DONE, new colour
-  - Need text. - MISSING
+  - New font - DONE, new colour DONE
+  - Need text. - DONE
   - Very slow - needs optimising... DONE
     => 40 words across width of screen.
     => For each word column we read 1x glyph word but write 2x.
@@ -190,6 +190,15 @@ Final colours?
 
 Scroller? 170, 204, 68 $0ac4
 
+Proportional menu font
+~~~
+Spaces are 5 pixels (!) 'i' is 4 pixels.
+=> Plot menu strings into 'sprite' at init.
+- Calculate pixel width of string => word width of sprite.
+- Optionally align string to RHS of sprite.
+- Plot glyphs at pixel offset.
+
+
 
 Archie custom features...?
 - Small Y offset for scroller?
@@ -197,3 +206,4 @@ Archie custom features...?
 - Add cube lighting back?
 - Make the scrolltext appear nicely from behind the last column?
 - Swap sample speed depending on CPU speed... - DONE
+

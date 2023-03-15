@@ -19,6 +19,11 @@ new_font_map_no_adr:
 
 ; ============================================================================
 
+menu_sprite_buffer_no_adr:
+	.skip 20 * 4 * NewFont_GlyphHeight * Menu_MaxSprites ; 20 chars * 4 bytes * 5 rows * 15 strings * 2 versions.
+
+; ============================================================================
+
 scroller_font_data_shifted_no_adr:
 	.skip Scroller_Max_Glyphs * Scroller_Glyph_Height * 12 * 8
 
@@ -29,6 +34,11 @@ logo_data_shifted_no_adr:
 
 logo_mask_shifted_no_adr:
 	.skip Logo_Bytes * 7
+
+; ============================================================================
+
+gen_sprite_code_pointers_no_adr:
+	.skip Menu_MaxSpriteStride * 4
 
 ; ============================================================================
 
