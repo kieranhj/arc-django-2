@@ -105,10 +105,6 @@ clean:
 ./build/rabenauge.bin: ./data/gfx/combined-logo.png $(PNG2ARC_DEPS)
 	$(PYTHON2) $(PNG2ARC) -o $@ -p $@.pal $< 9
 
-./build/bitshifters.lz4: ./build/bitshifters.bin
-./build/bitshifters.bin: ./data/gfx/logo_flatplane04.png $(PNG2ARC_DEPS)
-	$(PYTHON2) $(PNG2ARC) -o $@ -p $@.pal $< 9
-
 ##########################################################################
 ##########################################################################
 

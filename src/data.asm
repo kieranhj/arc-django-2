@@ -22,7 +22,6 @@ logo_mask_no_adr:
 
 ; ============================================================================
 
-.if _DJANGO==1
 .p2align 2
 rabenauge_pal_block_no_adr:
 .incbin "build/rabenauge.bin.pal"
@@ -30,7 +29,6 @@ rabenauge_pal_block_no_adr:
 .p2align 2
 rabenauge_splash_no_adr:
 .incbin "build/rabenauge.lz4"
-.endif
 
 ; ============================================================================
 

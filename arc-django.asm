@@ -5,13 +5,12 @@
 .equ _DEBUG, 1
 .equ _DEBUG_RASTERS, (_DEBUG && 1)
 .equ _DEBUG_SHOW, (_DEBUG && 0)
-
-.equ _DJANGO, 2
+.equ _DEBUG_FAST_SPLASH, (_DEBUG && 1)
 
 .equ Sample_Speed_SlowCPU, 48		; ideally get this down for ARM2
 .equ Sample_Speed_FastCPU, 16		; ideally 16us for ARM250+
 
-.equ Screen_Banks, _DJANGO
+.equ Screen_Banks, 2
 .equ Screen_Mode, 9
 .equ Screen_Width, 320
 .equ Screen_Height, 256
@@ -49,13 +48,15 @@
 
 .equ MAX_SONGS, 14
 
-.if _DEBUG
+.if _DEBUG_FAST_SPLASH
 .equ Splash_Frames, 3
 .equ Fade_Speed, 1
 .else
 .equ Splash_Frames, 3*50				; 3 seconds.
 .equ Fade_Speed, 3
 .endif
+
+.equ Splash_YPos, 28
 .equ Menu_Beat_Frames, 25				; 0.5 seconds.
 
 .equ VU_Bars_Effect, 2					; 'effect'
@@ -121,8 +122,7 @@ main:
 	; CLS bank N
 	mov r0, #OSByte_WriteVDUBank
 	swi OS_Byte
-	mov r0, #12
-	SWI OS_WriteC
+	SWI OS_WriteI + 12		; cls
 
 	add r1, r1, #1
 	cmp r1, #Screen_Banks
@@ -138,7 +138,7 @@ main:
 	swi OS_ReadMonotonicTime
 	str r0, rnd_seed
 
-	; But install our own IRQ handler - thanks Steve! :)
+	; Install our own IRQ handler - thanks Steve! :)
 	bl install_irq_handler
 
 	; EARLY INIT / LOAD STUFF HERE!
@@ -175,39 +175,30 @@ main:
 	bl claim_music_interrupt
 
 	; LATE INITALISATION HERE!
-	bl get_screen_addr
+	bl get_next_screen_for_writing
 
 	; Splash.
-	.if _DJANGO==1
-	adrl r2, rabenauge_pal_block
+	ldr r2, rabenauge_pal_block_p
 	bl palette_init_fade_to_black
 	bl palette_set_block
-	adr r0, rabenauge_splash
+	ldr r0, rabenauge_splash_p
 	ldr r1, screen_addr
+	add r1, r1, #Splash_YPos * Screen_Stride
 	bl unlz4
+
+	bl show_screen_at_vsync
+
 	; Pause.
 	mov r4, #Splash_Frames
 	bl wait_frames
 	; Fade.
 	bl fade_out
 
+	swi OS_WriteI + 12		; cls
+
 	; Pause.
 	mov r4, #Menu_Beat_Frames
 	bl wait_frames
-
-	; Menu Screen.
-	mov r0, #12				; cls
-	SWI OS_WriteC
-
-	; Draw logo.
-	ldr r12, screen_addr
-	adrl r9, logo_data
-	bl plot_logo
-
-	; Draw menu to screen.
-	ldr r12, screen_addr
-	bl plot_menu
-	.endif
 
 	; Set palette (shows screen).
 	adrl r2, logo_pal_block
@@ -328,8 +319,10 @@ exit:
 	; Remove music autoplay handler.
 	bl release_music_interrupt
 
-	; Fade out.
-	.if _DJANGO==1 && _DEBUG==0
+	; Fade out for a nice exit.
+	.if _DEBUG_FAST_SPLASH==0
+	mov r0, #-1
+	str r0, song_number				; tell irq handler to back off!
 	adrl r2, logo_pal_block
 	bl palette_init_fade_to_black
 	bl fade_out_with_volume
@@ -384,7 +377,12 @@ exit:
 ; Sequence helpers.
 ; ============================================================================
 
-.if _DJANGO==1
+rabenauge_pal_block_p:
+	.long rabenauge_pal_block_no_adr
+
+rabenauge_splash_p:
+	.long rabenauge_splash_no_adr
+
 wait_frames:
 	mov r0, #19
 	swi OS_Byte
@@ -433,7 +431,6 @@ fade_in:
 	cmp r0, #16
 	bne .1
 	ldr pc, [sp], #4
-.endif
 
 ; ============================================================================
 ; Debug helpers.
@@ -736,6 +733,9 @@ irq_handler:
 	BNE     vsync                   ;...Vs higher priority than T1
 
 timer1:
+	ldr r0, song_number
+	cmp r0, #-1
+	beq .2
 	adr	r1, timer1_vidc_regs_list
 	.1:
 	ldr r0, [r1], #4
@@ -756,6 +756,9 @@ exittimer1:
 	SUBS    PC,R14,#4
 
 vsync:
+	ldr r0, song_number
+	cmp r0, #-1
+	beq .2
 	adr	r1, vsync_vidc_regs_list
 	.1:
 	ldr r0, [r1], #4
@@ -910,7 +913,7 @@ screen_addr:
 .include "src/columns.asm"
 .include "src/scroller.asm"
 .include "src/logo.asm"
-;.include "lib/lz4-decode.asm"
+.include "lib/lz4-decode.asm"
 .include "lib/maths.asm"
 .include "src/3d-scene.asm"
 

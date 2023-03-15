@@ -70,7 +70,7 @@ Road to Revision
 
 TODO:
 
-- Splash screen with fade out.
+- Splash screen with fade out. - DONE
 - Hovering masked logo with pixel motion. - DONE
   - Add mask colour support to png2arc.py. - DONE (WELL, HACKED)
   - Expand to 8x shifts at runtime.
@@ -85,8 +85,8 @@ TODO:
 - Menu:
   - New layout.
   - New menu small font has no regular/bold. - DONE
-  - New menu small font is proportional? - HMMM
-  - New menu small font plots different colours over cube... - IGNORE FOR NOW!
+  - New menu small font is proportional? - DONE!
+  - New menu small font plots different colours over cube... - IGNORE FOR NOW?
   - New colours for the menu, selection & highlight etc. - DONE SOME
 - Cube:
   - Make smaller. - DONE
@@ -130,7 +130,7 @@ TODO:
   - Do we need RasterMan or get RasterMan Lite for stablised interrupts. => NO.
   - Remove redundant code.
   - Shrink and package etc.
-  - Ask Bodo for an app icon?
+  - Ask Bodo for an app icon? - DONE BUT PROD AGAIN
 
 Scrolltext
 ~~~
@@ -199,11 +199,10 @@ Spaces are 5 pixels (!) 'i' is 4 pixels.
 - Plot glyphs at pixel offset.
 
 
-
 Archie custom features...?
 - Small Y offset for scroller?
 - Reinstate logo glitch when loading tune? Or a wibble?
 - Add cube lighting back?
+- Make cube blip right & left for a few frames to simulate 'load glitch'.
 - Make the scrolltext appear nicely from behind the last column?
 - Swap sample speed depending on CPU speed... - DONE
-
