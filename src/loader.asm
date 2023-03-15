@@ -1,38 +1,85 @@
 ; ============================================================================
-; Compressed loader.
+; Generic loader to decompress main exe.
 ; ============================================================================
+
+.equ _DEBUG, 0
+
+.include "../lib/swis.h.asm"
+
+.ifndef _WIMPSLOT
+.equ _WIMPSLOT, 1000*1024           ; Assumed RAM - see !Run.txt
+.endif
+
+.equ STACK_SIZE, 1024
 
 .org 0x8000
 
-Start:
-    adrl sp, stack_base
-	B main
-
-Jump_unlz4:
-    b unlz4
-
-; ============================================================================
-; Stack
-; ============================================================================
-
-.skip 1024
-stack_base:
-
 main:
-    adr r0, code_source
-    adr r1, code_main
-    bl unlz4
-    b code_main
+    ; Get compressed file size.
+    mov r0, #5
+	adr r1, filename
+    swi OS_File
+    cmp r0, #1
+    swine OS_Exit                   ; file not found.
+    ; R4=file length.
 
-; ============================================================================
-; Additional code modules
-; ============================================================================
+    ; Calculate load address.
+    ldr r2, endofram
+    add r4, r4, #3
+    bic r4, r4, #0b11               ; round up to 4 bytes
+    sub r2, r2, r4                  ; subtract file size
+    .if _USE_SHRINKLER
+    sub r2, r2, #STACK_SIZE + NUM_CONTEXTS*4    ; subtract working space
+    .else
+    sub r2, r2, #STACK_SIZE
+    .endif
+    mov r9, r2                      ; remember load address
 
+	; Load compressed file.
+	mov r0, #0xff
+	adr r1, filename
+    mov r3, #0
+	swi OS_File
+
+    ; Relocate decoder.
+    ldr r12, endofram               ; dst
+    mov r8, r12
+    adr r11, reloc_start            ; src
+    adr r10, reloc_end              ; end
+.1:
+    ldr r0, [r11], #4
+    str r0, [r12], #4
+    cmp r11, r10
+    blt .1
+
+    ; Call decompressor.
+    mov r0, r9                      ; source
+    mov r1, #0x8000                 ; destination
+    .if _USE_SHRINKLER
+    mov r2, #0                      ; no callback
+    sub r9, r8, #STACK_SIZE + NUM_CONTEXTS*4               ; context
+    .endif
+    mov sp, r8                      ; reset stack top
+    mov lr, #0x8000                 ; return address
+    mov pc, r8                      ; jump to reloc
+
+filename:
+	.byte "<Demo$Dir>.Demo",0
+	.p2align 2
+
+endofram:
+    .long 0x8000 + _WIMPSLOT - (reloc_end - reloc_start)
+
+.if _USE_SHRINKLER
+reloc_start:
+	b ShrinklerDecompress
+
+.include "../lib/arc-shrinkler.asm"
+.else
+reloc_start:
+    ; b unlz4  <== code starts here anyway.
 .include "../lib/lz4-decode.asm"
+.endif
+reloc_end:
 
-.p2align 2
-code_source:
-.incbin "../build/arc-django.lz4"
-
-.p2align 2
-code_main:
+; ============================================================================

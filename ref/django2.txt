@@ -128,7 +128,7 @@ TODO:
       - Rich says use key pressed event and store a mask... DONE!
     => Improve update_3D_scene as well. => DONE
   - Do we need RasterMan or get RasterMan Lite for stablised interrupts. => NO.
-  - Remove redundant code.
+  - Remove redundant code. - DONE I THINK?
   - Shrink and package etc.
   - Ask Bodo for an app icon? - DONE BUT PROD AGAIN
 

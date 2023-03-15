@@ -5,6 +5,7 @@ COPY:=copy
 VASM?=bin\vasmarm_std_win32.exe
 VLINK?=bin\vlink.exe
 LZ4?=bin\lz4.exe
+SHRINKLER?=bin\Shrinkler.exe
 PYTHON2?=C:\Dev\Python27\python.exe
 PYTHON3?=python.exe
 DOS2UNIX?=bin\dos2unix.exe
@@ -15,6 +16,7 @@ COPY:=cp
 VASM?=vasmarm_std
 VLINK?=vlink
 LZ4?=lz4
+SHRINKLER?=shrinkler
 PYTHON3?=python
 DOS2UNIX?=dos2unix
 endif
@@ -37,7 +39,7 @@ deploy:folder
 	$(COPY) "$(FOLDER)\*.*" "$(HOSTFS)\$(FOLDER)\*.*"
 
 .PHONY:folder
-folder: build loader music text
+folder: build music text
 	$(RM_RF) $(FOLDER)
 	$(MKDIR_P) $(FOLDER)
 	$(COPY) .\folder\*.* "$(FOLDER)\*.*"
@@ -46,9 +48,35 @@ folder: build loader music text
 	$(COPY) .\build\django01.txt "$(FOLDER)\!Help"
 	$(COPY) .\build\arc-django.bin "$(FOLDER)\!RunImage,ff8"
 
-.PHONY:loader
-loader: build ./build/arc-django.lz4
-	$(VASM) -L build/loader.txt -m250 -Fbin -opt-adr -o build\loader.bin src/loader.asm
+.PHONY:lz4_build
+lz4_build: build ./build/arc-django.lz4
+	$(VASM) -D_USE_SHRINKLER=0 -L build/loader.txt -m250 -Fbin -opt-adr -o build\loader.bin src/loader.asm
+	$(RM_RF) $(FOLDER)
+	$(MKDIR_P) $(FOLDER)
+	$(COPY) .\folder\*.* "$(FOLDER)\*.*"
+	$(COPY) .\build\!run.txt "$(FOLDER)\!Run,feb"
+	$(COPY) .\build\icon.bin "$(FOLDER)\!Sprites,ff9"
+	$(COPY) .\build\django01.txt "$(FOLDER)\!Help"
+	$(COPY) .\build\loader.bin "$(FOLDER)\!RunImage,ff8"
+	$(COPY) .\build\arc-django.lz4 "$(FOLDER)\Demo,ffd"
+	$(RM_RF) "$(HOSTFS)\$(FOLDER)"
+	$(MKDIR_P) "$(HOSTFS)\$(FOLDER)"
+	$(COPY) "$(FOLDER)\*.*" "$(HOSTFS)\$(FOLDER)\*.*"
+
+.PHONY:shrinkler_build
+shrinkler_build: build ./build/arc-django.shri
+	$(VASM) -D_USE_SHRINKLER=1 -L build/loader.txt -m250 -Fbin -opt-adr -o build\loader.bin src/loader.asm
+	$(RM_RF) $(FOLDER)
+	$(MKDIR_P) $(FOLDER)
+	$(COPY) .\folder\*.* "$(FOLDER)\*.*"
+	$(COPY) .\build\!run.txt "$(FOLDER)\!Run,feb"
+	$(COPY) .\build\icon.bin "$(FOLDER)\!Sprites,ff9"
+	$(COPY) .\build\django01.txt "$(FOLDER)\!Help"
+	$(COPY) .\build\loader.bin "$(FOLDER)\!RunImage,ff8"
+	$(COPY) .\build\arc-django.shri "$(FOLDER)\Demo,ffd"
+	$(RM_RF) "$(HOSTFS)\$(FOLDER)"
+	$(MKDIR_P) "$(HOSTFS)\$(FOLDER)"
+	$(COPY) "$(FOLDER)\*.*" "$(HOSTFS)\$(FOLDER)\*.*"
 
 ./build/arc-django.bin: ./build/arc-django.o link_script.txt
 	$(VLINK) -T link_script.txt -b rawbin1 -o $@ build/arc-django.o -Mbuild/linker.txt
@@ -84,8 +112,6 @@ clean:
 
 ##########################################################################
 ##########################################################################
-
-./build/arc-django.lz4: ./build/arc-django.bin
 
 # TODO: Figure out how to not need to make the build dir for every target.
 ./build/logo.lz4: ./build/logo.bin
@@ -166,6 +192,10 @@ clean:
 # Rule to LZ4 compress bin files.
 %.lz4 : %.bin
 	$(LZ4) --best -f $< $@
+
+# Rule to Shrinkler compress bin files.
+%.shri : %.bin
+	$(SHRINKLER) -d -b -p -z $< $@
 
 # Rule to copy MOD files.
 %.bin : %.mod
