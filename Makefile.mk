@@ -39,7 +39,7 @@ deploy:folder
 	$(COPY) "$(FOLDER)\*.*" "$(HOSTFS)\$(FOLDER)\*.*"
 
 .PHONY:folder
-folder: build music text
+folder: build code text
 	$(RM_RF) $(FOLDER)
 	$(MKDIR_P) $(FOLDER)
 	$(COPY) .\folder\*.* "$(FOLDER)\*.*"
@@ -49,7 +49,7 @@ folder: build music text
 	$(COPY) .\build\arc-django.bin "$(FOLDER)\!RunImage,ff8"
 
 .PHONY:lz4_build
-lz4_build: build ./build/arc-django.lz4
+lz4_build: build code text ./build/arc-django.lz4
 	$(VASM) -D_USE_SHRINKLER=0 -L build/loader.txt -m250 -Fbin -opt-adr -o build\loader.bin src/loader.asm
 	$(RM_RF) $(FOLDER)
 	$(MKDIR_P) $(FOLDER)
@@ -64,7 +64,7 @@ lz4_build: build ./build/arc-django.lz4
 	$(COPY) "$(FOLDER)\*.*" "$(HOSTFS)\$(FOLDER)\*.*"
 
 .PHONY:shrinkler_build
-shrinkler_build: build ./build/arc-django.shri
+shrinkler_build: build code text ./build/arc-django.shri
 	$(VASM) -D_USE_SHRINKLER=1 -L build/loader.txt -m250 -Fbin -opt-adr -o build\loader.bin src/loader.asm
 	$(RM_RF) $(FOLDER)
 	$(MKDIR_P) $(FOLDER)
@@ -77,6 +77,9 @@ shrinkler_build: build ./build/arc-django.shri
 	$(RM_RF) "$(HOSTFS)\$(FOLDER)"
 	$(MKDIR_P) "$(HOSTFS)\$(FOLDER)"
 	$(COPY) "$(FOLDER)\*.*" "$(HOSTFS)\$(FOLDER)\*.*"
+
+.PHONY:code
+code: ./build/arc-django.bin
 
 ./build/arc-django.bin: ./build/arc-django.o link_script.txt
 	$(VLINK) -T link_script.txt -b rawbin1 -o $@ build/arc-django.o -Mbuild/linker.txt
@@ -94,7 +97,7 @@ music: build ./build/music_01.bin ./build/music_02.bin ./build/music_03.bin \
 	./build/music_04.bin ./build/music_05.bin ./build/music_06.bin \
 	./build/music_07.bin ./build/music_08.bin ./build/music_09.bin \
 	./build/music_10.bin ./build/music_11.bin ./build/music_12.bin \
-	./build/music_splash.bin
+	./build/music_13.bin ./build/music_splash.bin
 
 .PHONY:text build
 text: ./build/!run.txt ./build/django01.txt
@@ -168,6 +171,9 @@ clean:
 	$(COPY) $(subst /,\\,$+) $(subst /,\\,$@)
 
 ./build/music_12.bin: ./data/music2/vectrax-longplay-by-lord_sp.mod
+	$(COPY) $(subst /,\\,$+) $(subst /,\\,$@)
+
+./build/music_13.bin: ./data/music2/maze-funky-delicious.mod
 	$(COPY) $(subst /,\\,$+) $(subst /,\\,$@)
 
 ./build/music_splash.bin: ./data/music2/raven-mono.mod

@@ -317,7 +317,7 @@ menu_strings:
 	.byte "lies", 0, "punnik", 0
 	.byte "changing waves", 0, "4mat", 0
 	.byte "vectrax", 0, "lord", 0
-	.byte "placeholder", 0, "artist", 0
+	.byte "funky delicious", 0, "maz3", 0
 	.byte "placeholder", 0, "artist", 0
 	.byte "autoplay off", 0
 	.byte "autoplay on", 0
