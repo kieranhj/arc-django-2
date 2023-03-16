@@ -93,11 +93,11 @@ assets: build ./build/logo.lz4 ./data/logo-palette-hacked.bin ./build/big-font.b
 	./build/icon.bin ./build/logo.bin.mask
 
 .PHONY:music
-music: build ./build/music_01.bin ./build/music_02.bin ./build/music_03.bin \
-	./build/music_04.bin ./build/music_05.bin ./build/music_06.bin \
-	./build/music_07.bin ./build/music_08.bin ./build/music_09.bin \
-	./build/music_10.bin ./build/music_11.bin ./build/music_12.bin \
-	./build/music_13.bin ./build/music_splash.bin
+music: build ./build/birdhouse.mod ./build/autumn_mood.mod ./build/square_circles.mod \
+	./build/je_suis_k.mod ./build/la_soupe.mod ./build/bodoaxian.mod \
+	./build/sajt.mod ./build/holodash.mod ./build/squid_ring.mod \
+	./build/lies.mod ./build/changing_waves.mod ./build/vectrax.mod \
+	./build/funky_delicious.mod ./build/music_splash.mod
 
 .PHONY:text build
 text: ./build/!run.txt ./build/django01.txt
@@ -137,46 +137,46 @@ clean:
 ##########################################################################
 ##########################################################################
 
-./build/music_01.bin: ./data/music2/1IND-birdhouse-indahouz3.mod
+./build/birdhouse.mod: ./data/music2/1IND-birdhouse-indahouz3.mod
 	$(COPY) $(subst /,\\,$+) $(subst /,\\,$@)
 
-./build/music_02.bin: ./data/music2/autumn-mood.mod
+./build/autumn_mood.mod: ./data/music2/autumn-mood.mod
 	$(COPY) $(subst /,\\,$+) $(subst /,\\,$@)
 
-./build/music_03.bin: ./data/music2/ne7-square-circles.mod
+./build/square_circles.mod: ./data/music2/ne7-square-circles.mod
 	$(COPY) $(subst /,\\,$+) $(subst /,\\,$@)
 
-./build/music_04.bin: ./data/music2/mod.okeanos-jesuisk.mod
+./build/je_suis_k.mod: ./data/music2/mod.okeanos-jesuisk.mod
 	$(COPY) $(subst /,\\,$+) $(subst /,\\,$@)
 
-./build/music_05.bin: ./data/music2/mod.okeanos-la_soupe_aux_choux.mod
+./build/la_soupe.mod: ./data/music2/mod.okeanos-la_soupe_aux_choux.mod
 	$(COPY) $(subst /,\\,$+) $(subst /,\\,$@)
 
-./build/music_06.bin: ./data/music2/bodoaxian.final.mod
+./build/bodoaxian.mod: ./data/music2/bodoaxian.final.mod
 	$(COPY) $(subst /,\\,$+) $(subst /,\\,$@)
 
-./build/music_07.bin: ./data/music2/dlz-sajt.mod
+./build/sajt.mod: ./data/music2/dlz-sajt.mod
 	$(COPY) $(subst /,\\,$+) $(subst /,\\,$@)
 
-./build/music_08.bin: ./data/music2/virgil-holodash.mod
+./build/holodash.mod: ./data/music2/virgil-holodash.mod
 	$(COPY) $(subst /,\\,$+) $(subst /,\\,$@)
 
-./build/music_09.bin: ./data/music2/squid_ring.mod
+./build/squid_ring.mod: ./data/music2/squid_ring.mod
 	$(COPY) $(subst /,\\,$+) $(subst /,\\,$@)
 
-./build/music_10.bin: ./data/music2/punnik-Lies.mod
+./build/lies.mod: ./data/music2/punnik-Lies.mod
 	$(COPY) $(subst /,\\,$+) $(subst /,\\,$@)
 
-./build/music_11.bin: ./data/music2/changing-waves.mod
+./build/changing_waves.mod: ./data/music2/changing-waves.mod
 	$(COPY) $(subst /,\\,$+) $(subst /,\\,$@)
 
-./build/music_12.bin: ./data/music2/vectrax-longplay-by-lord_sp.mod
+./build/vectrax.mod: ./data/music2/vectrax-longplay-by-lord_sp.mod
 	$(COPY) $(subst /,\\,$+) $(subst /,\\,$@)
 
-./build/music_13.bin: ./data/music2/maze-funky-delicious.mod
+./build/funky_delicious.mod: ./data/music2/maze-funky-delicious.mod
 	$(COPY) $(subst /,\\,$+) $(subst /,\\,$@)
 
-./build/music_splash.bin: ./data/music2/raven-mono.mod
+./build/music_splash.mod: ./data/music2/raven-mono.mod
 	$(COPY) $(subst /,\\,$+) $(subst /,\\,$@)
 
 ##########################################################################

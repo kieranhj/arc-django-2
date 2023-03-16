@@ -7,6 +7,7 @@
 .equ NewFont_GlyphWidth, 8
 .equ NewFont_SpaceWidth, 5
 .equ NewFont_I_Width, 4
+.equ NewFont_AdjustPadding, 2       ; pixels
 
 .equ ASCII_a, 97
 .equ ASCII_z, 122
@@ -238,15 +239,18 @@ new_font_plot_string_as_sprite:
     bl new_font_get_pixel_width_for_string
     ; R6=width of string in pixels.
 
+    ; Padding.
+    add r6, r6, #NewFont_AdjustPadding
+
     ; Extend pixel width to words.
     add r12, r6, #7
     bic r12, r12, #7
-    sub r6, r12, r6             ; RHS adjustment = buffer width - pixel width
+    sub r6, r12, r6                     ; RHS adjustment = buffer width - pixel width
     mov r12, r12, lsr #1
     ; R12=width of buffer in bytes (stride).
 
     cmp r10, #0
-    moveq r6, #0                ; LHS adjustment.
+    moveq r6, #NewFont_AdjustPadding    ; LHS adjustment.
     ; R6=pixel offset (updated)
 
     mov r0, #0

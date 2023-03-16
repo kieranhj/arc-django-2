@@ -49,57 +49,56 @@ menu_font_data_no_adr:
 ; ============================================================================
 
 .p2align 2
-music_01_mod_no_adr:
-.incbin "build/music_01.bin"
+birdhouse_mod_no_adr:
+.incbin "build/birdhouse.mod"
 
 .p2align 2
-music_02_mod_no_adr:
-.incbin "build/music_02.bin"
+autumn_mood_mod_no_adr:
+.incbin "build/autumn_mood.mod"
 
 .p2align 2
-music_03_mod_no_adr:
-.incbin "build/music_03.bin"
+square_circles_mod_no_adr:
+.incbin "build/square_circles.mod"
 
 .p2align 2
-music_04_mod_no_adr:
-.incbin "build/music_04.bin"
+je_suis_k_mod_no_adr:
+.incbin "build/je_suis_k.mod"
 
 .p2align 2
-music_05_mod_no_adr:
-.incbin "build/music_05.bin"
+la_soupe_mod_no_adr:
+.incbin "build/la_soupe.mod"
 
 .p2align 2
-music_06_mod_no_adr:
-.incbin "build/music_06.bin"
+bodoaxian_mod_no_adr:
+.incbin "build/bodoaxian.mod"
 
 .p2align 2
-music_07_mod_no_adr:
-.incbin "build/music_07.bin"
+sajt_mod_no_adr:
+.incbin "build/sajt.mod"
 
 .p2align 2
-music_08_mod_no_adr:
-.incbin "build/music_08.bin"
+holodash_mod_no_adr:
+.incbin "build/holodash.mod"
 
 .p2align 2
-music_09_mod_no_adr:
-.incbin "build/music_09.bin"
+squid_ring_mod_no_adr:
+.incbin "build/squid_ring.mod"
 
 .p2align 2
-music_10_mod_no_adr:
-.incbin "build/music_10.bin"
+lies_mod_no_adr:
+.incbin "build/lies.mod"
 
 .p2align 2
-music_11_mod_no_adr:
-.incbin "build/music_11.bin"
+changing_waves_mod_no_adr:
+.incbin "build/changing_waves.mod"
 
 .p2align 2
-music_12_mod_no_adr:
-.incbin "build/music_12.bin"
+vectrax_mod_no_adr:
+.incbin "build/vectrax.mod"
 
 .p2align 2
-music_13_mod_no_adr:
-music_14_mod_no_adr:
-.incbin "build/music_13.bin"
+funky_delicious_mod_no_adr:
+.incbin "build/funky_delicious.mod"
 
 ; ============================================================================
 

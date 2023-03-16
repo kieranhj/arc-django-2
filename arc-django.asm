@@ -926,20 +926,20 @@ vdu_screen_disable_cursor:
 .p2align 2
 
 music_table:
-	.long music_01_mod_no_adr
-	.long music_02_mod_no_adr
-	.long music_03_mod_no_adr
-	.long music_04_mod_no_adr
-	.long music_05_mod_no_adr
-	.long music_06_mod_no_adr
-	.long music_07_mod_no_adr
-	.long music_08_mod_no_adr
-	.long music_09_mod_no_adr
-	.long music_10_mod_no_adr
-	.long music_11_mod_no_adr
-	.long music_12_mod_no_adr
-	.long music_13_mod_no_adr
-	.long music_14_mod_no_adr
+	.long birdhouse_mod_no_adr			; 1
+	.long funky_delicious_mod_no_adr	; 2
+	.long autumn_mood_mod_no_adr		; 3
+	.long je_suis_k_mod_no_adr			; 4
+	.long square_circles_mod_no_adr		; 5
+	.long la_soupe_mod_no_adr			; 6
+	.long sajt_mod_no_adr				; 7
+	.long bodoaxian_mod_no_adr			; 8
+	.long holodash_mod_no_adr			; 9
+	.long squid_ring_mod_no_adr			; 10
+	.long lies_mod_no_adr				; 11
+	.long vectrax_mod_no_adr			; 12
+	.long changing_waves_mod_no_adr		; 13
+	.long changing_waves_mod_no_adr		; 14
 
 logo_pal_block:
 .incbin "data/logo-palette-hacked.bin"
