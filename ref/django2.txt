@@ -94,7 +94,7 @@ TODO:
   - Match colours. - DONE
   - Check visualiser pulse. - AS LONG AS IT LOOKS GOOD...
 - Sawtooth:
-  - Has rounded edges
+  - Has rounded edges - DONE
   - Match colours - DONE
   - Match speeds.
 - Scrolltext:
@@ -207,3 +207,13 @@ Archie custom features...?
 - Make cube blip right & left for a few frames to simulate 'load glitch'.
 - Make the scrolltext appear nicely from behind the last column?
 - Swap sample speed depending on CPU speed... - DONE
+
+Bug fixes from Steve:
+- Check monitortype and adjust T1 timing?
+- Load tracks using R0=-1 (RMA copy) for QTM_Load.
+- Use SWI QTM_SongStatus and check bit 4 of R0 for end of track.
+  (This is easier than the music interrupt method previously.)
+- When autoplay is on, you might want to try clearing bit 2 of the music options byte,
+  using SWI QTM_MusicOptions, this will ensure each track fully stops at the end,
+  and doesn't loop round and start playing a few micro seconds of the start before the next track loads.
+

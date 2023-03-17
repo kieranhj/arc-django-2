@@ -68,7 +68,7 @@ filename:
 	.p2align 2
 
 endofram:
-    .long 0x8000 + _WIMPSLOT - (reloc_end - reloc_start)
+    .long 0x8000 + _WIMPSLOT - (reloc_end - reloc_start) - 4
 
 .if _USE_SHRINKLER
 reloc_start:

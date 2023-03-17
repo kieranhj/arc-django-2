@@ -824,7 +824,7 @@ play_song:
 	str r0, song_number
 	adr r2, music_table
 	ldr r1, [r2, r0, lsl #2]	; r0 * 4
-	mov r0, #0					; load from address
+	mov r0, #-1					; load from address and copy to RMA.
 	swi QTM_Load
 
 	mov r0, #64					; max volume
@@ -945,6 +945,9 @@ logo_pal_block:
 .incbin "data/logo-palette-hacked.bin"
 
 timer1_vidc_regs_list: ; bgr
+.if _DEBUG && !_DEBUG_RASTERS
+	.long VIDC_Border | 0x0f0
+.endif
 	.long VIDC_Col1  | 0x533			; cube colours
 	.long VIDC_Col2  | 0xb88
 	.long VIDC_Col3  | 0x756
@@ -958,6 +961,9 @@ timer1_vidc_regs_list: ; bgr
 	.long -1
 
 vsync_vidc_regs_list:
+.if _DEBUG && !_DEBUG_RASTERS
+	.long VIDC_Border | 0x000
+.endif
 	.long VIDC_Col1  | 0x700			; logo colours
 	.long VIDC_Col2  | 0x821
 	.long VIDC_Col3  | 0xa42
