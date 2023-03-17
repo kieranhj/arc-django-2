@@ -35,31 +35,31 @@ plot_columns:
     ldr r10, column_y_offset + 0
     ldr r9, column_colours + 0
     mov r4, #0  ; bg
-    bl plot_narrow_column
+    bl plot_rounded_column
 
     add r11, r12, #Screen_Stride/2 + 16
     ldr r10, column_y_offset + 4
     mov r4, r9  ; bg
     ldr r9, column_colours + 4
-    bl plot_narrow_column
+    bl plot_rounded_column
 
     add r11, r12, #Screen_Stride/2 + 32
     ldr r10, column_y_offset + 8
     mov r4, r9  ; bg
     ldr r9, column_colours + 8
-    bl plot_narrow_column
+    bl plot_rounded_column
 
     add r11, r12, #Screen_Stride/2 + 48
     ldr r10, column_y_offset + 12
     mov r4, r9  ; bg
     ldr r9, column_colours + 12
-    bl plot_narrow_column
+    bl plot_rounded_column
 
     add r11, r12, #Screen_Stride/2 + 64
     ldr r10, column_y_offset + 16
     mov r4, r9  ; bg
     ldr r9, column_colours + 16
-    bl plot_narrow_column
+    bl plot_rounded_column
 
     ldr pc, [sp], #4
 
@@ -104,24 +104,234 @@ clear_left_screen:
 ; R9=colour word
 ; R4=bg colour
 ; Trashes: r3-r8
-plot_narrow_column:
+plot_rounded_column:
     ; Copy colour word.
     mov r8, r9
     mov r7, r9
     mov r6, r9
+
+    ; Make corner word.
+    bic r5, r9, #0x0000000f     ; remove leftmost pixel.
+    orr r5, r5, r4, lsr #28     ; mask in a bg pixel.
+    ; R5=colour word with leftmost pixel in bg.
+
     ; Copy bg word.
-    mov r3, r4
+    mov r2, r4
 
-.rept Screen_Height
-    ; assumes 'tooth' size is 16 pixels
-    movs r0, r10, lsr #16+5     ; parity in C
+    ; Make corner word.
+    bic r3, r4, #0xf0000000     ; remove rightmost pixel.
+    orr r3, r3, r9, lsl #28     ; mask in a colour pixel.
+    ; R3=bg word with rightmost pixel in colour.
 
-    ; if carry set draw tooth
-    stmcsia r11!, {r6-r9}       ; plot 32 pixels of tooth
-    stmccia r11!, {r3-r4,r8-r9} ; else plot 16 pixels of bg + 16 pixels of tooth
-    
+    ; Plot 32-Y lines, skip Y lines from start out of block of 32.
+    mov r10, r10, lsr #16
+    and r10, r10, #31
+    adr r1, .1
+    add pc, r1, r10, lsl #3     ; Y*8 = Y * (2 instructions)
+
+.1:
+.rept Screen_Height/32
+    ; Each 'tooth' is 16 pixels.
+    ; Assuming we're starting at parity 0 on line 0:
+    stmia r11!, {r2-r3,r8-r9}   ; line 0 = bg + corner + colour + colour
+    add r11, r11, #Screen_Stride-16
+    stmia r11!, {r2,r4,r8-r9}   ; line 1 = bg + bg + colour + colour
+    add r11, r11, #Screen_Stride-16
+    stmia r11!, {r2,r4,r8-r9}   ; line 2 = bg + bg + colour + colour
+    add r11, r11, #Screen_Stride-16
+    stmia r11!, {r2,r4,r8-r9}   ; line 3 = bg + bg + colour + colour
+    add r11, r11, #Screen_Stride-16
+    stmia r11!, {r2,r4,r8-r9}   ; line 4 = bg + bg + colour + colour
+    add r11, r11, #Screen_Stride-16
+    stmia r11!, {r2,r4,r8-r9}   ; line 5 = bg + bg + colour + colour
+    add r11, r11, #Screen_Stride-16
+    stmia r11!, {r2,r4,r8-r9}   ; line 6 = bg + bg + colour + colour
+    add r11, r11, #Screen_Stride-16
+    stmia r11!, {r2,r4,r8-r9}   ; line 7 = bg + bg + colour + colour
+    add r11, r11, #Screen_Stride-16
+    stmia r11!, {r2,r4,r8-r9}   ; line 8 = bg + bg + colour + colour
+    add r11, r11, #Screen_Stride-16
+    stmia r11!, {r2,r4,r8-r9}   ; line 9 = bg + bg + colour + colour
+    add r11, r11, #Screen_Stride-16
+    stmia r11!, {r2,r4,r8-r9}   ; line 10 = bg + bg + colour + colour
+    add r11, r11, #Screen_Stride-16
+    stmia r11!, {r2,r4,r8-r9}   ; line 11 = bg + bg + colour + colour
+    add r11, r11, #Screen_Stride-16
+    stmia r11!, {r2,r4,r8-r9}   ; line 12 = bg + bg + colour + colour
+    add r11, r11, #Screen_Stride-16
+    stmia r11!, {r2,r4,r8-r9}   ; line 13 = bg + bg + colour + colour
+    add r11, r11, #Screen_Stride-16
+    stmia r11!, {r2,r4,r8-r9}   ; line 14 = bg + bg + colour + colour
+    add r11, r11, #Screen_Stride-16
+    stmia r11!, {r2-r3,r8-r9}   ; line 15 = bg + corner + colour + colour
     add r11, r11, #Screen_Stride-16
 
-    add r10, r10, #1<<16    ; next y offset
+    ; After 16 lines we switch to parity 1 on line 16:
+    stmia r11!, {r5,r6-r8}      ; line 16 = corner + colour + colour + colour
+    add r11, r11, #Screen_Stride-16
+    stmia r11!, {r6-r9}         ; line 17 = colour + colour + colour + colour
+    add r11, r11, #Screen_Stride-16
+    stmia r11!, {r6-r9}         ; line 18 = colour + colour + colour + colour
+    add r11, r11, #Screen_Stride-16
+    stmia r11!, {r6-r9}         ; line 19 = colour + colour + colour + colour
+    add r11, r11, #Screen_Stride-16
+    stmia r11!, {r6-r9}         ; line 20 = colour + colour + colour + colour
+    add r11, r11, #Screen_Stride-16
+    stmia r11!, {r6-r9}         ; line 21 = colour + colour + colour + colour
+    add r11, r11, #Screen_Stride-16
+    stmia r11!, {r6-r9}         ; line 22 = colour + colour + colour + colour
+    add r11, r11, #Screen_Stride-16
+    stmia r11!, {r6-r9}         ; line 23 = colour + colour + colour + colour
+    add r11, r11, #Screen_Stride-16
+    stmia r11!, {r6-r9}         ; line 24 = colour + colour + colour + colour
+    add r11, r11, #Screen_Stride-16
+    stmia r11!, {r6-r9}         ; line 25 = colour + colour + colour + colour
+    add r11, r11, #Screen_Stride-16
+    stmia r11!, {r6-r9}         ; line 26 = colour + colour + colour + colour
+    add r11, r11, #Screen_Stride-16
+    stmia r11!, {r6-r9}         ; line 27 = colour + colour + colour + colour
+    add r11, r11, #Screen_Stride-16
+    stmia r11!, {r6-r9}         ; line 28 = colour + colour + colour + colour
+    add r11, r11, #Screen_Stride-16
+    stmia r11!, {r6-r9}         ; line 29 = colour + colour + colour + colour
+    add r11, r11, #Screen_Stride-16
+    stmia r11!, {r6-r9}         ; line 30 = colour + colour + colour + colour
+    add r11, r11, #Screen_Stride-16
+    stmia r11!, {r5,r6-r8}      ; line 31 = corner + colour + colour + colour
+    add r11, r11, #Screen_Stride-16
 .endr
+
+    ; Plot Y lines [0-31] then rts.
+    cmp r10, #0
+    moveq pc, lr
+
+    stmia r11!, {r2-r3,r8-r9}   ; line 0 = bg + corner + colour + colour
+    subs r10, r10, #1
+    moveq pc, lr
+    add r11, r11, #Screen_Stride-16
+    stmia r11!, {r2,r4,r8-r9}   ; line 1 = bg + bg + colour + colour
+    subs r10, r10, #1
+    moveq pc, lr
+    add r11, r11, #Screen_Stride-16
+    stmia r11!, {r2,r4,r8-r9}   ; line 2 = bg + bg + colour + colour
+    subs r10, r10, #1
+    moveq pc, lr
+    add r11, r11, #Screen_Stride-16
+    stmia r11!, {r2,r4,r8-r9}   ; line 3 = bg + bg + colour + colour
+    subs r10, r10, #1
+    moveq pc, lr
+    add r11, r11, #Screen_Stride-16
+    stmia r11!, {r2,r4,r8-r9}   ; line 4 = bg + bg + colour + colour
+    subs r10, r10, #1
+    moveq pc, lr
+    add r11, r11, #Screen_Stride-16
+    stmia r11!, {r2,r4,r8-r9}   ; line 5 = bg + bg + colour + colour
+    subs r10, r10, #1
+    moveq pc, lr
+    add r11, r11, #Screen_Stride-16
+    stmia r11!, {r2,r4,r8-r9}   ; line 6 = bg + bg + colour + colour
+    subs r10, r10, #1
+    moveq pc, lr
+    add r11, r11, #Screen_Stride-16
+    stmia r11!, {r2,r4,r8-r9}   ; line 7 = bg + bg + colour + colour
+    subs r10, r10, #1
+    moveq pc, lr
+    add r11, r11, #Screen_Stride-16
+    stmia r11!, {r2,r4,r8-r9}   ; line 8 = bg + bg + colour + colour
+    subs r10, r10, #1
+    moveq pc, lr
+    add r11, r11, #Screen_Stride-16
+    stmia r11!, {r2,r4,r8-r9}   ; line 9 = bg + bg + colour + colour
+    subs r10, r10, #1
+    moveq pc, lr
+    add r11, r11, #Screen_Stride-16
+    stmia r11!, {r2,r4,r8-r9}   ; line 10 = bg + bg + colour + colour
+    subs r10, r10, #1
+    moveq pc, lr
+    add r11, r11, #Screen_Stride-16
+    stmia r11!, {r2,r4,r8-r9}   ; line 11 = bg + bg + colour + colour
+    subs r10, r10, #1
+    moveq pc, lr
+    add r11, r11, #Screen_Stride-16
+    stmia r11!, {r2,r4,r8-r9}   ; line 12 = bg + bg + colour + colour
+    subs r10, r10, #1
+    moveq pc, lr
+    add r11, r11, #Screen_Stride-16
+    stmia r11!, {r2,r4,r8-r9}   ; line 13 = bg + bg + colour + colour
+    subs r10, r10, #1
+    moveq pc, lr
+    add r11, r11, #Screen_Stride-16
+    stmia r11!, {r2,r4,r8-r9}   ; line 14 = bg + bg + colour + colour
+    subs r10, r10, #1
+    moveq pc, lr
+    add r11, r11, #Screen_Stride-16
+    stmia r11!, {r2-r3,r8-r9}   ; line 15 = bg + corner + colour + colour
+    subs r10, r10, #1
+    moveq pc, lr
+    add r11, r11, #Screen_Stride-16
+
+    ; After 16 lines we switch to parity 1 on line 16:
+    stmia r11!, {r5,r6-r8}      ; line 16 = corner + colour + colour + colour
+    subs r10, r10, #1
+    moveq pc, lr
+    add r11, r11, #Screen_Stride-16
+    stmia r11!, {r6-r9}         ; line 17 = colour + colour + colour + colour
+    subs r10, r10, #1
+    moveq pc, lr
+    add r11, r11, #Screen_Stride-16
+    stmia r11!, {r6-r9}         ; line 18 = colour + colour + colour + colour
+    subs r10, r10, #1
+    moveq pc, lr
+    add r11, r11, #Screen_Stride-16
+    stmia r11!, {r6-r9}         ; line 19 = colour + colour + colour + colour
+    subs r10, r10, #1
+    moveq pc, lr
+    add r11, r11, #Screen_Stride-16
+    stmia r11!, {r6-r9}         ; line 20 = colour + colour + colour + colour
+    subs r10, r10, #1
+    moveq pc, lr
+    add r11, r11, #Screen_Stride-16
+    stmia r11!, {r6-r9}         ; line 21 = colour + colour + colour + colour
+    subs r10, r10, #1
+    moveq pc, lr
+    add r11, r11, #Screen_Stride-16
+    stmia r11!, {r6-r9}         ; line 22 = colour + colour + colour + colour
+    subs r10, r10, #1
+    moveq pc, lr
+    add r11, r11, #Screen_Stride-16
+    stmia r11!, {r6-r9}         ; line 23 = colour + colour + colour + colour
+    subs r10, r10, #1
+    moveq pc, lr
+    add r11, r11, #Screen_Stride-16
+    stmia r11!, {r6-r9}         ; line 24 = colour + colour + colour + colour
+    subs r10, r10, #1
+    moveq pc, lr
+    add r11, r11, #Screen_Stride-16
+    stmia r11!, {r6-r9}         ; line 25 = colour + colour + colour + colour
+    subs r10, r10, #1
+    moveq pc, lr
+    add r11, r11, #Screen_Stride-16
+    stmia r11!, {r6-r9}         ; line 26 = colour + colour + colour + colour
+    subs r10, r10, #1
+    moveq pc, lr
+    add r11, r11, #Screen_Stride-16
+    stmia r11!, {r6-r9}         ; line 27 = colour + colour + colour + colour
+    subs r10, r10, #1
+    moveq pc, lr
+    add r11, r11, #Screen_Stride-16
+    stmia r11!, {r6-r9}         ; line 28 = colour + colour + colour + colour
+    subs r10, r10, #1
+    moveq pc, lr
+    add r11, r11, #Screen_Stride-16
+    stmia r11!, {r6-r9}         ; line 29 = colour + colour + colour + colour
+    subs r10, r10, #1
+    moveq pc, lr
+    add r11, r11, #Screen_Stride-16
+    stmia r11!, {r6-r9}         ; line 30 = colour + colour + colour + colour
+    subs r10, r10, #1
+    moveq pc, lr
+    add r11, r11, #Screen_Stride-16
+    stmia r11!, {r5,r6-r8}      ; line 31 = corner + colour + colour + colour
+    
     mov pc, lr
+    
