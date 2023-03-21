@@ -96,7 +96,7 @@ update_menu:
 	; Toggle autplay.
 	ldr r0, autoplay_flag
 	eor r0, r0, #1
-	str r0, autoplay_flag
+	bl set_autoplay
 
 	mov r3, #MAX_SONGS
 	b .5

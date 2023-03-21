@@ -83,7 +83,7 @@ TODO:
   => Ask Bodo if Titus can make a 10 colour version... DONE
 
 - Menu:
-  - New layout.
+  - New layout. - DONE
   - New menu small font has no regular/bold. - DONE
   - New menu small font is proportional? - DONE!
   - New menu small font plots different colours over cube... - IGNORE FOR NOW?
@@ -111,16 +111,17 @@ TODO:
 
 - Music playback.
   - Ping ToBach & 4mat - DONE
-  - Master volume of each tune.
-  - Pause between tunes during autoplay.
+  - Master volume of each tune?
+  - Pause between tunes during autoplay?
 - Archie specific:
-  - Remove _DJANGO define.
-  - Performance on ARM2? <== NEED TO SORT THIS AS A PRIORITY!
+  - Remove _DJANGO define. - DONE
+  - Performance on ARM2? - DONE (CAN ALWAYS DO MORE!)
     1. Scrolltext - cyan
       => Plot glyphs in one go and deal with edges separately. - DONE
     2. Menu - blue
     3. Cube - red
       => Could combine edge determination & rasterisation.
+
     4. Logo - magenta
     5. Columns - yellow
     6. Screen clear - green
@@ -130,8 +131,9 @@ TODO:
   - Do we need RasterMan or get RasterMan Lite for stablised interrupts. => NO.
   - Remove redundant code. - DONE I THINK?
   - Shrink exe - DONE
-  - Add new !ReadMe etc.
+  - Add new !ReadMe etc. ASCII from ne7.
   - Ask Bodo for an app icon? - DONE BUT PROD AGAIN
+  - Write some scrolltext!
 
 Scrolltext
 ~~~
@@ -199,7 +201,6 @@ Spaces are 5 pixels (!) 'i' is 4 pixels.
 - Optionally align string to RHS of sprite.
 - Plot glyphs at pixel offset.
 
-
 Archie custom features...?
 - Small Y offset for scroller?
 - Reinstate logo glitch when loading tune? Or a wibble?
@@ -209,11 +210,10 @@ Archie custom features...?
 - Swap sample speed depending on CPU speed... - DONE
 
 Bug fixes from Steve:
-- Check monitortype and adjust T1 timing?
-- Load tracks using R0=-1 (RMA copy) for QTM_Load.
-- Use SWI QTM_SongStatus and check bit 4 of R0 for end of track.
+- Check monitortype and adjust T1 timing? - NOT SURE!
+- Load tracks using R0=-1 (RMA copy) for QTM_Load. - DONE
+- Use SWI QTM_SongStatus and check bit 4 of R0 for end of track. - LEAVE
   (This is easier than the music interrupt method previously.)
-- When autoplay is on, you might want to try clearing bit 2 of the music options byte,
+- When autoplay is on, you might want to try clearing bit 2 of the music options byte, - DONE
   using SWI QTM_MusicOptions, this will ensure each track fully stops at the end,
   and doesn't loop round and start playing a few micro seconds of the start before the next track loads.
-

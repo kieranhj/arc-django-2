@@ -100,6 +100,10 @@ vectrax_mod_no_adr:
 funky_delicious_mod_no_adr:
 .incbin "build/funky_delicious.mod"
 
+.p2align 2
+splash_mod_no_adr:
+.incbin "build/music_splash.mod"
+
 ; ============================================================================
 
 .p2align 2

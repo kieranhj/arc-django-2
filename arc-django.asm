@@ -2,7 +2,7 @@
 ; arc-django-2 - An Archimedes port of Chipo Django 2 musicdisk by Rabenauge.
 ; ============================================================================
 
-.equ _DEBUG, 1
+.equ _DEBUG, 0
 .equ _DEBUG_RASTERS, (_DEBUG && 1)
 .equ _DEBUG_SHOW, (_DEBUG && 0)
 .equ _DEBUG_FAST_SPLASH, (_DEBUG && 1)
@@ -52,7 +52,7 @@
 .equ Splash_Frames, 3
 .equ Fade_Speed, 1
 .else
-.equ Splash_Frames, 3*50				; 3 seconds.
+.equ Splash_Frames, 5*50				; 3 seconds.
 .equ Fade_Speed, 3
 .endif
 
@@ -150,18 +150,20 @@ main:
 	bl scroller_init
 	bl logo_init
 
-	; QTM Config.
-
 	; Count how long the init takes as a very rough estimate of CPU speed.
 	ldr r1, vsync_count
 	cmp r1, #80		; ARM3~=20, ARM250~=70, ARM2~=108
 	movge r0, #Sample_Speed_SlowCPU
 	movlt r0, #Sample_Speed_FastCPU
+
+	; Setup QTM for our needs.
 	swi QTM_SetSampleSpeed
 
-	mov r0, #8    	; set bit 3 of music options byte = QTM retains control of sound system after Pause/Stop/Clear
-	mov r1, #8
-	SWI QTM_MusicOptions
+	mov r0, #-1
+	mov r1, #0b100	; QTM retains sounds system after Pause/Stop/Clear
+	mov r2, #-1
+	swi QTM_SoundControl
+	str r1, prev_sound_flags
 
 	mov r0, #VU_Bars_Effect
 	mov r1, #VU_Bars_Gravity
@@ -170,9 +172,6 @@ main:
 	mov r0, #0
 	mov r1, #Stereo_Positions
 	swi QTM_Stereo
-
-	; QTM callback.
-	bl claim_music_interrupt
 
 	; LATE INITALISATION HERE!
 	bl get_next_screen_for_writing
@@ -185,16 +184,31 @@ main:
 	ldr r1, screen_addr
 	add r1, r1, #Splash_YPos * Screen_Stride
 	bl unlz4
-
 	bl show_screen_at_vsync
 
+	; Play splash ditty.
+	mov r0, #0					; load from address and copy to RMA.
+	ldr r1, splash_mod_p
+	swi QTM_Load
+
+	mov r0, #64					; max volume
+	swi QTM_Volume
+	swi QTM_Start
+	
 	; Pause.
 	mov r4, #Splash_Frames
 	bl wait_frames
-	; Fade.
-	bl fade_out
 
+	; Fade.
+	bl fade_out_with_volume
 	swi OS_WriteI + 12		; cls
+	swi QTM_Stop
+
+	; Remaining QTM setup.
+	bl claim_music_interrupt
+
+	mov r0, #AutoPlay_Default
+	bl set_autoplay
 
 	; Pause.
 	mov r4, #Menu_Beat_Frames
@@ -328,14 +342,15 @@ exit:
 	bl fade_out_with_volume
 	.endif
 
-	; Return QTM to a normal state.
-	mov r0, #8	;clear bit 3 of music options byte
-	mov r1, #0
-	swi QTM_MusicOptions
-
 	; Disable music
 	mov r0, #0
 	swi QTM_Clear
+
+	; Return QTM to a normal state.
+	mov r0, #-1
+	ldr r1, prev_sound_flags
+	mov r2, #-1
+	swi QTM_SoundControl
 
 	; Remove our IRQ handler
 	bl uninstall_irq_handler
@@ -376,6 +391,9 @@ exit:
 ; ============================================================================
 ; Sequence helpers.
 ; ============================================================================
+
+splash_mod_p:
+	.long splash_mod_no_adr
 
 rabenauge_pal_block_p:
 	.long rabenauge_pal_block_no_adr
@@ -797,7 +815,7 @@ song_number:
 	.long -1
 
 autoplay_flag:
-	.long AutoPlay_Default
+	.long 0
 
 song_ended:
 	.long 0
@@ -809,6 +827,9 @@ prev_interrupt_sp:
 	.long 0
 
 volume_fade:
+	.long 0
+
+prev_sound_flags:
 	.long 0
 
 play_song:
@@ -872,16 +893,23 @@ check_autoplay:
 	ldr pc, [sp], #4
 
 claim_music_interrupt:
-	mov r0, #2
-	mov r1, #2
-	swi QTM_MusicOptions
-
+	; Claim music interrupt to check for internal looping tracks.
 	mov r0, #0
 	adr r1, music_interrupt
 	mov r2, #0
 	swi QTM_MusicInterrupt
 	str r1, prev_music_interrupt
 	str r2, prev_interrupt_sp
+	mov pc, lr
+
+; R0=autoplay flag.
+set_autoplay:
+	str r0, autoplay_flag
+
+	; Tell QTM.
+	mov r1, r0, lsl #1			; when autoplay is ON, STOP the song at the end
+	mov r0, #0b0010				; action when a song ends
+	swi QTM_MusicOptions
 	mov pc, lr
 
 release_music_interrupt:
