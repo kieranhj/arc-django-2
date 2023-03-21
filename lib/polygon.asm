@@ -3,10 +3,240 @@
 ; ============================================================================
 
 .equ _POLYGON_STORE_MIN_MAX_Y, 0    ; for rubber cube :)
+.equ _POLYGON_USE_EDGE_LIST, 0
+
 .equ POLYGON_EDGE_SIZE, 4*4         ; in bytes.
 
 polygon_span_table_p:
     .long polygon_span_table_no_adr
+
+; R0=m, R6=xs, R7=ys, R12=ye
+; R11=ptr to polygon_span_table
+; Trashes: r0-r1
+; Preserve: r2-r5
+.if _POLYGON_USE_EDGE_LIST==0
+polygon_rasterise_edge:
+
+    ; Track min y value for optimisation.
+    ldr r1, polygon_min_y       ; TODO: can we keep this in registers?
+    cmp r7, r1                  ; ys
+    bge .1
+
+    ; Clamp to min_y=0.
+    movs r1, r7                 ; ys
+    movmi r1, #0
+    str r1, polygon_min_y
+
+.1:
+    ; Clip to screen.
+    ; Off top of screen? (y<0)
+    cmp r7, #0
+    blt .2                      ; skip line.
+    ; Off bottom of screen? (y>=height)
+    cmp r7, #Screen_Height
+    bge .3                      ; skip line.
+
+    ldr r1, [r11, r7, lsl #2]   ; span[y]
+    mov r1, r1, lsl #16         ; can only have two values for convex polys.
+
+    ; Clip to screen.
+    mov r8, r6                  ; xs
+    ; Off left hand side? (x<0)
+    cmp r6, #0
+    movlt r8, #0                ; clamp left.
+    ; Off right hand side? (x>=width)
+    cmp r6, #Screen_Width<<PRECISION_BITS
+    ldrgt r8, polygon_clip_right_side   ; clamp right.
+
+    orr r1, r1, r8, lsr #16     ; mask in integer portion.
+    str r1, [r11, r7, lsl #2]   ; span[y]
+
+    ; Next scanline.
+.2:
+    add r6, r6, r0              ; x+=m
+    add r7, r7, #1              ; y+=y_dir
+    cmp r7, r12                  ; y < ye
+    blt .1
+.3:
+    cmp r7, #Screen_Height
+    movgt r7, #Screen_Height
+
+    ; Track max y for optimisation.
+    ldr r1, polygon_max_y
+    cmp r7, r1
+    strgt r7, polygon_max_y
+
+    mov pc, lr
+
+
+; Compute edge list from a quad specified as indices into a projected vertex array.
+; Parameters:
+;  R2=ptr to projected vertex array (x,y)
+;  R3=4x vertex indices for quad
+; Returns:
+; Trashes: r0-r12
+polygon_rasterise_quad:
+    str lr, [sp, #-4]!
+
+    ldr r11, polygon_span_table_p
+
+    and r0, r3, #0xff           ; index 0
+    add r5, r2, r0, lsl #3      ; projected_verts + index*8
+    ldmia r5, {r6, r7}          ; x_start, y_start
+    mov r6, r6, lsl #16         ; xs [16.16]
+
+
+    mov r0, r3, lsr #8          ; 
+    and r0, r0, #0xff           ; index 1
+    add r5, r2, r0, lsl #3      ; projected_verts + index*8
+    ldmia r5, {r8, r9}          ; x_end, y_end
+    mov r8, r8, lsl #16         ; xe [16.16]
+
+    subs r1, r9, r7             ; int(y_end) - int(y_start)
+    mov r4, r8                  ; (index 1 x_start)
+    mov r5, r9                  ; (index 1 y_start)
+    ; Skip horizontal edges.
+    beq .2                      ; y_end == y_start?
+    bpl .1
+
+    ; Swap ends to ensure ys < ye
+    rsb r1, r1, #0              ; ensure (ye-ys) is positive.
+    eor r6, r6, r8              ; swap xs <> xe
+    eor r8, r6, r8
+    eor r6, r6, r8
+    eor r7, r7, r9              ; swap ys <> ye
+    eor r9, r7, r9
+    eor r7, r7, r9
+    .1:
+
+    mov r12, r9                 ; TODO: Register allocation.
+
+    ; Compute m = (xe-xs) / (ye-ys) for edge 0->1
+    sub r0, r8, r6              ; xs = xe-xs
+    mov r1, r1, asl #16         ; (ye-ys) [16.16]
+    bl divide                   ; m = (xe-xs) / (ye-ys)
+    ; This will trash R8-R10!
+
+    ; R0=m, R6=xs, R7=ys, R12=ye
+    bl polygon_rasterise_edge
+
+    .2:
+    mov r6, r4                  ; (index 1 x_start)
+    mov r7, r5                  ; (index 1 y_start)
+
+                                
+    mov r0, r3, lsr #16         ; 
+    and r0, r0, #0xff           ; index 2
+    add r5, r2, r0, lsl #3      ; projected_verts + index*8
+    ldmia r5, {r8, r9}          ; x_end, y_end
+    mov r8, r8, lsl #16         ; xe [16.16]
+
+    subs r1, r9, r7             ; int(y_end) - int(y_start)
+    mov r4, r8                  ; (index 2 x_start)
+    mov r5, r9                  ; (index 2 y_start)
+    ; Skip horizontal edges.
+    beq .4                      ; y_end == y_start?
+    bpl .3
+
+    ; Swap ends to ensure ys < ye
+    rsb r1, r1, #0              ; ensure (ye-ys) is positive.
+    eor r6, r6, r8              ; swap xs <> xe
+    eor r8, r6, r8
+    eor r6, r6, r8
+    eor r7, r7, r9              ; swap ys <> ye
+    eor r9, r7, r9
+    eor r7, r7, r9
+    .3:
+
+    mov r12, r9                 ; TODO: Register allocation.
+
+    ; Compute m = (xe-xs) / (ye-ys) for edge 1->2
+    sub r0, r8, r6              ; xs = xe-xs
+    mov r1, r1, asl #16         ; (ye-ys) [16.16]
+    bl divide                   ; m = (xe-xs) / (ye-ys)
+    ; This will trash R8-R10!
+
+    ; R0=m, R6=xs, R7=ys, R12=ye
+    bl polygon_rasterise_edge
+
+    .4:
+    mov r6, r4                  ; (index 2 x_start)
+    mov r7, r5                  ; (index 2 y_start)
+
+
+    mov r0, r3, lsr #24         ; index 3
+    add r5, r2, r0, lsl #3      ; projected_verts + index*8
+    ldmia r5, {r8, r9}          ; x_end, y_end
+    mov r8, r8, lsl #16         ; xe [16.16]
+
+    subs r1, r9, r7             ; int(y_end) - int(y_start)
+    mov r4, r8                  ; (index 3 x_start)
+    mov r5, r9                  ; (index 3 y_start)
+    ; Skip horizontal edges.
+    beq .6                      ; y_end == y_start?
+    bpl .5
+
+    ; Swap ends to ensure ys < ye
+    rsb r1, r1, #0              ; ensure (ye-ys) is positive.
+    eor r6, r6, r8              ; swap xs <> xe
+    eor r8, r6, r8
+    eor r6, r6, r8
+    eor r7, r7, r9              ; swap ys <> ye
+    eor r9, r7, r9
+    eor r7, r7, r9
+    .5:
+
+    mov r12, r9                 ; TODO: Register allocation.
+
+    ; Compute m = (xe-xs) / (ye-ys) for edge 2->3
+    sub r0, r8, r6              ; xs = xe-xs
+    mov r1, r1, asl #16         ; (ye-ys) [16.16]
+    bl divide                   ; m = (xe-xs) / (ye-ys)
+    ; This will trash R8-R10!
+
+    ; R0=m, R6=xs, R7=ys, R12=ye
+    bl polygon_rasterise_edge
+
+    .6:
+    mov r6, r4                  ; (index 3 x_start)
+    mov r7, r5                  ; (index 3 y_start)
+
+
+    and r0, r3, #0xff           ; index 0
+    add r5, r2, r0, lsl #3      ; projected_verts + index*8
+    ldmia r5, {r8, r9}          ; x_end, y_end
+    mov r8, r8, lsl #16         ; xe [16.16]
+
+    subs r1, r9, r7             ; int(y_end) - int(y_start)
+    ; Skip horizontal edges.
+    beq .8                      ; y_end == y_start?
+    bpl .7
+
+    ; Swap ends to ensure ys < ye
+    rsb r1, r1, #0              ; ensure (ye-ys) is positive.
+    eor r6, r6, r8              ; swap xs <> xe
+    eor r8, r6, r8
+    eor r6, r6, r8
+    eor r7, r7, r9              ; swap ys <> ye
+    eor r9, r7, r9
+    eor r7, r7, r9
+    .7:
+
+    mov r12, r9                 ; TODO: Register allocation.
+
+    ; Compute m = (xe-xs) / (ye-ys) for edge 3->0
+    sub r0, r8, r6              ; xs = xe-xs
+    mov r1, r1, asl #16         ; (ye-ys) [16.16]
+    bl divide                   ; m = (xe-xs) / (ye-ys)
+    ; This will trash R8-R10!
+
+    ; R0=m, R6=xs, R7=ys, R12=ye
+    bl polygon_rasterise_edge
+
+    .8:
+    ldr pc, [sp], #4
+
+.else
 
 ; Compute edge list from a quad specified as indices into a projected vertex array.
 ; Parameters:
@@ -219,7 +449,7 @@ polygon_quad_to_edge_list:
 ; Params:
 ;  R12=ptr to edge_dda_table [xs, m, ys, ye]
 ; Trashes: r0, r3-7, r11
-polygon_rasterise_edge:
+polygon_rasterise_edge_from_list:
     ldmia r12!, {r3-r6}         ; [xs, ys, ye, m]
     ldr r11, polygon_span_table_p
 
@@ -273,6 +503,7 @@ polygon_rasterise_edge:
     strgt r4, polygon_max_y
 
     mov pc, lr
+.endif
 
 polygon_clip_right_side:
     FLOAT_TO_FP Screen_Width    ; clamp X to this value.
@@ -289,8 +520,11 @@ polygon_plot_quad:
     str r4, polygon_colour
     str r12, polygon_screen_addr    ; stash screen addr for now.
 
-    ; TODO: Combine quad edge determination with rasterisation.
-
+    .if _POLYGON_USE_EDGE_LIST==0
+    ; Combine quad edge determination with rasterisation.
+    ; No need to store an edge list for simple case.
+    bl polygon_rasterise_quad
+    .else
     ; Convert polygon indices to an edge list.
     adr r12, polygon_edge_list      ; ptr to edge_list [xs, m, ys, ye]
     bl polygon_quad_to_edge_list
@@ -305,9 +539,10 @@ polygon_plot_quad:
     adr r12, polygon_edge_list
     mov r8, r11
     .1:
-    bl polygon_rasterise_edge
+    bl polygon_rasterise_edge_from_list
     subs r8, r8, #1
     bne .1
+    .endif
 
     ; Convert colour index to colour word.
     ldr r9, polygon_colour
@@ -440,7 +675,9 @@ polygon_min_y:
 polygon_max_y:
     .long -1
 
+.if _POLYGON_USE_EDGE_LIST
 polygon_edge_list:
     .skip POLYGON_EDGE_SIZE * OBJ_MAX_EDGES_PER_FACE     ; 4 words per edge.
+.endif
 
 ; ============================================================================

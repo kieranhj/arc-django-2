@@ -2,7 +2,7 @@
 ; arc-django-2 - An Archimedes port of Chipo Django 2 musicdisk by Rabenauge.
 ; ============================================================================
 
-.equ _DEBUG, 0
+.equ _DEBUG, 1
 .equ _DEBUG_RASTERS, (_DEBUG && 1)
 .equ _DEBUG_SHOW, (_DEBUG && 0)
 .equ _DEBUG_FAST_SPLASH, (_DEBUG && 1)

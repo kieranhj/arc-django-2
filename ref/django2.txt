@@ -120,8 +120,7 @@ TODO:
       => Plot glyphs in one go and deal with edges separately. - DONE
     2. Menu - blue
     3. Cube - red
-      => Could combine edge determination & rasterisation.
-
+      => Could combine edge determination & rasterisation. - DONE
     4. Logo - magenta
     5. Columns - yellow
     6. Screen clear - green
