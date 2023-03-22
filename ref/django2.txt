@@ -216,3 +216,29 @@ Bug fixes from Steve:
 - When autoplay is on, you might want to try clearing bit 2 of the music options byte, - DONE
   using SWI QTM_MusicOptions, this will ensure each track fully stops at the end,
   and doesn't loop round and start playing a few micro seconds of the start before the next track loads.
+
+Woah! We consistently drop a frame every 0x130 = 304 frames! WTF?
+This still happens even if QTM is turned off..
+This still happens when all plotting is turned off..
+Not sure vsync counting or frame swapping is correct somehow?
+
+For multi-buffer:
+- Screen we're currently showing.
+- Screen we're currently writing to.
+- When finished writing want to schedule swap to that screen at vsync.
+- Get the next screen in the circular list.
+- Unless it is being shown, in which case block until free.
+
+Frame display queue.
+Fill up queue by rotating left until 'full' - block if full.
+0000 -> 0001 -> 0012 -> 0123 -> 1234 -> can't fill.
+
+On vsync empty the queue by popping off the top non-zero item.
+1234 -> 0234 -> 0034 -> 0004 -> 0000 -> nothing to display.
+Push the previous displayed bank onto the write queue.
+
+Popping the queue happens in IRQ handler with interrupts off.
+Probably need to add a lock / disable interrupts when adding to the queue.
+Need to store or calculate the length of the queue each time.
+
+Actually, this is all overkill, just implement triple buffering.

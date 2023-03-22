@@ -32,7 +32,7 @@ palette_set_block:
     blt .1
 	ldr pc, [sp], #4			; rts
 
-.if _DEBUG
+.if _DEBUG || _CHECK_FRAME_DROP
 ; R4 = colour as 0x00BBGGRR
 ; Uses R0,R1 
 palette_set_border:

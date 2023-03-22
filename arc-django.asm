@@ -2,15 +2,16 @@
 ; arc-django-2 - An Archimedes port of Chipo Django 2 musicdisk by Rabenauge.
 ; ============================================================================
 
-.equ _DEBUG, 1
-.equ _DEBUG_RASTERS, (_DEBUG && 1)
+.equ _DEBUG, 0
+.equ _DEBUG_RASTERS, (_DEBUG && 0)
 .equ _DEBUG_SHOW, (_DEBUG && 0)
 .equ _DEBUG_FAST_SPLASH, (_DEBUG && 1)
+.equ _CHECK_FRAME_DROP, 1
 
 .equ Sample_Speed_SlowCPU, 48		; ideally get this down for ARM2
 .equ Sample_Speed_FastCPU, 16		; ideally 16us for ARM250+
 
-.equ Screen_Banks, 2
+.equ Screen_Banks, 3
 .equ Screen_Mode, 9
 .equ Screen_Width, 320
 .equ Screen_Height, 256
@@ -117,8 +118,9 @@ main:
 
 	; Clear all screen buffers
 	mov r1, #1
-	str r1, scr_bank
 .1:
+	str r1, write_bank
+
 	; CLS bank N
 	mov r0, #OSByte_WriteVDUBank
 	swi OS_Byte
@@ -174,7 +176,7 @@ main:
 	swi QTM_Stereo
 
 	; LATE INITALISATION HERE!
-	bl get_next_screen_for_writing
+	bl get_next_bank_for_writing
 
 	; Splash.
 	ldr r2, rabenauge_pal_block_p
@@ -184,7 +186,7 @@ main:
 	ldr r1, screen_addr
 	add r1, r1, #Splash_YPos * Screen_Stride
 	bl unlz4
-	bl show_screen_at_vsync
+	bl mark_write_bank_as_pending_display
 
 	; Play splash ditty.
 	mov r0, #0					; load from address and copy to RMA.
@@ -239,10 +241,6 @@ main:
 	mov r1, #Event_KeyPressed
 	SWI OS_Byte
 
-	; Wait for vsync on first frame.
-	ldr r0, vsync_count
-	str r0, last_vsync
-
 main_loop:
 
 	; ========================================================================
@@ -267,22 +265,32 @@ main_loop:
 	; VSYNC
 	; ========================================================================
 
-	; Block if we've not even had a vsync since last time - we're >50Hz!
+	; This will block if there isn't a bank available to write to.
+	bl get_next_bank_for_writing
+
+	; Useful to determine frame rate for debug.
+	.if _DEBUG || _CHECK_FRAME_DROP
 	ldr r1, last_vsync
-.1:
 	ldr r2, vsync_count
-	cmp r1, r2
-	beq .1
 	sub r0, r2, r1
 	str r2, last_vsync
+	str r0, vsync_delta
+	.endif
 
 	; R0 = vsync delta since last frame.
+	.if _CHECK_FRAME_DROP
+	cmp r0, #1
+	ble .2
+	str r2, last_dropped_frame
+	.2:
+	movle r4, #0x000000
+	movgt r4, #0x0000ff
+	bl palette_set_border
+	.endif
 
 	; ========================================================================
 	; DRAW
-	; ============b============================================================
-
-	bl get_next_screen_for_writing
+	; ========================================================================
 
 	SET_BORDER 0x00ff00		; green = screen clear
 	ldr r12, screen_addr
@@ -316,7 +324,7 @@ main_loop:
 	.endif
 
 	; Swap screens!
-	bl show_screen_at_vsync
+	bl mark_write_bank_as_pending_display
 
 	; exit if Escape is pressed
 	swi OS_ReadEscapeState
@@ -374,11 +382,11 @@ exit:
 
 	; Display whichever bank we've just written to
 	mov r0, #OSByte_WriteDisplayBank
-	ldr r1, scr_bank
+	ldr r1, write_bank
 	swi OS_Byte
 	; and write to it
 	mov r0, #OSByte_WriteVDUBank
-	ldr r1, scr_bank
+	ldr r1, write_bank
 	swi OS_Byte
 
 	; Flush keyboard buffer.
@@ -475,6 +483,7 @@ debug_write_vsync_count:
 	swi OS_WriteC
 
     ; display current tracker position
+	.if 0
     mov r0, #-1
     mov r1, #-1
     swi QTM_Pos
@@ -519,10 +528,11 @@ debug_write_vsync_count:
 	swi OS_ConvertHex4
 	adr r0, debug_string
 	swi OS_WriteO
+.endif
 
-.if 0
+.if 1
 	; display frame count / frame rate etc.
-	ldr r0, vsync_count	; vsync_delta
+	ldr r0, vsync_delta
 	adr r1, debug_string
 	mov r2, #8
 	swi OS_ConvertHex4
@@ -556,15 +566,30 @@ get_screen_addr:
 screen_addr_input:
 	.long VD_ScreenStart, -1
 
-; TODO: rename these to be clearer.
-scr_bank:
-	.long 0				; current VIDC screen bank being written to.
+displayed_bank:
+	.long 0				; VIDC sreen bank being displayed
+
+write_bank:
+	.long 0				; VIDC screen bank being written to
+
+pending_bank:
+	.long 0				; VIDC screen to be displayed next
 
 vsync_count:
 	.long 0				; current vsync count from start of exe.
 
+.if _DEBUG || _CHECK_FRAME_DROP
 last_vsync:
 	.long 0
+
+vsync_delta:
+	.long 0
+.endif
+
+.if _CHECK_FRAME_DROP
+last_dropped_frame:
+	.long 0
+.endif
 
 keyboard_pressed_mask:
 	.long 0
@@ -619,23 +644,39 @@ event_handler:
 	mov pc, lr
 
 
-show_screen_at_vsync:
-	; Show current bank at next vsync
-	ldr r1, scr_bank
+mark_write_bank_as_pending_display:
+	; Mark write bank as pending display.
+	ldr r1, write_bank
+
+	; What happens if there is already a pending bank?
+	; At the moment we block but could also overwrite
+	; the pending buffer with the newer one to catch up.
+	; TODO: A proper fifo queue for display buffers.
+	.1:
+	ldr r0, pending_bank
+	cmp r0, #0
+	bne .1
+	str r1, pending_bank
+
+	; Show panding bank at next vsync.
 	MOV r0, #OSByte_WriteDisplayBank
 	swi OS_Byte
-
-	ldr r1, vsync_count
-	str r1, last_vsync	; we have to wait for the next one.
 	mov pc, lr
 
-get_next_screen_for_writing:
+get_next_bank_for_writing:
 	; Increment to next bank for writing
-	ldr r1, scr_bank
+	ldr r1, write_bank
 	add r1, r1, #1
 	cmp r1, #Screen_Banks
 	movgt r1, #1
-	str r1, scr_bank
+
+	; Block here if trying to write to displayed bank.
+	.1:
+	ldr r0, displayed_bank
+	cmp r1, r0
+	beq .1
+
+	str r1, write_bank
 
 	; Now set the screen bank to write to
 	mov r0, #OSByte_WriteVDUBank
@@ -667,7 +708,7 @@ error_handler:
 
 	; Write & display current screen bank.
 	MOV r0, #OSByte_WriteDisplayBank
-	LDR r1, scr_bank
+	LDR r1, write_bank
 	SWI OS_Byte
 
 	; Do these help?
@@ -793,10 +834,21 @@ vsync:
 	MOV     R0,#1<<6
 	STRB    R0,[R12,#0x14]           ;clear any pending T1 irq
 
-	; update the vsync counter
+	; Update the vsync counter
 	LDR r0, vsync_count
 	ADD r0, r0, #1
 	STR r0, vsync_count
+
+	; Pending bank will now be displayed.
+	ldr r1, pending_bank
+	cmp r1, #0
+	beq exitVs
+
+	str r1, displayed_bank
+
+	; Clear pending bank.
+	mov r0, #0
+	str r0, pending_bank
 
 exitVs:
 	TEQP    PC,#0b10<<26 | 0b10
@@ -973,7 +1025,7 @@ logo_pal_block:
 .incbin "data/logo-palette-hacked.bin"
 
 timer1_vidc_regs_list: ; bgr
-.if _DEBUG && !_DEBUG_RASTERS
+.if _DEBUG && !_DEBUG_RASTERS && !_CHECK_FRAME_DROP
 	.long VIDC_Border | 0x0f0
 .endif
 	.long VIDC_Col1  | 0x533			; cube colours
