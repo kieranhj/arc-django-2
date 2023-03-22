@@ -9,7 +9,7 @@
 .equ _CHECK_FRAME_DROP, 1
 
 .equ Sample_Speed_SlowCPU, 48		; ideally get this down for ARM2
-.equ Sample_Speed_FastCPU, 16		; ideally 16us for ARM250+
+.equ Sample_Speed_FastCPU, 48		; ideally 16us for ARM250+
 
 .equ Screen_Banks, 3
 .equ Screen_Mode, 9
@@ -141,7 +141,7 @@ main:
 	str r0, rnd_seed
 
 	; Install our own IRQ handler - thanks Steve! :)
-	bl install_irq_handler
+;	bl install_irq_handler
 
 	; EARLY INIT / LOAD STUFF HERE!
 	bl new_font_init
@@ -239,6 +239,10 @@ main:
 	; Enable key pressed event.
 	mov r0, #OSByte_EventEnable
 	mov r1, #Event_KeyPressed
+	SWI OS_Byte
+
+	mov r0, #OSByte_EventEnable
+	mov r1, #Event_VSync
 	SWI OS_Byte
 
 main_loop:
@@ -361,11 +365,15 @@ exit:
 	swi QTM_SoundControl
 
 	; Remove our IRQ handler
-	bl uninstall_irq_handler
+;	bl uninstall_irq_handler
 
 	; Disable key press event
 	mov r0, #OSByte_EventDisable
 	mov r1, #Event_KeyPressed
+	swi OS_Byte
+
+	mov r0, #OSByte_EventDisable
+	mov r1, #Event_VSync
 	swi OS_Byte
 
 	; Release our event handler
@@ -597,8 +605,30 @@ keyboard_pressed_mask:
 ; R0=event number
 event_handler:
 	cmp r0, #Event_KeyPressed
+	beq .1
+
+	cmp r0, #Event_VSync
 	movne pc, lr
 
+	str r0, [sp, #-4]!
+	ldr r0, vsync_count
+	add r0, r0, #1
+	str r0, vsync_count
+
+	; Pending bank will now be displayed.
+	ldr r0, pending_bank
+	cmp r0, #0
+	beq .4
+	str r0, displayed_bank
+	; Clear pending bank.
+	mov r0, #0
+	str r0, pending_bank
+	.4:
+
+	ldr r0, [sp], #4
+	mov pc, lr
+
+.1:
 	; R1=0 key up or 1 key down
 	; R2=internal key number (RMKey_*)
 
@@ -688,11 +718,15 @@ get_next_bank_for_writing:
 error_handler:
 	STMDB sp!, {r0-r2, lr}
 
-	bl uninstall_irq_handler
+;	bl uninstall_irq_handler
 
 	; Release event handler.
 	MOV r0, #OSByte_EventDisable
 	MOV r1, #Event_KeyPressed
+	SWI OS_Byte
+
+	MOV r0, #OSByte_EventDisable
+	MOV r1, #Event_VSync
 	SWI OS_Byte
 
 	MOV r0, #EventV
