@@ -2,14 +2,14 @@
 ; arc-django-2 - An Archimedes port of Chipo Django 2 musicdisk by Rabenauge.
 ; ============================================================================
 
-.equ _DEBUG, 0
+.equ _DEBUG, 1
 .equ _DEBUG_RASTERS, (_DEBUG && 0)
 .equ _DEBUG_SHOW, (_DEBUG && 0)
 .equ _DEBUG_FAST_SPLASH, (_DEBUG && 1)
-.equ _CHECK_FRAME_DROP, 1
+.equ _CHECK_FRAME_DROP, 0
 
 .equ Sample_Speed_SlowCPU, 48		; ideally get this down for ARM2
-.equ Sample_Speed_FastCPU, 16		; ideally 16us for ARM250+
+.equ Sample_Speed_FastCPU, 48		; ideally 16us for ARM250+
 
 .equ Screen_Banks, 3
 .equ Screen_Mode, 9
@@ -77,7 +77,7 @@
 .equ KeyBit_LeftClick, 5
 
 ; TODO: Final location for ARM2 and maybe increase gap to menu..?
-.equ RasterSplitLine, 56+100			; 56 lines from vsync to screen start
+.equ RasterSplitLine, 56+150			; 56 lines from vsync to screen start
 ; Check MENU_TOP_YPOS definition.
 
 ; ============================================================================
@@ -141,7 +141,6 @@ main:
 	str r0, rnd_seed
 
 	; Install our own IRQ handler - thanks Steve! :)
-	bl install_irq_handler
 
 	; EARLY INIT / LOAD STUFF HERE!
 	bl new_font_init
@@ -206,6 +205,8 @@ main:
 	swi OS_WriteI + 12		; cls
 	swi QTM_Stop
 
+	bl install_irq_handler
+
 	; Remaining QTM setup.
 	bl claim_music_interrupt
 
@@ -240,6 +241,7 @@ main:
 	mov r0, #OSByte_EventEnable
 	mov r1, #Event_KeyPressed
 	SWI OS_Byte
+
 
 main_loop:
 
@@ -597,8 +599,21 @@ keyboard_pressed_mask:
 ; R0=event number
 event_handler:
 	cmp r0, #Event_KeyPressed
-	movne pc, lr
+	beq .1
+	
+	cmp r0, #Event_VSync
+	beq .4
+	mov pc, lr
 
+.4:
+	; Update the vsync counter
+	str r0, [sp, #-4]!
+	LDR r0, vsync_count
+	ADD r0, r0, #1
+	STR r0, vsync_count
+	ldr r0, [sp], #4
+	mov pc, lr
+.1:
 	; R1=0 key up or 1 key down
 	; R2=internal key number (RMKey_*)
 
@@ -799,14 +814,23 @@ timer1:
 	.1:
 	ldr r0, [r1], #4
 	cmp r0, #-1
-	beq .2
+	beq .3
 	str r0, [r11]					; why Steve has ,#0x40?
 	b .1
-	.2:
+	.3:
+	MOV     R0,#1<<6
+	; ACK'ing Vs fixes reentry but stops VU bars from working...
+	STRB    R0,[R12,#0x14]           ;clear any pending T1 irq
 
 	LDRB    R0,[R12,#0x18]
 	BIC     R0,R0,#1<<6
 	STRB    R0,[R12,#0x18]           ;stop T1 irq...
+
+	adr r1, vsync_vidc_regs_list
+	mov r0, #0
+	strb r0, [r1]
+
+	.2:
 
 exittimer1:
 	TEQP    PC,#0b10<<26 | 0b10
@@ -822,23 +846,25 @@ vsync:
 	.1:
 	ldr r0, [r1], #4
 	cmp r0, #-1
-	beq .2
+	beq .3
 	str r0, [r11]					; why Steve has ,#0x40?
 	b .1
-	.2:
+	.3:
+	adr	r1, vsync_vidc_regs_list
+	ldrb r0, [r1]
+	cmp r0, #0
+	beq .4
+	mov r0, r0
+	.4:
+	add r0, r0, #1
+	strb r0, [r1]
 
 	STRB    R0,[R12,#0x58]           ;T1 GO (latch already set up)
 	LDRB    R0,[R12,#0x18]
 	ORR     R0,R0,#1<<6
 	STRB    R0,[R12,#0x18]           ;enable T1 irq...
-	MOV     R0,#1<<6
-	STRB    R0,[R12,#0x14]           ;clear any pending T1 irq
 
-	; Update the vsync counter
-	LDR r0, vsync_count
-	ADD r0, r0, #1
-	STR r0, vsync_count
-
+	.2:
 	; Pending bank will now be displayed.
 	ldr r1, pending_bank
 	cmp r1, #0
@@ -1042,7 +1068,7 @@ timer1_vidc_regs_list: ; bgr
 
 vsync_vidc_regs_list:
 .if _DEBUG && !_DEBUG_RASTERS
-	.long VIDC_Border | 0x000
+	.long VIDC_Border | 0xf00
 .endif
 	.long VIDC_Col1  | 0x700			; logo colours
 	.long VIDC_Col2  | 0x821

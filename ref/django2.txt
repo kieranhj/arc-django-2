@@ -222,6 +222,16 @@ This still happens even if QTM is turned off..
 This still happens when all plotting is turned off..
 Not sure vsync counting or frame swapping is correct somehow?
 
+=> vsync IRQ handler is being called twice in quick succession in a frame!
+=> once every 0x12f (303) frames...
+=> For Sarah's version, Timer 1 continues to count down after we've ACK'd it
+   and it is conveniently 156 lines, which is half of 312...!
+   T1 must be timing out during the Vsync IRQ handler once every 303 frames.
+   In which case it re-enters but before the Vsync has been ACK'd by the
+   subsequent RO handler.
+=> So why does Steve's version also exhibit this behaviour?
+
+
 For multi-buffer:
 - Screen we're currently showing.
 - Screen we're currently writing to.
