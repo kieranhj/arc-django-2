@@ -101,6 +101,10 @@ funky_delicious_mod_no_adr:
 .incbin "build/funky_delicious.mod"
 
 .p2align 2
+cool_beans_mod_no_adr:
+.incbin "build/cool_beans.mod"
+
+.p2align 2
 splash_mod_no_adr:
 .incbin "build/music_splash.mod"
 

@@ -310,6 +310,7 @@ menu_strings:
 	.byte "autumn mood", 0, "triace", 0
 	.byte "je suis k", 0, "okeanos", 0
 	.byte "square circles", 0, "ne7", 0
+	.byte "cool beans", 0, "tobach", 0
 	.byte "la soupe aux choux", 0, "okeanos", 0
 	.byte "sajt", 0, "dalezy", 0
 	.byte "bodoaxian", 0, "slash", 0
@@ -318,7 +319,6 @@ menu_strings:
 	.byte "lies", 0, "punnik", 0
 	.byte "vectrax longplay", 0, "lord", 0
 	.byte "changing waves", 0, "4mat", 0
-	.byte "placeholder", 0, "artist", 0
 	.byte "autoplay off", 0
 	.byte "autoplay on", 0
 ; End of string list.
