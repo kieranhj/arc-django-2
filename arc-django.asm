@@ -6,9 +6,9 @@
 .equ _DEBUG_RASTERS, (_DEBUG && 0)
 .equ _DEBUG_SHOW, (_DEBUG && 0)
 .equ _DEBUG_FAST_SPLASH, (_DEBUG && 1)
-.equ _CHECK_FRAME_DROP, 1
+.equ _CHECK_FRAME_DROP, 0
 
-.equ Sample_Speed_SlowCPU, 48		; ideally get this down for ARM2
+.equ Sample_Speed_SlowCPU, 24		; ideally get this down for ARM2
 .equ Sample_Speed_FastCPU, 16		; ideally 16us for ARM250+
 
 .equ Screen_Banks, 3
@@ -792,6 +792,9 @@ irq_handler:
 	BNE     vsync                   ;...Vs higher priority than T1
 
 timer1:
+	mov r0, #0
+	str r0, vsync_bodge
+
 	ldr r0, song_number
 	cmp r0, #-1
 	beq .2
@@ -815,6 +818,14 @@ exittimer1:
 	SUBS    PC,R14,#4
 
 vsync:
+	ldr r0, vsync_bodge
+	cmp r0, #0
+	beq .3
+	b exitVs
+.3:
+	mov r0, #1
+	str r0, vsync_bodge
+
 	ldr r0, song_number
 	cmp r0, #-1
 	beq .2
@@ -858,6 +869,8 @@ nottimer1orVs:
 	LDMFD   R13!,{R0-R1,R11-R12}
 	ldr pc, oldirqhandler
 
+vsync_bodge:
+	.long 0
 
 ; ============================================================================
 ; Play the music!
