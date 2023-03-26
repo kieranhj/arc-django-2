@@ -172,6 +172,10 @@ main:
 	mov r1, #VU_Bars_Gravity
 	swi QTM_VUBarControl
 
+	mov r1, #0
+	mov r0, #0b0010				; always loop our songs, we control autoplay manually.
+	swi QTM_MusicOptions
+
 	mov r0, #0
 	mov r1, #Stereo_Positions
 	swi QTM_Stereo
@@ -209,8 +213,6 @@ main:
 	swi QTM_Stop
 
 	; Remaining QTM setup.
-	bl claim_music_interrupt
-
 	mov r0, #AutoPlay_Default
 	bl set_autoplay
 
@@ -336,9 +338,6 @@ main_loop:
 	b main_loop
 
 exit:
-	; Remove music autoplay handler.
-	bl release_music_interrupt
-
 	; Fade out for a nice exit.
 	.if _DEBUG_FAST_SPLASH==0
 	ldr r7, song_number
@@ -536,10 +535,6 @@ debug_write_vsync_count:
 
 	swi OS_WriteI+32
 	ldr r0, autoplay_flag
-	bl debug_print_r0
-
-	swi OS_WriteI+32
-	ldr r0, song_ended
 	bl debug_print_r0
 
 .if Mouse_Enable
@@ -909,13 +904,7 @@ song_number:
 autoplay_flag:
 	.long 0
 
-song_ended:
-	.long 0
-
-prev_music_interrupt:
-	.long 0
-
-prev_interrupt_sp:
+song_timer:
 	.long 0
 
 volume_fade:
@@ -947,22 +936,35 @@ play_song:
 
 	; Play music!
 	swi QTM_Start
+
+	mov r0, #0
+	str r0, song_timer
 	mov pc, lr
 
 check_autoplay:
+	; Are we already transitioning to the next song?
 	ldr r0, volume_fade
 	cmp r0, #0
 	bne .1
 
-	ldr r1, song_ended
-	cmp r1, #0
-	moveq pc, lr
-	str r0, song_ended
+	; How long has the song been running?
+	ldr r1, song_timer
+	add r1, r1, #1
+	str r1, song_timer
 
+	; Check autoplay flag - just exit if off.
 	ldr r0, autoplay_flag
 	cmp r0, #0
 	moveq pc, lr
 
+	; Has the song timer gone over our autoplay duration?
+	adr r2, durationTable
+	ldr r0, song_number
+	ldr r3, [r2, r0, lsl #2]
+	cmp r1, r3
+	movlt pc, lr
+
+	; Kick off fade out and start next.
 	mov r0, #64
 	str r0, volume_fade
 	mov pc, lr
@@ -986,38 +988,10 @@ check_autoplay:
 
 	ldr pc, [sp], #4
 
-claim_music_interrupt:
-	; Claim music interrupt to check for internal looping tracks.
-	mov r0, #0
-	adr r1, music_interrupt
-	mov r2, #0
-	swi QTM_MusicInterrupt
-	str r1, prev_music_interrupt
-	str r2, prev_interrupt_sp
-	mov pc, lr
-
 ; R0=autoplay flag.
 set_autoplay:
 	str r0, autoplay_flag
-
-	; Tell QTM.
-	mov r1, r0, lsl #1			; when autoplay is ON, STOP the song at the end
-	mov r0, #0b0010				; action when a song ends
-	swi QTM_MusicOptions
 	mov pc, lr
-
-release_music_interrupt:
-	mov r0, #0
-	ldr r1, prev_music_interrupt
-	ldr r2, prev_interrupt_sp
-	swi QTM_MusicInterrupt
-	mov pc, lr
-
-music_interrupt:
-	cmp r0, #MusicInterrupt_SongEnded
-	movnes pc, lr
-	str r1, song_ended
-	movs pc, lr
 
 ; ============================================================================
 ; Additional code modules
