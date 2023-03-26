@@ -1,15 +1,14 @@
 ; scrolltxt  
-; change:  24.03.2023
+; change:  26.03.2023 Time: 13:37
 ;
 ;       End of txt   0
 ;       Pause   1,(0-255)
 ;       Speed   2,(1,2,4 max 8)
+;       possible chars:
+;        ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!,:()+-=;'
+;       NO UMLAUTS 
 
 
-
-
-    ;   possible chars:
-    ; ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!,:()+-=;'
     .byte 2,2  ; speed
     .byte 1,8,32 ; pause before start
     .byte 2,4,"CHIPO               ",1,10
@@ -36,7 +35,8 @@
     .byte "PUNNIK,  "
     .byte "4MAT,  "
     .byte "LORD,  "
-    .byte "MAZE  "
+    .byte "MAZE,  "
+    .byte "AND TOBACH  "
 ;
     .byte  "                               "
     .byte "HERE IS BODO AT THE KEYS:        "
@@ -58,7 +58,7 @@
     .byte "FOR THE AMIGA CODE AGAIN, "
     .byte "BECAUSE I FEEL THAT MY PET IS CALLING. "
     .byte "BUT DO NOT WORRY THERE WILL BE MORE CHIPO DJANGOS. "
-    .byte "                                   "
+    .byte "                                "
     .byte "AND DO NOT FORGET:     "
     .byte "NEVER GIVE UP -    ",1,2
     .byte "STAY AMIGA!        ",1,5
@@ -67,6 +67,7 @@
     .byte "MAKES IT POSSIBLE!  ",1,5
     .byte "         ...END OF BODO "
     .byte "                       "
+;
    .byte "CURT COOL IS WRITING. I AM HAPPY TO "
    .byte "BE PART OF THE CHIPO DJANGO FAMILY "
    .byte "ONCE AGAIN, AND HOPEFULLY THIS RATHER "
@@ -88,6 +89,7 @@
    .byte "NUKLEUS, INSANE, UP ROUGH, REBELS, TRSI, SPACEBALLS, "
    .byte "RESISTANCE, PLANET JAZZ, BOOZOMBIES, BRAINSTORM, HAUJOBB, "
    .byte "EPHIDRENA, IRIS, TRAKTOR AND ALL I FORGOT (SORRY!)         "
+   .byte "                       "
 ;
    .byte "     VIRGILL IS HERE:  "
    .byte "AMIGA MOD TRACKER MUSIC, "
@@ -100,20 +102,35 @@
    .byte "TO MAKE THE SPEAKERS POUND. "
    .byte "IT MAY BE OLD, BUT STILL IT LIVES, "
    .byte "IN THE HEARTS OF MANY FANS, "
-   .byte "AMIGA MOD TRACKER MUSIC, ""
+   .byte "AMIGA MOD TRACKER MUSIC, "
    .byte "FOREVER MAKING JAMS.       "
+   .byte "                       "	
+;
+   .byte "YO! KIERAN AT THE KEYS NOW. BIG THANKS TO BODO FOR ASKING ME TO "
+   .byte "COLLABORATE ON THIS MUSICDISK FROM THE BEGINNING FOR THE ARCHIE "
+   .byte "VERSION.    IT HAS BEEN A LOT OF FUN TO MAKE AND AN HONOUR TO PRESENT "
+   .byte "THIS FANTASTIC SELECTION OF TUNES FROM SUCH TALENTED MUSICIANS AT "
+   .byte "REVISION 2023!    THIS IS MY FIRST TIME AT THE PARTY IN PERSON, "
+   .byte "AFTER BEING THWARTED BY THE DREADED COVID IN 2020.     I LOOK FORWARD "
+   .byte "TO MEETING MANY OF YOU THERE AND WHO KNOWS WHAT NEW COLLABORATIONS "
+   .byte "MAY COME OUT OF IT...     THE ACORN ARCHIMEDES IS SUCH A CAPABLE "
+   .byte "MACHINE, WE'VE ONLY JUST GOT STARTED!     GREETS TO MY FELLOW "
+   .byte "BITSHIFTERS BACK HOME AND ACROSS THE ATLANTIC.    "
+   .byte "     TIPSY HUGS     ", 1,5, "TO EVERYONE AT THE PARTY :)"
+   .byte "                         "    
 ;
    .byte "HIER IST DALEZY: "
    .byte "WAR JA KLAR, DASS ES AUF DEM AMIGA KEINE EXTRA BUCHSTABEN GIBT! "
    .byte "ALSO MUSS ICH ES AUF DEUTSCH SCHREIBEN. "
    .byte "AM SONNTAGMORGEN UM 13 UHR 37 HABE ICH MIR EINEN CHEESEBURGER "
-   .byte "AUS DEM KÜHLSCHRANK GEHOLT UND IHN KALT GEGESSEN. "
+   .byte "AUS DEM KUEHLSCHRANK GEHOLT UND IHN KALT GEGESSEN. "
    .byte "BODO IST EIN NETTER JUNGE, MIT DEM MAN 1-14 BIER "
    .byte "HINTEREINANDER TRINKEN KANN. "
    .byte "DIESER CHIPTUNE IST IRGENDWANN ZWISCHEN BODO UND DEM "
    .byte "CHEESEBURGER ENTSTANDEN. "
    .byte "DIE GESCHICHTE ENDET HIER UND WIEDERHOLT SICH ENTSPRECHEND! "
    .byte "LBM.HERZCHENEMOJI "    
+   .byte "                       "
 ;
     .byte "LORD OF SPREADPOINT ON THE KEYS FOR THIS MULTI "
     .byte "PLATFORM MUSICDISK: I CREATED A LONGPLAY VERSION "
@@ -137,7 +154,7 @@
     .byte "IN THE OLD DAYS OF CHIP MODULES AND IT WAS IN THE EDITOR ALL ALONG. "
     .byte ":)  THANKS TO THE MUSICDISK CODERS FOR IMPLEMENTING THIS COMMAND IN "
     .byte "THE DRIVER."
-    .byte "                         "	
+    .byte "                         "
 ;
     .byte "HELLO! TOBACH HERE, GLAD TO FINALLY BE DOING MUSIC ON A "
     .byte "MUSICDISK THAT ISN'T MY OWN! ALONG WITH SUCH BIG NAMES TOO... "
@@ -145,6 +162,13 @@
     .byte "ISN'T MY LAST! HOPE YOU ALL HAVE A GREAT REVISION 2023! "
     .byte "GREETZ TO TITAN, TUHB, POO-BRAIN AND ALL THE UK SCENE CREW."
     .byte "                         "	
+;
+   .byte"HELLO AND WELCOME TO SLASH SCROLLTEXT. "
+   .byte"IT WAS A PLEASURE TO BE INVITED TO CHIPO DJANGO 1 "
+   .byte"SO HERE IS MY CONTRIBUTION FOR ISSUE 2. "
+   .byte"LETS MAKE THE CHIPMUSIC SCENE GROW TOGETHER - "
+   .byte"GREETINGS TO THE AMIGASCENE / SLASH"
+   .byte "                         "
 ;
     .byte "TITUS WRITING HERE. HEYA LADYS AND GENTS!"
     .byte "I HAVE NEVER BEEN A GREAT WRITER OF SCROLLTEXTS."
@@ -157,7 +181,7 @@
     .byte "KUDOS TO YOU! TITUS - ATH0+ "
 ;         12345678901234567890
     .byte "                         "	
-    .byte "OUR GREETINGS GO TO:",1,4
+    .byte "GREETINGS FROM RABENAUGE AND BITSHIFTERS FLY OUT TO:",1,4
     .byte "   "
     .byte 2,8,"ABYSS    "
     .byte "ABYSS CONNECTION    "
