@@ -59,6 +59,7 @@
 
 .equ Splash_YPos, 28
 .equ Menu_Beat_Frames, 25				; 0.5 seconds.
+.equ EndScreen_Frames, 3*50
 
 .equ VU_Bars_Effect, 2					; 'effect'
 .equ VU_Bars_Gravity, 2					; lines per vsync
@@ -334,10 +335,6 @@ main_loop:
 	b main_loop
 
 exit:
-	; Wait for vsync (any pending buffers)
-	mov r0, #0
-	swi OS_Byte
-
 	; Remove music autoplay handler.
 	bl release_music_interrupt
 
@@ -348,6 +345,24 @@ exit:
 	adrl r2, logo_pal_block
 	bl palette_init_fade_to_black
 	bl fade_out_with_volume
+
+	; End screen.
+	SWI OS_WriteI + 12		; cls
+	ldr r0, endscreen_p
+	ldr r1, screen_addr
+	add r1, r1, #Splash_YPos * Screen_Stride
+	bl unlz4
+	bl mark_write_bank_as_pending_display
+	ldr r2, rabenauge_pal_block_p
+	bl palette_init_fade_from_black
+	bl fade_in
+
+	; Pause.
+	mov r4, #EndScreen_Frames
+	bl wait_frames
+	.else
+	mov r0, #19
+	swi OS_Byte
 	.endif
 
 	; Disable music
@@ -408,6 +423,12 @@ rabenauge_pal_block_p:
 
 rabenauge_splash_p:
 	.long rabenauge_splash_no_adr
+
+endscreen_pal_block_p:
+	.long endscreen_pal_block_no_adr
+
+endscreen_p:
+	.long endscreen_no_adr
 
 wait_frames:
 	mov r0, #19

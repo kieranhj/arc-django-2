@@ -30,6 +30,14 @@ rabenauge_pal_block_no_adr:
 rabenauge_splash_no_adr:
 .incbin "build/rabenauge.lz4"
 
+.p2align 2
+endscreen_pal_block_no_adr:
+.incbin "build/endscreen.bin.pal"
+
+.p2align 2
+endscreen_no_adr:
+.incbin "build/endscreen.lz4"
+
 ; ============================================================================
 
 .p2align 2

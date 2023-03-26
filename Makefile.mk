@@ -90,7 +90,7 @@ code: ./build/arc-django.bin
 .PHONY:assets
 assets: build ./build/logo.lz4 ./data/logo-palette-hacked.bin ./build/big-font.bin \
 	./build/rabenauge.lz4 ./build/rabenauge.bin.pal ./build/small-font.bin \
-	./build/icon.bin ./build/logo.bin.mask
+	./build/icon.bin ./build/logo.bin.mask ./build/endscreen.lz4 ./build/endscreen.bin.pal
 
 .PHONY:music
 music: build ./build/birdhouse.mod ./build/autumn_mood.mod ./build/square_circles.mod \
@@ -127,11 +127,15 @@ clean:
 ./build/small-font.bin: ./data/font/font-8x5-onelined.png $(PNG2ARC_DEPS)
 	$(PYTHON2) $(PNG2ARC_FONT) -o $@ --glyph-dim 8 5 $< 9
 
-./build/icon.bin: ./data/gfx/icon.png $(PNG2ARC_DEPS)
+./build/icon.bin: ./data/gfx/icon001.png $(PNG2ARC_DEPS)
 	$(PYTHON2) $(PNG2ARC_SPRITE) --name !django02 -o $@ $< 9
 
 ./build/rabenauge.lz4: ./build/rabenauge.bin
 ./build/rabenauge.bin: ./data/gfx/combined-logo.png $(PNG2ARC_DEPS)
+	$(PYTHON2) $(PNG2ARC) -o $@ -p $@.pal $< 9
+
+./build/endscreen.lz4: ./build/endscreen.bin
+./build/endscreen.bin: ./data/gfx/endscreen.png $(PNG2ARC_DEPS)
 	$(PYTHON2) $(PNG2ARC) -o $@ -p $@.pal $< 9
 
 ##########################################################################
@@ -188,7 +192,7 @@ clean:
 ./build/!run.txt: ./data/text/!run.txt
 	$(DOS2UNIX) -n $< $@
 
-./build/django01.txt: ./data/text/django01.nfo
+./build/django01.txt: ./data/text/NE7-CHIPODJANGO2.TXT
 	$(DOS2UNIX) -n $< $@
 
 ##########################################################################
