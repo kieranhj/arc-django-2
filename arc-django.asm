@@ -355,7 +355,6 @@ exit:
 	SWI OS_WriteI + 12		; cls
 	ldr r0, endscreen_p
 	ldr r1, screen_addr
-	add r1, r1, #Splash_YPos * Screen_Stride
 	bl unlz4
 	bl mark_write_bank_as_pending_display
 	ldr r2, rabenauge_pal_block_p
