@@ -907,6 +907,9 @@ autoplay_flag:
 song_timer:
 	.long 0
 
+song_pause:
+	.long 0
+
 volume_fade:
 	.long 0
 
@@ -939,10 +942,16 @@ play_song:
 
 	mov r0, #0
 	str r0, song_timer
+	str r0, song_pause
+	str r0, volume_fade
 	mov pc, lr
 
 check_autoplay:
 	; Are we already transitioning to the next song?
+	ldr r0, song_pause
+	cmp r0, #0
+	bne .3
+
 	ldr r0, volume_fade
 	cmp r0, #0
 	bne .1
@@ -958,17 +967,23 @@ check_autoplay:
 	moveq pc, lr
 
 	; Has the song timer gone over our autoplay duration?
-	adr r2, durationTable
 	ldr r0, song_number
+
+	adr r2, durationTable
 	ldr r3, [r2, r0, lsl #2]
+
+	adr r4, volumeTable
+	ldrb r5, [r4, r0]
+
+	sub r3, r3, r5			; so we end on Bodo's frame?
 	cmp r1, r3
 	movlt pc, lr
 
-	; Kick off fade out and start next.
-	mov r0, #64
-	str r0, volume_fade
+	; Kick off fade out.
+	str r5, volume_fade
 	mov pc, lr
 
+	; Fade out volume.
 .1:
 	subs r0, r0, #1
 	str r0, volume_fade
@@ -977,7 +992,19 @@ check_autoplay:
 	swi QTM_Volume
 	mov pc, lr
 
+	; Pause for breath between tracks.
 .2:
+	ldr r1, song_number
+	adr r2, songpausetable
+	ldr r0, [r2, r1, lsl #2]
+	str r0, song_pause
+	mov pc, lr
+
+.3:
+	subs r0, r0, #1
+	str r0, song_pause
+	movne pc, lr
+
 	str lr, [sp, #-4]!
 	ldr r0, song_number
 	mov r3, r0
