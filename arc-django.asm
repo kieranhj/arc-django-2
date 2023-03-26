@@ -203,6 +203,7 @@ main:
 	bl wait_frames
 
 	; Fade.
+	mov r7, #64
 	bl fade_out_with_volume
 	swi OS_WriteI + 12		; cls
 	swi QTM_Stop
@@ -340,10 +341,15 @@ exit:
 
 	; Fade out for a nice exit.
 	.if _DEBUG_FAST_SPLASH==0
+	ldr r7, song_number
+
 	mov r0, #-1
 	str r0, song_number				; tell irq handler to back off!
 	adrl r2, logo_pal_block
 	bl palette_init_fade_to_black
+
+	adr r2, volumeTable
+	ldrb r7, [r2, r7]
 	bl fade_out_with_volume
 
 	; End screen.
@@ -447,9 +453,9 @@ fade_out:
 	bne .1
 	ldr pc, [sp], #4
 
+; R7=starting volume.
 fade_out_with_volume:
 	str lr, [sp, #-4]!
-	mov r7, #64
 	.1:
 	mov r4, #1
 	bl wait_frames
@@ -466,7 +472,7 @@ fade_out_with_volume:
     bl palette_set_block
 
 	subs r7, r7, #1
-	bne .1
+	bpl .1
 	ldr pc, [sp], #4
 
 fade_in:
@@ -934,7 +940,9 @@ play_song:
 	mov r0, #-1					; load from address and copy to RMA.
 	swi QTM_Load
 
-	mov r0, #64					; max volume
+	adr r2, volumeTable
+	ldr r1, song_number
+	ldrb r0, [r2, r1]
 	swi QTM_Volume
 
 	; Play music!
@@ -1054,6 +1062,57 @@ music_table:
 	.long lies_mod_no_adr				; 12
 	.long vectrax_mod_no_adr			; 13
 	.long changing_waves_mod_no_adr		; 14
+
+volumeTable:    
+    .byte    35   ; birdhouse
+    .byte    50    ; funky delicious
+    .byte    62-2  ; autumn
+    .byte    51  ; je suis k
+    .byte    60-2  ; square circles
+    .byte    50     ; coolbeans
+    .byte    54  ; la soupe
+    .byte    56-3  ; sajt
+    .byte    59-1  ; bodoaxian
+    .byte    64    ; holodash
+    .byte    39-2  ; squid ring
+    .byte    61-1  ; lies
+    .byte    53      ; vectrax longplay
+    .byte    45-8-4    ; changing waves
+.p2align 2
+
+durationTable:
+;    dcb.w   10,250  
+    .long    51*50       ; birdhouse
+    .long    50*92      ; funky delicious
+    .long    192*50-40      ; autumn
+    .long    159*50      ; je suis k
+    .long    173*50      ; square circles
+    .long    145*50      ; coolbeans
+    .long    120*50      ; la soupe
+    .long    95*50       ; sajt
+    .long    110*50      ; bodoaxian
+    .long    116*50      ; holodash
+    .long    174*50      ; squid ring
+    .long    181*50-10   ; lies
+    .long    485*50      ; vectrax longplay
+    .long    50*6*60     ; changing waves
+
+; break between tunes
+songpausetable:
+    .long    50      ; birdhouse
+    .long    50      ; funky delicious
+    .long    10       ; autumn
+    .long    70      ; je suis k
+    .long    80      ; square circles
+    .long    50      ; coolbeans
+    .long    80+20      ; la soupe
+    .long    50      ; sajt
+    .long    70      ; bodoaxian
+    .long    90      ; holodash
+    .long    90      ; squid ring
+    .long    50-10   ; lies
+    .long    50      ; vectrax longplay
+    .long    600      ; changing waves
 
 logo_pal_block:
 .incbin "data/logo-palette-hacked.bin"
