@@ -6,8 +6,9 @@
 .equ Logo_Stride, Logo_Width/Screen_PixelsPerByte
 .equ Logo_Bytes, Logo_Stride*Logo_Height
 
-.equ Logo_X, 50
-.equ Logo_Y, 8
+.equ Logo_Y_Radius, 12
+.equ Logo_Centre_Left, 56
+.equ Logo_Centre_Top, 14
 
 logo_data_p:
     .long logo_data_no_adr
@@ -27,35 +28,59 @@ logo_data_shift_table:
 logo_mask_shift_table:
     .skip 8*4
 
-logo_xSinus_p:
-    .long xSinus_no_adr
-
-logo_ySinus_p:
-    .long ySinus_no_adr
-
-logo_index:
+logo_x_rads:
     .long 0
 
+logo_y_rads:
+    .long 0
+
+logo_x_delta:
+    .long 3<<7      ; period << 8
+
+logo_y_delta:
+    .long 2<<7      ; period << 8
+
+logo_x_radius:
+    .long 20
+
 plot_logo:
-    ldrb r2, logo_index
-    ldr r3, logo_xSinus_p
-    ldr r4, logo_ySinus_p
+    str lr, [sp, #-4]!
 
-    ldrb r0, [r3, r2]
-    ldrb r1, [r4, r2]
+    ; Update x position
+    ldr r0, logo_x_rads
+    ldr r1, logo_x_delta
+    add r0, r0, r1
+    str r0, logo_x_rads
 
-    add r0, r0, #Logo_X
-    add r1, r1, #Logo_Y
+    bl sine
+    ; R0=sin(x_rads)
+    ldr r8, logo_x_radius
+    mul r8, r0, r8
+    mov r8, r8, asr #16
+    mov r1, #Logo_Centre_Left
+    add r8, r8, r1
 
-    add r2, r2, #1
-    strb r2, logo_index
+    ; Update y position
+    ldr r0, logo_y_rads
+    ldr r1, logo_y_delta
+    add r0, r0, r1
+    str r0, logo_y_rads
+    bl cosine
+    ; R0=cos(y_rads)
+    mov r1, #Logo_Y_Radius
+
+    mul r1, r0, r1
+    mov r1, r1, asr #16
+    add r1, r1, #Logo_Centre_Top
+
+    mov r0, r8
 
     ; Fall through!
 
 ; R0=x
 ; R1=y
 ; R12=screen address
-plot_logo_at_xy:
+;plot_logo_at_xy:
     mov r10, #Logo_Height
     mov r11, r12
 
@@ -108,7 +133,7 @@ plot_logo_at_xy:
     subs r10, r10, #1
     bne .1
 
-    mov pc, lr
+    ldr pc, [sp], #4
 
 .macro logo_shift_right_by_pixels
     mov r8, r8, lsl r10

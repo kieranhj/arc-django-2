@@ -306,6 +306,7 @@ main_loop:
 
 	SET_BORDER 0xff00ff		; magenta = masked logo
 	ldr r12, screen_addr
+	ldr r0, song_number
 	bl plot_logo
 
 	SET_BORDER 0xffff00		; cyan = masked scroller
