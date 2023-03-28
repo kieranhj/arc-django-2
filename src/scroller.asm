@@ -2,7 +2,7 @@
 ; Scroller
 ; ============================================================================
 
-.equ Scroller_Y_Pos, 234
+.equ Scroller_Y_Pos, 230
 .equ Scroller_Max_Glyphs, 60
 
 .equ Scroller_Glyph_Width, 16
@@ -11,6 +11,11 @@
 .equ Scroller_Code_EOF, 0
 .equ Scroller_Code_Wait, 1
 .equ Scroller_Code_Speed, 2
+
+.equ Scroller_Sine_Glyph_Delta, 4096
+.equ Scroller_Sine_Tick_Delta, 1024
+
+.equ _SCROLLER_SINE, 1
 
 scroller_speed:
     .long 1
@@ -282,22 +287,38 @@ scroller_get_next_glyph_no:
 	sub r0, r0, #ASCII_Space
 	mov pc, lr
 
+.if _SCROLLER_SINE
+scroller_sine_index:
+	.long 0
+
+scroller_sine_last_y:
+	.long 0
+.endif
 
 ; Draw entire scroller.
 ; R12=screen addr
 scroller_draw_new:
     str lr, [sp, #-4]!
 
-    mov r0, #Scroller_Y_Pos
-    add r11, r12, r0, lsl #7
-    add r11, r11, r0, lsl #5        ; assume stride is 160.
-
-	ldr r10, scroller_font_colour
-    ldr r12, scroller_text_ptr
-
     ldr r3, scroller_shift			; [0-15]
 	and r8, r3, #7					; pixel shift [0-7]
 
+	.if _SCROLLER_SINE
+	; Calc y=y_pos+8*sin(idx)
+	ldr r0, scroller_sine_index
+	bl sine			; [s1.16]
+	mov r1, r0, asr #13
+	add r1, r1, #Scroller_Y_Pos
+	str r1, scroller_sine_last_y
+	.else
+	mov r1, #Scroller_Y_Pos
+	.endif
+
+	add r11, r12, r1, lsl #7
+	add r11, r11, r1, lsl #5
+
+	ldr r10, scroller_font_colour
+    ldr r12, scroller_text_ptr
 	bl scroller_get_next_glyph_no
 
 	; If shift > 0 then need to plot left & right hand side glyph.
@@ -313,11 +334,38 @@ scroller_draw_new:
 	bllt scroller_plot_glyph_1_column
 
 .2:
+	.if _SCROLLER_SINE
+	ldr r3, scroller_sine_index
+	.endif
+
 	mov r7, #19
+	ldr r0, scroller_shift
+	cmp r0, #0
+
 	; If glyph shift == 0 then plot 20 glyphs.
-	cmp r3, #0
 	addeq r7, r7, #1				; 20
+	beq .4
+
 .1:
+	.if _SCROLLER_SINE
+	; Update sine index
+	add r3, r3, #Scroller_Sine_Glyph_Delta
+
+	; Calc y'
+	mov r0, r3
+	bl sine
+	mov r0, r0, asr #13
+	add r0, r0, #Scroller_Y_Pos
+
+	; Update R11 += (y'-y)*160
+	ldr r1, scroller_sine_last_y
+	str r0, scroller_sine_last_y
+	sub r0, r0, r1
+	add r11, r11, r0, lsl #7
+	add r11, r11, r0, lsl #5
+	.endif
+
+.4:
 	bl scroller_get_next_glyph_no
 	bl scroller_plot_glyph
 
@@ -325,20 +373,45 @@ scroller_draw_new:
 	bne .1
 
 	; If shift > 0 then need to plot left & right hand side glyph.
-	cmp r3, #0
+    ldr r2, scroller_shift			; [0-15]
+	cmp r2, #0
 	beq .3
+
+	.if _SCROLLER_SINE
+	; Update sine index.
+	add r3, r3, #Scroller_Sine_Glyph_Delta
+
+	; Calc y'
+	mov r0, r3
+	bl sine
+	mov r0, r0, asr #13
+	add r0, r0, #Scroller_Y_Pos
+
+	; Update R11 += (y'-y)*160
+	ldr r1, scroller_sine_last_y
+	sub r0, r0, r1
+	add r11, r11, r0, lsl #7
+	add r11, r11, r0, lsl #5
+	.endif
 
 	bl scroller_get_next_glyph_no
 
 	; RHS.
 	mov r7, #0
-	cmp r3, #8
+	cmp r2, #8
 	; Plot two column words?
 	bllt scroller_plot_glyph_2_columns
 	; Or just one?
 	blge scroller_plot_glyph_1_column
 
 .3:
+	.if _SCROLLER_SINE
+	ldr r3, scroller_sine_index
+	ldr r0, scroller_speed
+	sub r3, r3, #Scroller_Sine_Tick_Delta
+	str r3, scroller_sine_index
+	.endif
+
     ldr pc, [sp], #4
 
 
@@ -357,7 +430,17 @@ scroller_update_new:
 	ldr r0, scroller_shift
     ldr r1, scroller_speed
 	subs r0, r0, r1
-	addmi r0, r0, #Scroller_Glyph_Width
+	bpl .2
+
+	add r0, r0, #Scroller_Glyph_Width
+
+	.if _SCROLLER_SINE
+	ldr r2, scroller_sine_index
+	add r2, r2, #Scroller_Sine_Glyph_Delta
+	str r2, scroller_sine_index
+	.endif
+
+	.2:
 	str r0, scroller_shift
 
 	; next string char?
