@@ -6,7 +6,7 @@
 .equ _DEBUG_RASTERS, (_DEBUG && 0)
 .equ _DEBUG_SHOW, (_DEBUG && 0)
 .equ _DEBUG_FAST_SPLASH, (_DEBUG && 1)
-.equ _CHECK_FRAME_DROP, 1
+.equ _CHECK_FRAME_DROP, 0
 
 .equ Sample_Speed_SlowCPU, 24		; ideally get this down for ARM2
 .equ Sample_Speed_FastCPU, 16		; ideally 16us for ARM250+
@@ -53,7 +53,7 @@
 .equ Splash_Frames, 3
 .equ Fade_Speed, 1
 .else
-.equ Splash_Frames, 5*50				; 3 seconds.
+.equ Splash_Frames, 242				; 3 seconds.
 .equ Fade_Speed, 3
 .endif
 

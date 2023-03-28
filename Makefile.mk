@@ -183,7 +183,7 @@ clean:
 ./build/cool_beans.mod: ./data/music2/coolbeans.mod
 	$(COPY) $(subst /,\\,$+) $(subst /,\\,$@)
 
-./build/music_splash.mod: ./data/music2/raven-mono.mod
+./build/music_splash.mod: ./data/music2/mod.raven-stereo.mod
 	$(COPY) $(subst /,\\,$+) $(subst /,\\,$@)
 
 ##########################################################################

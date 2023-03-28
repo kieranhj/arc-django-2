@@ -1,5 +1,5 @@
 ; scrolltxt  
-; change:  26.03.2023 Time: 13:37
+; change:  27.03.2023 Time: 21:48
 ;
 ;       End of txt   0
 ;       Pause   1,(0-255)
@@ -128,9 +128,9 @@
    .byte "HINTEREINANDER TRINKEN KANN. "
    .byte "DIESER CHIPTUNE IST IRGENDWANN ZWISCHEN BODO UND DEM "
    .byte "CHEESEBURGER ENTSTANDEN. "
-   .byte "DIE GESCHICHTE ENDET HIER UND WIEDERHOLT SICH ENTSPRECHEND! "
+   .byte "DIE GESCHICHTE ENDET HIER UND WIEDERHOLT SICH ENTSPRECHEND!   "
    .byte "LBM.HERZCHENEMOJI "    
-   .byte "                       "
+   .byte "                         "
 ;
     .byte "LORD OF SPREADPOINT ON THE KEYS FOR THIS MULTI "
     .byte "PLATFORM MUSICDISK: I CREATED A LONGPLAY VERSION "
@@ -253,5 +253,5 @@
     .byte 2,2
     .byte "                                                  "
     .byte "   OVER AND OUT                                                   "
-    .byte 1,20  ; pause
+    .byte 1,30  ; pause
     .byte 0   ; end of text
