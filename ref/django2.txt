@@ -201,19 +201,22 @@ Spaces are 5 pixels (!) 'i' is 4 pixels.
 - Plot glyphs at pixel offset.
 
 Archie custom features...?
-- Small Y offset for scroller?
+- Small Y offset for scroller? - DONE
 - Reinstate logo glitch when loading tune? Or a wibble?
+  => Can have the logo following a different path.
 - Add cube lighting back?
 - Make cube blip right & left for a few frames to simulate 'load glitch'.
 - Make the scrolltext appear nicely from behind the last column?
+  => Probably a pain to do and more cycles.
 - Swap sample speed depending on CPU speed... - DONE
+- Set VU bars effect on 1/2/3 keys. - DONE
 
 Bug fixes from Steve:
 - Check monitortype and adjust T1 timing? - NOT SURE!
 - Load tracks using R0=-1 (RMA copy) for QTM_Load. - DONE
-- Use SWI QTM_SongStatus and check bit 4 of R0 for end of track. - LEAVE
+- Use SWI QTM_SongStatus and check bit 4 of R0 for end of track. - REPLACED BY TIMER
   (This is easier than the music interrupt method previously.)
-- When autoplay is on, you might want to try clearing bit 2 of the music options byte, - DONE
+- When autoplay is on, you might want to try clearing bit 2 of the music options byte, - REPLACED BY TIMER
   using SWI QTM_MusicOptions, this will ensure each track fully stops at the end,
   and doesn't loop round and start playing a few micro seconds of the start before the next track loads.
 
@@ -221,6 +224,9 @@ Woah! We consistently drop a frame every 0x130 = 304 frames! WTF?
 This still happens even if QTM is turned off..
 This still happens when all plotting is turned off..
 Not sure vsync counting or frame swapping is correct somehow?
+=> Turned out to be Timer 0 colliding with VSync and RO IRQ handler
+   giving T0 higher priority than vsync, causing our handler to be
+   re-entered. Fixed with a bodge flag to detect this.
 
 For multi-buffer:
 - Screen we're currently showing.
@@ -241,4 +247,5 @@ Popping the queue happens in IRQ handler with interrupts off.
 Probably need to add a lock / disable interrupts when adding to the queue.
 Need to store or calculate the length of the queue each time.
 
-Actually, this is all overkill, just implement triple buffering.
+=> Actually, this is all overkill, just implement triple buffering, using
+an round robin index for displayed, writing and pending banks...

@@ -39,6 +39,9 @@
 
 .equ OSWord_WritePalette, 12
 
+; BBC compatible Internal Key numbers.
+; Found in RISCOS PRMs pp 1-849.
+; Values are EOR 0xff for OS_Byte 129 (Read keyboard for information.)
 .equ IKey_LeftClick, 0xf6
 .equ IKey_RightClick, 0xf4
 .equ IKey_Space, 0x9d
@@ -55,6 +58,9 @@
 .equ IKey_ArrowRight, 134
 .equ IKey_Return, 0xB6
 
+; Archimedes low-level internal key numbers transmitted by IOC.
+; Found in RISCOS PRMs pp 1-156.
+; Used by RasterMan and OS_Event Event_KeyPressed (11)
 .equ RMKey_ArrowUp, 0x59
 .equ RMKey_ArrowDown, 0x63
 .equ RMKey_Return, 0x47
@@ -62,6 +68,19 @@
 .equ RMKey_LeftClick, 0x70
 .equ RMKey_RightClick, 0x72
 .equ RMKey_A, 0x3c
+.equ RMKey_E, 0x29
+.equ RMKey_F, 0x3F
+.equ RMKey_R, 0x2A
+.equ RMKey_1, 0x11
+.equ RMKey_2, 0x12
+.equ RMKey_3, 0x13
+.equ RMKey_4, 0x14
+.equ RMKey_5, 0x15
+.equ RMKey_6, 0x16
+.equ RMKey_7, 0x17
+.equ RMKey_8, 0x18
+.equ RMKey_9, 0x19
+.equ RMKey_0, 0x10
 
 .equ DynArea_Screen, 2
 

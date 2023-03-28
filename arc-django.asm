@@ -76,6 +76,14 @@
 .equ KeyBit_ArrowDown, 3
 .equ KeyBit_A, 4
 .equ KeyBit_LeftClick, 5
+.equ KeyBit_1, 6
+.equ KeyBit_2, 7
+.equ KeyBit_3, 8
+.equ KeyBit_4, 9
+.equ KeyBit_5, 10
+.equ KeyBit_E, 11
+.equ KeyBit_F, 12
+.equ KeyBit_R, 13
 
 ; TODO: Final location for ARM2 and maybe increase gap to menu..?
 .equ RasterSplitLine, 56+100			; 56 lines from vsync to screen start
@@ -643,6 +651,22 @@ event_handler:
 	orreq r0, r0, #1<<KeyBit_A
 	cmp r2, #RMKey_LeftClick
 	orreq r0, r0, #1<<KeyBit_LeftClick
+	cmp r2, #RMKey_1
+	orreq r0, r0, #1<<KeyBit_1
+	cmp r2, #RMKey_2
+	orreq r0, r0, #1<<KeyBit_2
+	cmp r2, #RMKey_3
+	orreq r0, r0, #1<<KeyBit_3
+	cmp r2, #RMKey_4
+	orreq r0, r0, #1<<KeyBit_4
+	cmp r2, #RMKey_5
+	orreq r0, r0, #1<<KeyBit_5
+	cmp r2, #RMKey_E
+	orreq r0, r0, #1<<KeyBit_E
+	cmp r2, #RMKey_F
+	orreq r0, r0, #1<<KeyBit_F
+	cmp r2, #RMKey_R
+	orreq r0, r0, #1<<KeyBit_R
 	b .3
 
 .2:
@@ -659,6 +683,22 @@ event_handler:
 	biceq r0, r0, #1<<KeyBit_A
 	cmp r2, #RMKey_LeftClick
 	biceq r0, r0, #1<<KeyBit_LeftClick
+	cmp r2, #RMKey_1
+	biceq r0, r0, #1<<KeyBit_1
+	cmp r2, #RMKey_2
+	biceq r0, r0, #1<<KeyBit_2
+	cmp r2, #RMKey_3
+	biceq r0, r0, #1<<KeyBit_3
+	cmp r2, #RMKey_4
+	biceq r0, r0, #1<<KeyBit_4
+	cmp r2, #RMKey_5
+	biceq r0, r0, #1<<KeyBit_5
+	cmp r2, #RMKey_E
+	biceq r0, r0, #1<<KeyBit_E
+	cmp r2, #RMKey_F
+	biceq r0, r0, #1<<KeyBit_F
+	cmp r2, #RMKey_R
+	biceq r0, r0, #1<<KeyBit_R
 
 .3:
 	str r0, keyboard_pressed_mask

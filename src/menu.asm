@@ -111,7 +111,7 @@ update_menu:
 
 .5:
 
-.if Mouse_Enable        ; NB. Not tested!
+.if Mouse_Enable
 	; Check mouse.
 	swi OS_Mouse
 	ldr r0, prev_mouse_y
@@ -144,6 +144,33 @@ update_menu:
 .endif
 
 .6:
+	; Set QTM Vu Bars effect.
+	tst r4, #1<<KeyBit_E|1<<KeyBit_F|1<<KeyBit_R|1<<KeyBit_1|1<<KeyBit_2|1<<KeyBit_3|1<<KeyBit_4|1<<KeyBit_5
+	beq .7
+
+	mov r0, #-1
+	tst r4, #1<<KeyBit_F
+	movne r0, #1			; 'fake' VU bars
+	tst r4, #1<<KeyBit_E
+	movne r0, #2			; 'effect' VU bars
+	tst r4, #1<<KeyBit_R
+	movne r0, #3			; 'real' VU bars
+
+	mov r1, #-1
+	tst r4, #1<<KeyBit_1
+	movne r1, #1
+	tst r4, #1<<KeyBit_2
+	movne r1, #2
+	tst r4, #1<<KeyBit_3
+	movne r1, #3
+	tst r4, #1<<KeyBit_4
+	movne r1, #4
+	tst r4, #1<<KeyBit_5
+	movne r1, #5
+
+	swi QTM_VUBarControl
+
+.7:
 	ldr pc, [sp], #4
 
 ; ============================================================================
