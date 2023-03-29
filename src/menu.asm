@@ -171,6 +171,15 @@ update_menu:
 	swi QTM_VUBarControl
 
 .7:
+	; check sine
+	tst r4, #1<<KeyBit_S	; key changed & down?
+	beq .8
+
+	ldr r0, scroller_enable_sine
+	eor r0, r0, #1
+	str r0, scroller_enable_sine
+
+.8:
 	ldr pc, [sp], #4
 
 ; ============================================================================

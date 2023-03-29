@@ -14,8 +14,12 @@
 
 .equ Scroller_Sine_Glyph_Delta, 4096
 .equ Scroller_Sine_Tick_Delta, 1024
+.equ Scroller_Sine_Shift, 13			; [-8,+8]
 
 .equ _SCROLLER_SINE, 1
+
+scroller_enable_sine:
+	.long 0
 
 scroller_speed:
     .long 1
@@ -303,15 +307,17 @@ scroller_draw_new:
     ldr r3, scroller_shift			; [0-15]
 	and r8, r3, #7					; pixel shift [0-7]
 
+	mov r1, #Scroller_Y_Pos
 	.if _SCROLLER_SINE
+	ldr r2, scroller_enable_sine
+	cmp r2, #0
+	beq .10
 	; Calc y=y_pos+8*sin(idx)
 	ldr r0, scroller_sine_index
 	bl sine			; [s1.16]
-	mov r1, r0, asr #13
-	add r1, r1, #Scroller_Y_Pos
+	add r1, r1, r0, asr #Scroller_Sine_Shift
 	str r1, scroller_sine_last_y
-	.else
-	mov r1, #Scroller_Y_Pos
+	.10:
 	.endif
 
 	add r11, r12, r1, lsl #7
@@ -348,13 +354,17 @@ scroller_draw_new:
 
 .1:
 	.if _SCROLLER_SINE
+	ldr r1, scroller_enable_sine
+	cmp r1, #0
+	beq .11
+
 	; Update sine index
 	add r3, r3, #Scroller_Sine_Glyph_Delta
 
 	; Calc y'
 	mov r0, r3
 	bl sine
-	mov r0, r0, asr #13
+	mov r0, r0, asr #Scroller_Sine_Shift
 	add r0, r0, #Scroller_Y_Pos
 
 	; Update R11 += (y'-y)*160
@@ -363,6 +373,7 @@ scroller_draw_new:
 	sub r0, r0, r1
 	add r11, r11, r0, lsl #7
 	add r11, r11, r0, lsl #5
+	.11:
 	.endif
 
 .4:
@@ -378,13 +389,17 @@ scroller_draw_new:
 	beq .3
 
 	.if _SCROLLER_SINE
+	ldr r1, scroller_enable_sine
+	cmp r1, #0
+	beq .12
+
 	; Update sine index.
 	add r3, r3, #Scroller_Sine_Glyph_Delta
 
 	; Calc y'
 	mov r0, r3
 	bl sine
-	mov r0, r0, asr #13
+	mov r0, r0, asr #Scroller_Sine_Shift
 	add r0, r0, #Scroller_Y_Pos
 
 	; Update R11 += (y'-y)*160
@@ -392,6 +407,7 @@ scroller_draw_new:
 	sub r0, r0, r1
 	add r11, r11, r0, lsl #7
 	add r11, r11, r0, lsl #5
+	.12:
 	.endif
 
 	bl scroller_get_next_glyph_no
@@ -406,10 +422,15 @@ scroller_draw_new:
 
 .3:
 	.if _SCROLLER_SINE
+	ldr r1, scroller_enable_sine
+	cmp r1, #0
+	beq .13
+
 	ldr r3, scroller_sine_index
 	ldr r0, scroller_speed
 	sub r3, r3, #Scroller_Sine_Tick_Delta
 	str r3, scroller_sine_index
+	.13:
 	.endif
 
     ldr pc, [sp], #4

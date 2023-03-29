@@ -192,6 +192,8 @@ Final colours?
 
 Scroller? 170, 204, 68 $0ac4
 
+Final scroller colour:  $49c    
+
 Proportional menu font
 ~~~
 Spaces are 5 pixels (!) 'i' is 4 pixels.

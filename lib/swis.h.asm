@@ -69,8 +69,9 @@
 .equ RMKey_RightClick, 0x72
 .equ RMKey_A, 0x3c
 .equ RMKey_E, 0x29
-.equ RMKey_F, 0x3F
-.equ RMKey_R, 0x2A
+.equ RMKey_F, 0x3f
+.equ RMKey_R, 0x2a
+.equ RMKey_S, 0x3d
 .equ RMKey_1, 0x11
 .equ RMKey_2, 0x12
 .equ RMKey_3, 0x13

@@ -3,7 +3,7 @@
 ; ============================================================================
 
 .equ _DEBUG, 0
-.equ _DEBUG_RASTERS, (_DEBUG && 0)
+.equ _DEBUG_RASTERS, (_DEBUG && 1)
 .equ _DEBUG_SHOW, (_DEBUG && 0)
 .equ _DEBUG_FAST_SPLASH, (_DEBUG && 1)
 .equ _CHECK_FRAME_DROP, 0
@@ -84,9 +84,10 @@
 .equ KeyBit_E, 11
 .equ KeyBit_F, 12
 .equ KeyBit_R, 13
+.equ KeyBit_S, 14
 
 ; TODO: Final location for ARM2 and maybe increase gap to menu..?
-.equ RasterSplitLine, 56+100			; 56 lines from vsync to screen start
+.equ RasterSplitLine, 56+94			; 56 lines from vsync to screen start
 ; Check MENU_TOP_YPOS definition.
 
 ; ============================================================================
@@ -667,6 +668,8 @@ event_handler:
 	orreq r0, r0, #1<<KeyBit_F
 	cmp r2, #RMKey_R
 	orreq r0, r0, #1<<KeyBit_R
+	cmp r2, #RMKey_S
+	orreq r0, r0, #1<<KeyBit_S
 	b .3
 
 .2:
@@ -699,6 +702,8 @@ event_handler:
 	biceq r0, r0, #1<<KeyBit_F
 	cmp r2, #RMKey_R
 	biceq r0, r0, #1<<KeyBit_R
+	cmp r2, #RMKey_S
+	biceq r0, r0, #1<<KeyBit_S
 
 .3:
 	str r0, keyboard_pressed_mask
@@ -1073,8 +1078,8 @@ screen_addr:
 .include "lib/mode9-palette.asm"
 .include "src/new-font.asm"
 .include "src/menu.asm"
-.include "src/columns.asm"
 .include "src/scroller.asm"
+.include "src/columns.asm"
 .include "src/logo.asm"
 .include "lib/lz4-decode.asm"
 .include "lib/maths.asm"
@@ -1171,7 +1176,7 @@ timer1_vidc_regs_list: ; bgr
 	.long VIDC_Col7  | 0x7fb
 	.long VIDC_Col8  | 0xfff			; line marker
 	;
-	.long VIDC_Col10 | 0x4ca			; scroller
+	.long VIDC_Col10 | 0xc94			; scroller
 	.long -1
 
 vsync_vidc_regs_list:
