@@ -113,6 +113,10 @@ cool_beans_mod_no_adr:
 .incbin "build/cool_beans.mod"
 
 .p2align 2
+digitags_mod_no_adr:
+.incbin "build/digitags.mod"
+
+.p2align 2
 splash_mod_no_adr:
 .incbin "build/music_splash.mod"
 
@@ -124,5 +128,6 @@ scroller_text_string_no_adr:
 .byte "                    "
 .include "src/scrolltxt-final.asm"
 scroller_text_string_end_no_adr:
+.p2align 2
 
 ; ============================================================================

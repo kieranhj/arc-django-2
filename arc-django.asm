@@ -47,7 +47,7 @@
 ; App defines
 ; ============================================================================
 
-.equ MAX_SONGS, 14
+.equ MAX_SONGS, 15
 
 .if _DEBUG_FAST_SPLASH
 .equ Splash_Frames, 3
@@ -87,7 +87,7 @@
 .equ KeyBit_S, 14
 
 ; TODO: Final location for ARM2 and maybe increase gap to menu..?
-.equ RasterSplitLine, 56+94			; 56 lines from vsync to screen start
+.equ RasterSplitLine, 56+90			; 56 lines from vsync to screen start
 ; Check MENU_TOP_YPOS definition.
 
 ; ============================================================================
@@ -292,13 +292,25 @@ main_loop:
 
 	; R0 = vsync delta since last frame.
 	.if _CHECK_FRAME_DROP
+	.if 0
+	; This flashes if it's been more than 1 vsync since last main loop,
+	; but we might have had a buffer pending to display to cover this up.
 	cmp r0, #1
 	ble .2
-	str r2, last_dropped_frame
 	.2:
-	movle r4, #0x000000
-	movgt r4, #0x0000ff
+	movne r4, #0x000000
+	moveq r4, #0x0000ff
 	bl palette_set_border
+	.else
+	; This flashes if vsync IRQ has no pending buffer to display.
+	ldr r2, last_dropped_frame
+	ldr r1, last_last_dropped_frame
+	cmp r2, r1
+	moveq r4, #0x000000
+	movne r4, #0x0000ff
+	strne r2, last_last_dropped_frame
+	bl palette_set_border
+	.endif
 	.endif
 
 	; ========================================================================
@@ -620,6 +632,9 @@ vsync_delta:
 .if _CHECK_FRAME_DROP
 last_dropped_frame:
 	.long 0
+
+last_last_dropped_frame:
+	.long 0
 .endif
 
 keyboard_pressed_mask:
@@ -920,6 +935,9 @@ vsync:
 	; Pending bank will now be displayed.
 	ldr r1, pending_bank
 	cmp r1, #0
+	.if _CHECK_FRAME_DROP
+	streq r0, last_dropped_frame
+	.endif
 	beq exitVs
 
 	str r1, displayed_bank
@@ -1094,6 +1112,7 @@ vdu_screen_disable_cursor:
 .p2align 2
 
 music_table:
+	.long digitags_mod_no_adr			; 0
 	.long birdhouse_mod_no_adr			; 1
 	.long funky_delicious_mod_no_adr	; 2
 	.long autumn_mood_mod_no_adr		; 3
@@ -1109,13 +1128,15 @@ music_table:
 	.long vectrax_mod_no_adr			; 13
 	.long changing_waves_mod_no_adr		; 14
 
+; master volume of each tune
 volumeTable:    
-    .byte    35   ; birdhouse
-    .byte    50    ; funky delicious
+    .byte    40      ; digitags
+    .byte    35      ; birdhouse
+    .byte    50-10   ; funky delicious
     .byte    62-2  ; autumn
     .byte    51  ; je suis k
     .byte    60-2  ; square circles
-    .byte    50     ; coolbeans
+    .byte    50+5     ; coolbeans
     .byte    54  ; la soupe
     .byte    56-3  ; sajt
     .byte    59-1  ; bodoaxian
@@ -1124,10 +1145,12 @@ volumeTable:
     .byte    61-1  ; lies
     .byte    53      ; vectrax longplay
     .byte    45-8-4    ; changing waves
-.p2align 2
+    .p2align 2
+
 
 durationTable:
 ;    dcb.w   10,250  
+    .long    50*122      ; digitags
     .long    51*50       ; birdhouse
     .long    50*92      ; funky delicious
     .long    192*50-40      ; autumn
@@ -1142,9 +1165,11 @@ durationTable:
     .long    181*50-10   ; lies
     .long    485*50      ; vectrax longplay
     .long    50*6*60     ; changing waves
+    
 
 ; break between tunes
 songpausetable:
+    .long    50      ; digitags
     .long    50      ; birdhouse
     .long    50      ; funky delicious
     .long    10       ; autumn
@@ -1158,7 +1183,7 @@ songpausetable:
     .long    90      ; squid ring
     .long    50-10   ; lies
     .long    50      ; vectrax longplay
-    .long    600      ; changing waves
+    .long    600      ; changing waves    
 
 logo_pal_block:
 .incbin "data/logo-palette-hacked.bin"

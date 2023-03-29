@@ -97,7 +97,8 @@ music: build ./build/birdhouse.mod ./build/autumn_mood.mod ./build/square_circle
 	./build/je_suis_k.mod ./build/la_soupe.mod ./build/bodoaxian.mod \
 	./build/sajt.mod ./build/holodash.mod ./build/squid_ring.mod \
 	./build/lies.mod ./build/changing_waves.mod ./build/vectrax.mod \
-	./build/funky_delicious.mod ./build/cool_beans.mod ./build/music_splash.mod
+	./build/funky_delicious.mod ./build/cool_beans.mod ./build/music_splash.mod \
+	./build/digitags.mod
 
 .PHONY:text build
 text: ./build/!run.txt ./build/django01.txt
@@ -181,6 +182,9 @@ clean:
 	$(COPY) $(subst /,\\,$+) $(subst /,\\,$@)
 
 ./build/cool_beans.mod: ./data/music2/coolbeans.mod
+	$(COPY) $(subst /,\\,$+) $(subst /,\\,$@)
+
+./build/digitags.mod: ./data/music2/soda7-digitags.mod
 	$(COPY) $(subst /,\\,$+) $(subst /,\\,$@)
 
 ./build/music_splash.mod: ./data/music2/mod.raven-stereo.mod

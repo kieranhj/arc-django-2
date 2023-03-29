@@ -17,7 +17,7 @@
 
 .equ VIEWPORT_SCALE,    (Screen_Width /2) * PRECISION_MULTIPLIER
 .equ VIEWPORT_CENTRE_X, 184 * PRECISION_MULTIPLIER
-.equ VIEWPORT_CENTRE_Y, 154 * PRECISION_MULTIPLIER
+.equ VIEWPORT_CENTRE_Y, 146 * PRECISION_MULTIPLIER
 
 ; ============================================================================
 ; Scene data.

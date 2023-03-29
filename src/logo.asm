@@ -6,9 +6,9 @@
 .equ Logo_Stride, Logo_Width/Screen_PixelsPerByte
 .equ Logo_Bytes, Logo_Stride*Logo_Height
 
-.equ Logo_Y_Radius, 12
+.equ Logo_Y_Radius, 8
 .equ Logo_Centre_Left, 56
-.equ Logo_Centre_Top, 14
+.equ Logo_Centre_Top, 10
 
 logo_data_p:
     .long logo_data_no_adr

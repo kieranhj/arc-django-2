@@ -2,13 +2,13 @@
 ; Menu stuff.
 ; ============================================================================
 
-.equ Menu_MaxSprites, 30
+.equ Menu_MaxSprites, (MAX_SONGS+1)*2
 .equ Menu_Song_Column, 20			; aligned right.
 .equ Menu_Artist_Column, 26			; aligned left.
 
 .equ Menu_MaxSpriteStride, 20
 
-.equ Menu_Top_YPos, 106
+.equ Menu_Top_YPos, 94
 .equ Menu_Row_Height, 7
 .equ Menu_Item_Colour, 4
 .equ Menu_Playing_Colour, 8
@@ -275,6 +275,7 @@ plot_menu_sprites:
 	adr r9, menu_sprite_buffer_ptrs
 	ldr r9, [r9, r8, lsl #2]		; sprite ptr.
 
+	add r12, r12, #Screen_Stride*Menu_Row_Height
 	add r11, r12, #Menu_Autoplay_Column*4
 	bl plot_menu_sprite
 	
@@ -341,6 +342,7 @@ menu_sprite_strides:				; in bytes
 
 .p2align 2
 menu_strings:
+	.byte "digitags", 0, "soda7", 0
 	.byte "birdhouse in da houz3", 0, "slime", 0
 	.byte "funky delicious", 0, "maz3", 0
 	.byte "autumn mood", 0, "triace", 0
