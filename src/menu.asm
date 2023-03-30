@@ -41,7 +41,7 @@ update_menu:
 
 	; Update selected item colour.
     ldr r1, vsync_count
-    ands r1, r1, #1
+    ands r1, r1, #2
 	moveq r0, #Menu_Playing_Colour
 	movne r0, #Menu_Item_Colour
 	str r0, selection_colour
