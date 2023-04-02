@@ -90,7 +90,8 @@ code: ./build/arc-django.bin
 .PHONY:assets
 assets: build ./build/logo.lz4 ./data/logo-palette-hacked.bin ./build/big-font.bin \
 	./build/rabenauge.lz4 ./build/rabenauge.bin.pal ./build/small-font.bin \
-	./build/icon.bin ./build/logo.bin.mask ./build/endscreen.lz4 ./build/endscreen.bin.pal
+	./build/icon.bin ./build/logo.bin.mask ./build/endscreen1.lz4 ./build/endscreen3.bin.pal \
+	./build/endscreen2.lz4 ./build/endscreen3.lz4
 
 .PHONY:music
 music: build ./build/birdhouse.mod ./build/autumn_mood.mod ./build/square_circles.mod \
@@ -135,8 +136,16 @@ clean:
 ./build/rabenauge.bin: ./data/gfx/combined-logo.png $(PNG2ARC_DEPS)
 	$(PYTHON2) $(PNG2ARC) -o $@ -p $@.pal $< 9
 
-./build/endscreen.lz4: ./build/endscreen.bin
-./build/endscreen.bin: ./data/gfx/endscreen.png $(PNG2ARC_DEPS)
+./build/endscreen1.lz4: ./build/endscreen1.bin
+./build/endscreen1.bin: ./data/gfx/001.png ./build/endscreen3.bin $(PNG2ARC_DEPS)
+	$(PYTHON2) $(PNG2ARC) -o $@ --use-palette ./build/endscreen3.bin.pal $< 9
+
+./build/endscreen2.lz4: ./build/endscreen2.bin
+./build/endscreen2.bin: ./data/gfx/002.png ./build/endscreen3.bin $(PNG2ARC_DEPS)
+	$(PYTHON2) $(PNG2ARC) -o $@ --use-palette ./build/endscreen3.bin.pal $< 9
+
+./build/endscreen3.lz4: ./build/endscreen3.bin
+./build/endscreen3.bin: ./data/gfx/003.png $(PNG2ARC_DEPS)
 	$(PYTHON2) $(PNG2ARC) -o $@ -p $@.pal $< 9
 
 ##########################################################################

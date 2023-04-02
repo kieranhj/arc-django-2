@@ -11,7 +11,7 @@
 .equ Menu_Top_YPos, 94
 .equ Menu_Row_Height, 7
 .equ Menu_Item_Colour, 4
-.equ Menu_Playing_Colour, 8
+.equ Menu_Selection_Colour, 8
 
 .equ Menu_Autoplay_Column, 1
 
@@ -23,7 +23,7 @@ prev_mouse_y:
 selection_number:
 	.long 0
 
-selection_colour:
+playing_colour:
 	.long 0
 
 keyboard_prev_mask:
@@ -39,12 +39,12 @@ update_menu:
 	str r0, keyboard_prev_mask
 	and r4, r2, r0			; diff bits & key down bits	
 
-	; Update selected item colour.
+	; Update playing item colour.
     ldr r1, vsync_count
-    ands r1, r1, #2
-	moveq r0, #Menu_Playing_Colour
+    ands r1, r1, #4
+	moveq r0, #Menu_Selection_Colour
 	movne r0, #Menu_Item_Colour
-	str r0, selection_colour
+	str r0, playing_colour
 
 	; check up
 	tst r4, #1<<KeyBit_ArrowUp	; key changed & down?
@@ -215,13 +215,13 @@ plot_menu_sprites:
 	ldr r3, song_number
 	mov r3, r3, lsl #1
 	cmp r8, r3
-	moveq r10, #Menu_Playing_Colour
+	ldreq r10, playing_colour
 
 	; selection_number = what's flashing
 	ldr r4, selection_number
 	mov r4, r4, lsl #1
 	cmp r8, r4
-	ldreq r10, selection_colour
+	moveq r10, #Menu_Selection_Colour
 
 	; set colour word.
 	orr r10, r10, r10, lsl #4
@@ -259,7 +259,7 @@ plot_menu_sprites:
 	ldr r4, selection_number
 	mov r4, r4, lsl #1
 	cmp r8, r4
-	ldreq r10, selection_colour
+	moveq r10, #Menu_Selection_Colour
 
 	; set colour word.
 	orr r10, r10, r10, lsl #4

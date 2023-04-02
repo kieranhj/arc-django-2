@@ -61,8 +61,8 @@
 .equ Menu_Beat_Frames, 25				; 0.5 seconds.
 .equ EndScreen_Frames, 3*50
 
-.equ VU_Bars_Effect, 2					; 'effect'
-.equ VU_Bars_Gravity, 2					; lines per vsync
+.equ VU_Bars_Effect, 3					; 'fake' bars
+.equ VU_Bars_Gravity, 5					; lines per vsync
 
 .equ Mouse_Enable, 1
 .equ Mouse_Sensitivity, 10
@@ -85,6 +85,7 @@
 .equ KeyBit_F, 12
 .equ KeyBit_R, 13
 .equ KeyBit_S, 14
+.equ KeyBit_RightClick, 16
 
 ; TODO: Final location for ARM2 and maybe increase gap to menu..?
 .equ RasterSplitLine, 56+88			; 56 lines from vsync to screen start
@@ -203,7 +204,7 @@ main:
 	bl mark_write_bank_as_pending_display
 
 	; Play splash ditty.
-	mov r0, #0					; load from address and copy to RMA.
+	mov r0, #0					; load from address
 	ldr r1, splash_mod_p
 	swi QTM_Load
 
@@ -264,6 +265,10 @@ main_loop:
 	; do menu.
 	ldr r0, keyboard_pressed_mask
 	bl update_menu
+
+	; R4=key bits changed & down.
+	tst r4, #1<<KeyBit_RightClick
+	bne exit
 
 	; autoplay!
 	bl check_autoplay
@@ -374,16 +379,33 @@ exit:
 	bl fade_out_with_volume
 
 	; End screen.
+	bl get_next_bank_for_writing
 	SWI OS_WriteI + 12		; cls
-	ldr r0, endscreen_p
+	ldr r0, endscreen1_p
 	ldr r1, screen_addr
 	bl unlz4
 	bl mark_write_bank_as_pending_display
 	ldr r2, rabenauge_pal_block_p
 	bl palette_init_fade_from_black
 	bl fade_in
+	mov r4, #EndScreen_Frames
+	bl wait_frames
 
-	; Pause.
+	; Screen 2
+	bl get_next_bank_for_writing
+	ldr r0, endscreen2_p
+	ldr r1, screen_addr
+	bl unlz4
+	bl mark_write_bank_as_pending_display
+	mov r4, #EndScreen_Frames
+	bl wait_frames
+
+	; Screen 3
+	bl get_next_bank_for_writing
+	ldr r0, endscreen3_p
+	ldr r1, screen_addr
+	bl unlz4
+	bl mark_write_bank_as_pending_display
 	mov r4, #EndScreen_Frames
 	bl wait_frames
 	.else
@@ -453,8 +475,14 @@ rabenauge_splash_p:
 endscreen_pal_block_p:
 	.long endscreen_pal_block_no_adr
 
-endscreen_p:
-	.long endscreen_no_adr
+endscreen1_p:
+	.long endscreen1_no_adr
+
+endscreen2_p:
+	.long endscreen2_no_adr
+
+endscreen3_p:
+	.long endscreen3_no_adr
 
 wait_frames:
 	mov r0, #19
@@ -685,6 +713,8 @@ event_handler:
 	orreq r0, r0, #1<<KeyBit_R
 	cmp r2, #RMKey_S
 	orreq r0, r0, #1<<KeyBit_S
+	cmp r2, #RMKey_RightClick
+	orreq r0, r0, #1<<KeyBit_RightClick
 	b .3
 
 .2:
@@ -719,6 +749,8 @@ event_handler:
 	biceq r0, r0, #1<<KeyBit_R
 	cmp r2, #RMKey_S
 	biceq r0, r0, #1<<KeyBit_S
+	cmp r2, #RMKey_RightClick
+	biceq r0, r0, #1<<KeyBit_RightClick
 
 .3:
 	str r0, keyboard_pressed_mask
@@ -1128,24 +1160,25 @@ music_table:
 	.long vectrax_mod_no_adr			; 13
 	.long changing_waves_mod_no_adr		; 14
 
+
 ; master volume of each tune
 volumeTable:    
-    .byte    40      ; digitags
+    .byte    60      ; digitags
     .byte    35      ; birdhouse
     .byte    50-10   ; funky delicious
     .byte    62-2  ; autumn
     .byte    51  ; je suis k
-    .byte    60-2  ; square circles
+    .byte    60-2-2  ; square circles
     .byte    50+5     ; coolbeans
-    .byte    54  ; la soupe
+    .byte    54+2  ; la soupe
     .byte    56-3  ; sajt
-    .byte    59-1  ; bodoaxian
+    .byte    59-1+2  ; bodoaxian
     .byte    64    ; holodash
     .byte    39-2  ; squid ring
     .byte    61-1  ; lies
     .byte    53      ; vectrax longplay
     .byte    45-8-4    ; changing waves
-    .p2align 2
+	.p2align 2
 
 
 durationTable:
@@ -1169,17 +1202,17 @@ durationTable:
 
 ; break between tunes
 songpausetable:
-    .long    50      ; digitags
-    .long    50      ; birdhouse
-    .long    50      ; funky delicious
+    .long    100+20      ; digitags
+    .long    70+30      ; birdhouse
+    .long    60+30      ; funky delicious
     .long    10       ; autumn
-    .long    70      ; je suis k
-    .long    80      ; square circles
+    .long    70+20      ; je suis k
+    .long    80+30      ; square circles
     .long    50      ; coolbeans
-    .long    80+20      ; la soupe
-    .long    50      ; sajt
+    .long    80+20+30      ; la soupe
+    .long    50+40      ; sajt
     .long    70      ; bodoaxian
-    .long    90      ; holodash
+    .long    90+20      ; holodash
     .long    90      ; squid ring
     .long    50-10   ; lies
     .long    50      ; vectrax longplay

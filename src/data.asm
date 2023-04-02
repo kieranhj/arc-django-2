@@ -32,11 +32,19 @@ rabenauge_splash_no_adr:
 
 .p2align 2
 endscreen_pal_block_no_adr:
-.incbin "build/endscreen.bin.pal"
+.incbin "build/endscreen3.bin.pal"
 
 .p2align 2
-endscreen_no_adr:
-.incbin "build/endscreen.lz4"
+endscreen1_no_adr:
+.incbin "build/endscreen1.lz4"
+
+.p2align 2
+endscreen2_no_adr:
+.incbin "build/endscreen2.lz4"
+
+.p2align 2
+endscreen3_no_adr:
+.incbin "build/endscreen3.lz4"
 
 ; ============================================================================
 
