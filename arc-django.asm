@@ -61,7 +61,7 @@
 .equ Menu_Beat_Frames, 25				; 0.5 seconds.
 .equ EndScreen_Frames, 3*50
 
-.equ VU_Bars_Effect, 3					; 'fake' bars
+.equ VU_Bars_Effect, 1					; 'fake' bars
 .equ VU_Bars_Gravity, 5					; lines per vsync
 
 .equ Mouse_Enable, 1
