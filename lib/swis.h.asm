@@ -150,6 +150,7 @@
 .equ VIDC_HDisplayStart, 0x8C000000     ; (M-7)/2 MODE 9 pixels << 14 [x7]
 .equ VIDC_HDisplayEnd, 0x90000000       ; (M-7)/2 MODE 9 pixels << 14 [x7]
 .equ VIDC_HBorderEnd, 0x94000000        ; (M-1)/2 pixels << 14 [odd]
+.equ VIDC_VCycle, 0xA0000000
 .equ VIDC_VBorderStart, 0xA8000000      ; N-1 rasters << 14
 .equ VIDC_VDisplayStart, 0xAC000000     ; N-1 rasters << 14
 .equ VIDC_VDisplayEnd, 0xB0000000       ; N-1 rasters << 14

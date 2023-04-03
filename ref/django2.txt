@@ -15,11 +15,11 @@ TODO
   - Also store in ASCII order for simplicity? - DONE
   => TODO: Bold is a bit bodged, ripple hack/effect missing.
 - Add scrolltext. - DONE
-  => Control codes are triggered on LHS now not RHS.
+  => Control codes are triggered on LHS now not RHS. - DONE
 - Add 3D rendering code for cube. - DONE
 - Add 3D cube! - DONE
 - Move screen layout to be roughly that of Bodo's WIP. - DONE
-- Optimise for 8MHz machines.
+- Optimise for 8MHz machines. - DONE
 
 https://pdjstone.github.io/arculator-wasm/arculator.html?disc=https://bitshifters.github.io/content/wip/arc-django-2-wip.adf&autoboot=desktop%20filer_run%20adfs::0.$.!Django02
 
@@ -107,12 +107,12 @@ TODO:
     => Read/mask/write 1x into current column (shifted)
     => 16x for font height.
     => Total read/mask/write = 41*16*lots
-  - Could have scroller glyphs on a modest sine wave if we wanted?
+  - Could have scroller glyphs on a modest sine wave if we wanted? - DONE
 
 - Music playback.
   - Ping ToBach & 4mat - DONE
-  - Master volume of each tune?
-  - Pause between tunes during autoplay?
+  - Master volume of each tune? - DONE
+  - Pause between tunes during autoplay? - DONE
 - Archie specific:
   - Remove _DJANGO define. - DONE
   - Performance on ARM2? - DONE (CAN ALWAYS DO MORE!)
@@ -130,9 +130,9 @@ TODO:
   - Do we need RasterMan or get RasterMan Lite for stablised interrupts. => NO.
   - Remove redundant code. - DONE I THINK?
   - Shrink exe - DONE
-  - Add new !ReadMe etc. ASCII from ne7.
-  - Ask Bodo for an app icon? - DONE BUT PROD AGAIN
-  - Write some scrolltext!
+  - Add new !ReadMe etc. ASCII from ne7. - DONE
+  - Ask Bodo for an app icon? - DONE
+  - Write some scrolltext! - DONE
 
 Scrolltext
 ~~~

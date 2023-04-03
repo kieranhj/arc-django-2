@@ -3,10 +3,11 @@
 ; ============================================================================
 
 .equ _DEBUG, 0
-.equ _DEBUG_RASTERS, (_DEBUG && 1)
+.equ _DEBUG_RASTERS, (_DEBUG && 0)
 .equ _DEBUG_SHOW, (_DEBUG && 0)
 .equ _DEBUG_FAST_SPLASH, (_DEBUG && 1)
 .equ _CHECK_FRAME_DROP, 0
+.equ _SUPER_312p_HACK, 0
 
 .equ Sample_Speed_SlowCPU, 24		; ideally get this down for ARM2
 .equ Sample_Speed_FastCPU, 16		; ideally 16us for ARM250+
@@ -113,6 +114,14 @@ main:
 	adr r0, vdu_screen_disable_cursor
 	mov r1, #12
 	swi OS_WriteN
+
+	.if _SUPER_312p_HACK
+	swi OS_EnterOS
+	mov r0, #VIDC_Write
+	ldr r1, vidc_312_hack
+	str r1, [r0]
+	teqp pc, #0
+	.endif
 
 	; Set screen size for number of buffers
 	MOV r0, #DynArea_Screen
@@ -363,6 +372,11 @@ main_loop:
 
 	; repeat!
 	b main_loop
+
+.if _SUPER_312p_HACK
+vidc_312_hack:
+	.long VIDC_VCycle | (312<<14)
+.endif
 
 exit:
 	; Fade out for a nice exit.
