@@ -1096,10 +1096,11 @@ check_autoplay:
 .1:
 	subs r0, r0, #1
 	str r0, volume_fade
-	beq .2
-
 	swi QTM_Volume
-	mov pc, lr
+
+	ldr r0, volume_fade
+	cmp r0, #0
+	movne pc, lr
 
 	; Pause for breath between tracks.
 .2:
