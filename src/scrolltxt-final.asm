@@ -260,7 +260,7 @@
     .byte "PT 2.3F REPLAYER. WITH BITS FROM HACKING LANCE "
     .byte "BY PAULO SIMOES AS WELL. "
     .byte "WATCH OUT FOR A COMING FALCON030 AS WELL AS "
-    .byte "SEGA MEGA DRIVE VERSION OF CHIO DJANGO "
+    .byte "SEGA MEGA DRIVE VERSION OF CHIPO DJANGO "
     .byte "SOMETIMES FAR IN THE FUTURE. "
     .byte "END OF LINE"
     .byte "                         "	
