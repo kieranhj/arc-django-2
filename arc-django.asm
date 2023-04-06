@@ -388,8 +388,9 @@ exit:
 	adrl r2, logo_pal_block
 	bl palette_init_fade_to_black
 
-	adr r2, volumeTable
-	ldrb r7, [r2, r7]
+	mov r0, #-1						; fade from existing volume.
+	swi QTM_Volume
+	mov r7, r0
 	bl fade_out_with_volume
 
 	; End screen.

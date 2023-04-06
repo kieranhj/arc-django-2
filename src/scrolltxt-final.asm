@@ -1,5 +1,5 @@
 ; scrolltxt  
-; change:  30.03.2023 Time: 17:08
+; change:  06.04.2023 Time: 19:17
 ;
 ;       End of txt   0
 ;       Pause   1,(0-255)
@@ -9,6 +9,8 @@
 ;       NO UMLAUTS 
 
 
+
+
     .byte 2,2  ; speed
     .byte 1,8,32 ; pause before start
     .byte 2,4,"CHIPO               ",1,10
@@ -16,7 +18,7 @@
     .byte 2,2,"   WE ARE HAPPY TO PRESENT THIS NEW CHIPTUNE PACK "
     .byte "AT THE REVISION 2023   IN SAARBRUECKEN,   "
     .byte "AFTER 3 YEARS OF CORONA SHIT.              "
-    .byte "THERE IS AGAIN FOR AMIGA, ARCHIMEDES AND ATARI STE.   "
+    .byte "RUNNING ON AMIGA, ARCHIMEDES AND ATARI STE.   "
 ;
     .byte "          CREDITS:               GFX:   TITUS              "
     .byte "CODE:   KIERAN + PHOENIX:QUANTUM (ARCHIMEDES)    "
@@ -245,7 +247,25 @@
     .byte "I DO!. SO MY GREATEST THX TO ALL " 
     .byte "THESE TALENTED MUSICIANS WHO MADE THIS POSSIBLE."
     .byte "KUDOS TO YOU! TITUS - ATH0+ "
-;         12345678901234567890
+    .byte "                         "	
+
+
+    .byte "INSANE/RABENAUGE+TSCC HERE. THIS HAS BEEN A WILD RIDE. "
+    .byte "UNFORTUNATELY THIS TIME NOT FOR THE FALCON030 - "
+    .byte "DUE TO THE STE LANCE REPLAY BEING STE ONLY."
+    .byte "LEONARDS STE PAULA WAS UNFORTUNATELY TOO SLOW "
+    .byte "FOR ALL THE VISUAL STUFF TO RUN ONEFRAMED ON "
+    .byte "A BOG STANDARD ATARI STE. "
+    .byte "SO THIS RELEASE USES A BRAND NEW LANCE-BASED "
+    .byte "PT 2.3F REPLAYER. WITH BITS FROM HACKING LANCE "
+    .byte "BY PAULO SIMOES AS WELL. "
+    .byte "WATCH OUT FOR A COMING FALCON030 AS WELL AS "
+    .byte "SEGA MEGA DRIVE VERSION OF CHIO DJANGO "
+    .byte "SOMETIMES FAR IN THE FUTURE. "
+    .byte "END OF LINE"
+    .byte "                         "	
+
+
     .byte "                         "	
     .byte "GREETINGS FROM RABENAUGE AND BITSHIFTERS FLY OUT TO:",1,4
     .byte "   "
@@ -321,3 +341,9 @@
     .byte "   OVER AND OUT                                                   "
     .byte 1,50  ; pause
     .byte 0   ; end of text
+
+
+
+
+
+
