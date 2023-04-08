@@ -1,5 +1,5 @@
 ; scrolltxt  
-; change:  06.04.2023 Time: 19:17
+; change:  08.04.2023 Time: 14:32
 ;
 ;       End of txt   0
 ;       Pause   1,(0-255)
@@ -264,8 +264,20 @@
     .byte "SOMETIMES FAR IN THE FUTURE. "
     .byte "END OF LINE"
     .byte "                         "	
-
-
+   .byte "TRIACE ON THE KEYS GREETINGS TO ALL AND "
+   .byte "THANKS FOR HAVING ME AGAIN ON THIS ISSUE "
+   .byte "OF CHIPO DJANGO. ITS SPRING AND ITS EASTER AND "
+   .byte "WE ARE AT E-WERK AGAIN - SO WE ALL SHOULD BE HAPPY GO "
+   .byte " LUCKY. THIS TRACK IS MORE MELLOWISH, "
+   .byte "I WROTE IT BACK IN LAST YEARS AUTUMN ON A RAINY DAY, "
+   .byte "THE TRACK WROTE KIND OF ITSELF BY JUST LOOKING OUT "
+   .byte "OF THE WINDOW. ANYWAYS, HOPE YOU LIKE IT. "
+   .byte "GREETINGS TO ALL AAAAAMIIIGAAH. PERSONAL GREETINGS .byte "
+   .byte "TO VEDDER, VIRGILL, TEO, SENSENSTAHL, MA2E, POWL, "
+   .byte "DASCON, BONEFISH, WAYNE, MAGNUS AND ALL I KNOW, "
+   .byte "STAY AWESOME AND KEEP THE BLEEP! "
+;
+    .byte "                         "	
     .byte "                         "	
     .byte "GREETINGS FROM RABENAUGE AND BITSHIFTERS FLY OUT TO:",1,4
     .byte "   "
